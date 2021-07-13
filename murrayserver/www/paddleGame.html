@@ -7,36 +7,143 @@
 
     <SCRIPT>
 
- jatos.onLoad(function() {
-    //var username1 = jatos.studySessionData.username;
-    if (jatos.urlQueryParameters.hasOwnProperty("id")) {
-        //var username = "0"
-        username = jatos.urlQueryParameters.id;
-        jatos.studySessionData["SonaID"] = username1;
-        } 
-    else {
-        username1 = null;
-        jatos.studySessionData["SonaID"] = username1;
+
+
+function ready(fn) {
+  if (document.readyState != 'loading'){
+    fn();
+  } else {
+    document.addEventListener('DOMContentLoaded', fn);
+  }
 }
-    // set block order based on jatos ids
-    var condOrderID = parseInt(jatos.studyResultId)%6;
-    var condOrders = [
-        ["nonCol","col","com"],
-        ["nonCol","com","col"],
-        ["col","nonCol","com"],
-        ["col","com","nonCol"],
-        ["com","nonCol","col"],
-        ["com","col","nonCol"]
-        ];
-    condOrder = condOrders[condOrderID];
-    initialise();
-});
+
+class ConnectionLost extends Error {}
+class UnableToConnect extends ConnectionLost {}
+
+class ProgressStream {
+
+    constructor(fun) {
+
+        this._progress = undefined;
+
+        this._results_prom = new Promise((resolve, reject) => {
+            this._resolve_result = resolve;
+            this._reject_result = reject;
+        });
+
+        this._progress_prom = new Promise((resolve, reject) => {
+            this._resolve_progress = resolve;
+            this._reject_progress = reject;
+        });
+
+        let self = this;
+        this.setProgress = function(progress) {
+            self._progress = progress;
+            self._resolve_progress();
+        };
+
+        let thing = fun(this.setProgress)
+            .then((result) => {
+                this._reject_progress();
+                this._resolve_result(result);
+            }, (error) => {
+                this._reject_progress(error);
+                this._reject_result(error);
+            });
+    }
+
+    then(onSuccess, onError) {
+        return this._results_prom.then(onSuccess, onError);
+    }
+
+    [Symbol.asyncIterator]() {
+        var self = this;
+        return {
+            async next() {
+                try {
+                    await self._progress_prom;
+                    self._progress_prom = new Promise((resolve, reject) => {
+                        self._resolve_progress = resolve;
+                        self._reject_progress = reject;
+                    });
+                    return { done: false, value: self._progress };
+                } catch (e) {
+                    if (e)
+                        throw e;
+                    else
+                        return { done: true };
+                }
+            }
+        };
+    }
+}
+
+let ws;
+let messages;
+let updatingFromMessagesSentByTheServer = false;
+
+
+ready(async() => {
+
+    let condOrderID;
+
+    if (window.location.hostname === 'localhost') {
+        condOrderID = 0;
+    }
+    else {
+
+        jatos.onLoad(function() {
+           //var username1 = jatos.studySessionData.username;
+           if (jatos.urlQueryParameters.hasOwnProperty("id")) {
+               //var username = "0"
+               username = jatos.urlQueryParameters.id;
+               jatos.studySessionData["SonaID"] = username1;
+           }
+           else {
+               username1 = null;
+               jatos.studySessionData["SonaID"] = username1;
+               condOrderID = parseInt(jatos.studyResultId)%6;
+            }
+        });
+    }
+       // set block order based on jatos ids
+
+       var condOrders = [
+           ["nonCol","col","com"],
+           ["nonCol","com","col"],
+           ["col","nonCol","com"],
+           ["col","com","nonCol"],
+           ["com","nonCol","col"],
+           ["com","col","nonCol"]
+           ];
+       condOrder = condOrders[condOrderID];
+
+       let protocol = (window.location.protocol === 'http:' ? 'ws:' : 'wss:')
+       let url = `${ protocol }//${ window.location.host }/coms`
+
+       ws = new WebSocket(url);
+
+       await new Promise(function(resolve, reject) {
+           ws.onopen = () => resolve();
+           ws.onerror = () => reject(new UnableToConnect());
+       });
+
+       messages = new ProgressStream((setProgress) => {
+           ws.onmessage = (message) => setProgress(message.data);
+           return new Promise((resolve, reject) => {
+               ws.onclose = () => reject(new ConnectionLost());
+           });
+       });
+
+       initialise();
+   });
+
 
   </SCRIPT>
 
     <canvas id="canvas" width = 800 height = 600></canvas>
     <script>
-        
+
     var skipIntro = true;
 
     // Define variables
@@ -48,7 +155,7 @@
         //var condOrder;//          = ["nonCol","col","com"];
 
         // workload
-        var workloadLevels      = [3,6,9]; 
+        var workloadLevels      = [3,6,9];
         var workloadTrials      = new Array(nTrials/workloadLevels.length).fill(workloadLevels).flat();
         var trialDuration       = 20;           // seconds
         var dirInst             = 5;            // second intervals to display practice trial instructions
@@ -60,7 +167,7 @@
 
         // GameFrame
         var frameWidth          = 900;
-        var frameHeight         = 600;         
+        var frameHeight         = 600;
         var frameLeft;
         var frameRight;
         var frameTop;
@@ -100,7 +207,7 @@
         var fa1 = [];
         var fa2 = [];
         var missCode = -1;
-        
+
         // Experiment control
         var nCurrentBlock;
         var nCurrentTrial;
@@ -117,12 +224,12 @@
         var bInTrialBreak           = false;
         var justOncePlease          = true;
         var dispCont                = true;
-        
+
         //var errorUsernameSendingCounter = 0;
-		//var errorDataSendingCounter = 0;       
-        var username1; 
+		//var errorDataSendingCounter = 0;
+        var username1;
         var username2;
-        
+
         // Trial Start
         let startCount          = 0;
         let start;
@@ -137,10 +244,10 @@
         let p1Right             = false;
         let p1Left              = false;
         let p2Right             = false;
-        let p2Left              = false;         
+        let p2Left              = false;
         let p1Start;
         let p2Start;
-        var py;     
+        var py;
         var plyr1Left           = "90";         // get the event.which from keycode.info
         var plyr1Right          = 88;
         var plyr2Left           = "ArrowLeft";  // event.code
@@ -152,7 +259,7 @@
         var rtMin               = 0.1; // tenth of a second - used to clean RT times as they're made
         var counter1 = true; // these are response counters so we don't have 100 RTs saved as hits for each DRT stimulus event.
         var counter2 = true;
-        
+
 
         // Balls
         var bRad                = pHeight*0.9;
@@ -178,7 +285,7 @@
         var p1CumScore          = 0;
         var p2CumScore          = 0;
         var teamCumScore        = 0;
-        var p1teamScore         = 0;        
+        var p1teamScore         = 0;
         var p2teamScore         = 0;
 
         // save Data
@@ -186,12 +293,12 @@
         var ballCoords          = [];
         var scoreData           = [];
         var drtData             = [];
-		
+
         var outputSummary;
 
         // Sprite Classes
         class Ball {
-            constructor(x, colour, ballId, angle) {// when you define object, this is where you pass values   
+            constructor(x, colour, ballId, angle) {// when you define object, this is where you pass values
             this.x      = x;
             this.y      = by;
             this.size   = bRad;
@@ -215,8 +322,8 @@
                 }
                 if (this.y < frameTop + bRad) {
                     this.angle = -this.angle;
-                } 
-                if (this.y > frameBottom) { 
+                }
+                if (this.y > frameBottom) {
                     this.y = frameTop + bRad;
                     if (condOrder[nCurrentBlock]=="nonCol"&& !bInPractice){
                         if (this.identity < Math.max(...workloadLevels)){
@@ -255,7 +362,7 @@
                                     this.angle = -this.angle;
                                 } else {
                                     this.angle = -this.angle+offset
-                                }                
+                                }
                                 this.y = py - bRad+1
                                 hits2++
                             }
@@ -287,9 +394,9 @@
                                 this.angle = -this.angle;
                             } else {
                                 this.angle = -this.angle+offset
-                            }                
+                            }
                             this.y = py - bRad+1
-                            hits2++                      
+                            hits2++
                         }
                     }
                 }
@@ -344,9 +451,9 @@
                 expContext.fillStyle = drtColour;
                 expContext.fill();
                 expContext.stroke();
-            }        
+            }
         }
-     
+
         function roundedRect(ctx,x,y,width,height,radius,fill,stroke){
             ctx.strokeStyle = "white";
             ctx.beginPath();
@@ -354,7 +461,7 @@
             ctx.moveTo(x+radius,y);
             ctx.arcTo(x+width,y,x+width,y+radius,radius);
             // draw right side and bottom right corner
-            ctx.arcTo(x+width,y+height,x+width-radius,y+height,radius); 
+            ctx.arcTo(x+width,y+height,x+width-radius,y+height,radius);
             // draw bottom and bottom left corner
             ctx.arcTo(x,y+height,x,y+height-radius,radius);
             // draw left and top left corner
@@ -366,7 +473,7 @@
                 ctx.stroke();
             }
             ctx.strokeStyle = "black";
-        }  
+        }
         function drawKeyDepth(x, y) {
             expContext.strokeStyle = "white";
             expContext.beginPath();
@@ -380,24 +487,24 @@
         function drawKey(ctx, faceVal, x, y, width, height, radius, fill, stroke, specialChar){
             // Perimeter / Base
             ctx.lineWidth = 4;
-            roundedRect(ctx,x-10,y-10,width, height, radius, false, stroke);           
+            roundedRect(ctx,x-10,y-10,width, height, radius, false, stroke);
             // Key top
             expContext.lineWidth = 3;
             drawKeyDepth(x,y);
             expContext.fillStyle = "black";
             roundedRect(ctx,x-5,y-6,width-10,height-10, radius-1, true, stroke);
             // Key Content
-            expContext.fillStyle = "white";         
+            expContext.fillStyle = "white";
             if (specialChar){ // used for the directional arrows
                 var uni = '"\\u' + faceVal+'"';
                 var faceVal = eval(uni);
-            } 
+            }
             expContext.fillText(faceVal, x+10, y+10);
             ctx.lineWidth = 1;
         }
         function keyInsts(p1, p2, drt1, drt2){
             // Player 1 Keys
-            if (p1){        
+            if (p1){
                 expContext.fillStyle = p1Colour;
                 expContext.fillText("Player 1:", expCanvas.width/3+15,expCanvas.height/2-25);
                 expContext.fillStyle = "white";
@@ -416,7 +523,7 @@
                 expContext.fillText("Non-Dominant", expCanvas.width/2,expCanvas.height/2+15);
                 expContext.fillText("Dominant Hand", expCanvas.width/2,expCanvas.height/2+60);
             }
-            
+
             if (p2){
             // Player 2 Keys
                 expContext.fillStyle = p2Colour;
@@ -459,7 +566,7 @@
             }*/
             if (event.keyCode === 9){// Disable Tab key function
                 event.preventDefault();
-            }    
+            }
 
             if (bInInstructions1){
 				if (event.keyCode == 32) {
@@ -480,7 +587,7 @@
                         hand1 = 'left';
                         p1HandChosen = true;
                     }
-                } 
+                }
                 if (p1Hand.length == 1 && p1HandChosen){
                     expContext.fillText("Player 2, please indicate if you are right-handed by pressing '?/' or if you are left-handed press '|\\' (above enter').",expCanvas.width/2,expCanvas.height/4+75);
                     keyInsts(true,false,plyr1DRTrespKey,plyr2DRTrespKey);
@@ -519,7 +626,7 @@
                 if (event.keyCode == 32) {
                     event.preventDefault();
                     bInInstructions3 = false;
-                    
+
                     if (skipIntro){
                         blockInst(condOrder,nCurrentBlock);
                     } else {
@@ -533,10 +640,10 @@
                     keyInsts(true,true,plyr1DRTrespKey,plyr2DRTrespKey);
                     expContext.fillText("Player 2, please indicate if you are right-handed by pressing '?/' or if you are left-handed press '|\\' (above enter').",expCanvas.width/2,expCanvas.height/4+75);
                     expContext.fillText("Press 'spacebar' to continue", expCanvas.width*.75,expCanvas.height-50);
-                    expContext.fillStyle = "red";	
+                    expContext.fillStyle = "red";
                     expContext.font="30px Arial";
                     expContext.fillText("Controls cannot be changed.",expCanvas.width/2,expCanvas.height/4);
-                    expContext.fillStyle = frameColour;	
+                    expContext.fillStyle = frameColour;
                     expContext.font="16px Arial";
                 }
             }
@@ -549,11 +656,11 @@
                         start   = new Date();
                     }
                 }
-                if (event.keyCode == plyr1DRTrespKey){ 
+                if (event.keyCode == plyr1DRTrespKey){
                     event.preventDefault();
                     drtResp1 = true;
                 }
-                if (event.keyCode == plyr2DRTrespKey){ 
+                if (event.keyCode == plyr2DRTrespKey){
                     event.preventDefault();
                     drtResp2 = true;
                 }
@@ -587,7 +694,7 @@
                     proceed = false;
                 }
             }
-        }  
+        }
         function keyUpHandler(e) {
             if (e.keyCode == plyr1Right) { //d
                 p1Right = false;
@@ -610,8 +717,8 @@
         // Set Instructions
         function instructions1(){
             bInInstructions1 = true;
-            drawCanvas();      
-			expContext.fillStyle = frameColour;	
+            drawCanvas();
+			expContext.fillStyle = frameColour;
             expContext.font="30px Arial";
 			expContext.textAlign = "center";
             expContext.fillText("Welcome to Team Spirit!",expCanvas.width/2,expCanvas.height/4-100);
@@ -631,7 +738,7 @@
         }
         function instructions2(){
             bInInstructions2 = true;
-            drawCanvas();                
+            drawCanvas();
             expContext.fillStyle = "white";
             expContext.fillText("2/3", expCanvas.width*.75,25);
             expContext.fillText("Player 1 paddle is red and begins each trial on the left. Your score is shown in the top left corner of each trial.",expCanvas.width/2,expCanvas.height/4-50);
@@ -657,7 +764,7 @@
             expContext.fillText("Respond quickly and accurately to the light.",expCanvas.width/2,expCanvas.height/4);
             expContext.fillText("The response key for each player is shown below.",expCanvas.width/2,expCanvas.height/4+25);
             expContext.fillText("A walkthrough trial will commence following this screen.",expCanvas.width/2,expCanvas.height/4+50);
-            
+
             expContext.fillText("Please ensure that your dominant hand controls the directional keys, and your non-dominant hand controls the response key.",expCanvas.width/2,expCanvas.height-125);
             expContext.fillText("Press 'spacebar' to continue", expCanvas.width*.75,expCanvas.height-50);
             expContext.fillText("Press 'b' to return", expCanvas.width*.25,expCanvas.height-50);
@@ -689,7 +796,7 @@
                 expContext.fillText("Trials last 60 seconds.",expCanvas.width/2,frameTop+frameHeight/5);
                 expContext.fillText("Your score can be seen throughout the trial.",expCanvas.width/2,frameTop+frameHeight/5+20);
                 expContext.fillText("The maximum score for a trial is 1000.",expCanvas.width/2,frameTop+frameHeight/5+40);
-                
+
             } else if (time < trialDuration-dirInst*5 && time > trialDuration-dirInst*8){
                 expContext.fillText("The panels on the side have now been activated.",expCanvas.width/2,frameTop+frameHeight/5);
                 expContext.fillText("They will regularly flash green throughout the game.",expCanvas.width/2,frameTop+frameHeight/5+20);
@@ -698,7 +805,7 @@
 
                 expContext.fillText("Player 1:",p1Start+pWidth/2,frameBottom-frameHeight/4-25);
                 expContext.fillText("Press 'q'",p1Start+pWidth/2,frameBottom-frameHeight/4);
-                
+
                 expContext.fillText("Player 2:",p2Start+pWidth/2,frameBottom-frameHeight/4-25);
                 expContext.fillText("Press '?/'",p2Start+pWidth/2,frameBottom-frameHeight/4);
             }
@@ -736,7 +843,7 @@
                 timeout = setTimeout(timedContinue,blockBreakTime*1000);
             }
         }
-        
+
         // Set Functions
 		function initialise() {
 			nCurrentBlock       = 0; // start at zero
@@ -759,16 +866,16 @@
             py                  = frameBottom - pHeight*3;
             bx                  = [frameRight-(frameWidth/2-bRad*4), frameRight-frameWidth/2, frameRight-(frameWidth/2+bRad*4)];
             by                  = py-bRad;
-            
 
-            
+
+
             disableScroll();
 			// Use math.floor to round down to closest integer.
 			// Use math.random()*2 to generate number between 0 & 2. Math.random() as default randomly generates between 0 & 1.
 			// Therefore initialConditionAssignment will be 0 or 1.
 			//var initialConditionAssignment =  Math.floor(Math.random()*differentResponseTypes.length);
 			// uses initial ConditionAssignment to index differentResponseTypes = ["close","far"];
-			//currentResponseDistance = differentResponseTypes[initialConditionAssignment];            
+			//currentResponseDistance = differentResponseTypes[initialConditionAssignment];
             getUsername1();
         }
         //Addin
@@ -843,7 +950,7 @@
                     indexes.push(i);
             return indexes;
         }
-        function mean(numbers,missID) {         
+        function mean(numbers,missID) {
             // remove misses from array, return mean without misses, and number of misses
             let array = removeAllVals(numbers,missID);
 
@@ -858,19 +965,19 @@
                 document.documentElement.requestFullscreen();
             } else {
                 if (document.exitFullscreen) {
-                document.exitFullscreen(); 
+                document.exitFullscreen();
                 }
             }
         }
-        function disableScroll() { 
-            // Get the current page scroll position 
-            scrollTop = window.pageYOffset || document.documentElement.scrollTop; 
-            scrollLeft = window.pageXOffset || document.documentElement.scrollLeft, 
-            // if any scroll is attempted, set this to the previous value 
-            window.onscroll = function() { 
-            window.scrollTo(scrollLeft, scrollTop); 
-            }; 
-        } 
+        function disableScroll() {
+            // Get the current page scroll position
+            scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            scrollLeft = window.pageXOffset || document.documentElement.scrollLeft,
+            // if any scroll is attempted, set this to the previous value
+            window.onscroll = function() {
+            window.scrollTo(scrollLeft, scrollTop);
+            };
+        }
         function timedContinue() {
             if (dispCont){
             expContext.fillText("Press 'spacebar' to continue.", expCanvas.width/2,expCanvas.height-200);
@@ -902,7 +1009,7 @@
             } else {
                 tRem = duration;
             }
-            
+
             if (drtResp1){
                 if (stimTimes[0]-tRem > rtMin && counter1){
                     rt1.push(stimTimes[0]-tRem);
@@ -925,15 +1032,15 @@
             if (tRem > stimTimes[0]){
                 drtResp1 = false; drtResp2 = false;
                 drtPanels.draw(drtOff);
-            } 
+            }
             if (tRem < stimTimes[0] && tRem > stimTimes[0]-drtDur && (drtResp1==false || drtResp2==false)){
                 drtPanels.draw(drtOn);
-            } 
+            }
             if (tRem < stimTimes[0]-respWin){
                 onsets.push(stimTimes[0]);
                 stimTimes.shift();
                 if (counter1){ // if still true at this point then no response was made to this stimulus
-                    rt1.push(-1); // -1 == a miss                 
+                    rt1.push(-1); // -1 == a miss
                 } else {counter1 = true;}
                 if (counter2){
                     rt2.push(-1);
@@ -962,7 +1069,7 @@
             miss2       = 0;
             score2      = 0;
             teamScore   = 0;
-            p1teamScore = 0;        
+            p1teamScore = 0;
             p2teamScore = 0;
             rt1         = [];
             rt2         = [];
@@ -978,7 +1085,7 @@
                 expContext.fillText("Team Score: "+teamScore,frameLeft+10,frameTop+20);
 
                 expContext.textAlign = "right";
-                expContext.fillText("Team Score: "+teamScore,frameRight-10,frameTop+20);    
+                expContext.fillText("Team Score: "+teamScore,frameRight-10,frameTop+20);
             } else {
                 // Player 1 Score
                 expContext.textAlign = "left";
@@ -986,10 +1093,10 @@
                 expContext.fillStyle = "rgb(0,0,0)";
                 expContext.fillText("P1 Score: "+score1,frameLeft+10,frameTop+20);
                 expContext.fillStyle = "#22BF15";
-                expContext.fillText("Hits: "+hits1,frameLeft+10,frameTop+40);         
+                expContext.fillText("Hits: "+hits1,frameLeft+10,frameTop+40);
                 expContext.fillStyle = "#DA4322";
                 expContext.fillText("Misses: "+miss1,frameLeft+10,frameTop+60);
-                
+
                 // Player 2 Score
                 expContext.textAlign = "right";
                 expContext.fillStyle = "rgb(0,0,0)";
@@ -1031,7 +1138,7 @@
                     counter++;
                 }
             }
-            return angles;       
+            return angles;
         }
         function deg2rad(degrees) {
             var pi = Math.PI;
@@ -1068,10 +1175,13 @@
             })
             paddle1.draw(); paddle1.move(p1Left,p1Right);
             paddle2.draw(); paddle2.move(p2Left,p2Right);
+
+            ws.send(JSON.stringify({'paddle': { 'pos': paddle2.x, 'vel': 0 }}));
+
             scoring();
             drawScore(condOrder,nCurrentBlock);
             trialTime = drawTimer(trialDuration, start, moving);
-            
+
             if (trialTime <= 0){endTrial()};
         }
         function expTrial(){
@@ -1090,7 +1200,7 @@
                 }
                 for (let i = workloadTrials[nCurrentTrial-1]; i<workloadTrials[nCurrentTrial-1]*2; i++){
                     p2Balls.push(new Ball(bx[i%3], p2Colour, i+Math.max(...workloadLevels), bAngles[i]));
-                    allBalls.push(new Ball(bx[i%3], p2Colour, i+Math.max(...workloadLevels), bAngles[i]));                    
+                    allBalls.push(new Ball(bx[i%3], p2Colour, i+Math.max(...workloadLevels), bAngles[i]));
                 }
             } else {
                 for (let i = 0; i<workloadTrials[nCurrentTrial-1]*2; i++){
@@ -1100,7 +1210,26 @@
             paddle1     = new Paddle(p1Start,p1Colour);
             paddle2     = new Paddle(p2Start,p2Colour);
             interval    = setInterval(drawTrial,frameRate);
+
+            readMessages();
         }
+
+        async function readMessages() {
+
+            updatingFromMessagesSentByTheServer = true;
+
+            for await (const message of messages) {
+                let state = JSON.parse(message);
+                paddle1.x = state.paddles[0].pos;
+                // paddle2.x = state.paddles[1].pos;
+
+                if ( ! updatingFromMessagesSentByTheServer)
+                    break;
+
+                // also update the balls positions
+            }
+        }
+
         function practiceTrial(){
             bInPractice = true;
             drtOnsets   = drtStimTimes(respWin,trialDuration/2);
@@ -1111,10 +1240,11 @@
             }
             paddle1     = new Paddle(p1Start,p1Colour);
             paddle2     = new Paddle(p2Start,p2Colour);
-            interval    = setInterval(drawTrial,frameRate); 
+            interval    = setInterval(drawTrial,frameRate);
         }
         function endTrial(){
             clearInterval(interval);
+            updatingFromMessagesSendByTheServer = false;
             clearFrame();
             saveTrial();
             bInTrialBreak=true;
@@ -1128,13 +1258,13 @@
                     interTrial(score1,score2,teamScore,condOrder[nCurrentBlock]);
             }
         }
-        
+
         var p1DRTtrialData;
         var p2DRTtrialData;
         var p1MissEvents;
         var p2MissEvents;
         function saveTrial(){
-			//averageFrameRate = Math.round((eventCount / (rt/1000)) * 1000)/1000; 
+			//averageFrameRate = Math.round((eventCount / (rt/1000)) * 1000)/1000;
             p1DRTtrialData = mean(rt1,missCode);
             p2DRTtrialData = mean(rt2,missCode);
             p1MissEvents = [];
@@ -1148,11 +1278,11 @@
 
             // Save DRT
             drtData.push(nCurrentBlock + "\t" + condOrder[nCurrentBlock] + "\t" + nCurrentTrial + "\t" + workloadTrials[nCurrentTrial-1] + "\t" +  onsets + "\t" + rt1 + "\t" + rt2 + "\t" + p1MissEvents + "\t" + p2MissEvents + "\t" + fa1 + "\t" + fa2 + "\t" + hand1 + "\t" + hand2);
-            
+
             // Save sprite coordinates
-            paddleCoords.push(nCurrentBlock + "\t" + condOrder[nCurrentBlock] + "\t" + nCurrentTrial + "\t" + workloadTrials[nCurrentTrial-1] + "\t" + paddle1.coords + "\t" + paddle2.coords)                 
+            paddleCoords.push(nCurrentBlock + "\t" + condOrder[nCurrentBlock] + "\t" + nCurrentTrial + "\t" + workloadTrials[nCurrentTrial-1] + "\t" + paddle1.coords + "\t" + paddle2.coords)
             allBalls.forEach(function(key) {ballCoords.push(nCurrentBlock + "\t" + condOrder[nCurrentBlock] + "\t" + nCurrentTrial + "\t" + workloadTrials[nCurrentTrial-1] + "\t" +  key.identity + "\t" + key.xCoords + "\t" + key.yCoords)});
-		}	
+		}
 
         function interTrial(p1s, p2s, teams, blockType){
             drawCanvas();
@@ -1166,44 +1296,44 @@
             if (justOncePlease){
                 p1CumScore += parseInt(p1s);
                 p2CumScore += parseInt(p2s);
-                teamCumScore+=parseInt(teams);                
+                teamCumScore+=parseInt(teams);
                 justOncePlease = false;
             }
             if (blockType == "nonCol" || blockType == "com"){
                 expContext.fillText("Player 1:",p1Start+pWidth/2,frameTop+frameHeight/4+100);
                 expContext.fillText("Player 2:",p2Start+pWidth/2,frameTop+frameHeight/4+100);
                 expContext.fillText("Trial Score",frameRight-frameWidth/2,frameTop+frameHeight/4+125);
-                expContext.fillText("Total Score",frameRight-frameWidth/2,frameTop+frameHeight/4+175);   
+                expContext.fillText("Total Score",frameRight-frameWidth/2,frameTop+frameHeight/4+175);
                 expContext.fillText(p1s,p1Start+pWidth/2,frameTop+frameHeight/4+125);
                 expContext.fillText(p2s,p2Start+pWidth/2,frameTop+frameHeight/4+125);
                 expContext.fillText(p1CumScore,p1Start+pWidth/2,frameTop+frameHeight/4+175);
                 expContext.fillText(p2CumScore,p2Start+pWidth/2,frameTop+frameHeight/4+175);
                 //hits
-                expContext.fillText("Hits",frameRight-frameWidth/2,frameTop+frameHeight/4+200); 
+                expContext.fillText("Hits",frameRight-frameWidth/2,frameTop+frameHeight/4+200);
                 expContext.fillText(hits1,p1Start+pWidth/2,frameTop+frameHeight/4+200);
                 expContext.fillText(hits2,p2Start+pWidth/2,frameTop+frameHeight/4+200);
                 //misses
-                expContext.fillText("Misses",frameRight-frameWidth/2,frameTop+frameHeight/4+225); 
+                expContext.fillText("Misses",frameRight-frameWidth/2,frameTop+frameHeight/4+225);
                 expContext.fillText(miss1,p1Start+pWidth/2,frameTop+frameHeight/4+225);
                 expContext.fillText(miss2,p2Start+pWidth/2,frameTop+frameHeight/4+225);
-                
+
             } else { // collaborative
                 expContext.fillText("Player 1:",p1Start+pWidth/2,frameTop+frameHeight/4+100);
                 expContext.fillText("Player 2:",p2Start+pWidth/2,frameTop+frameHeight/4+100);
                 expContext.fillText("Team: ",expCanvas.width/2,frameTop+frameHeight/4);
                 expContext.fillText("Trial Score",p1Start+pWidth/2,frameTop+frameHeight/4+25);
-                expContext.fillText("Total Score",p1Start+pWidth/2,frameTop+frameHeight/4+50); 
+                expContext.fillText("Total Score",p1Start+pWidth/2,frameTop+frameHeight/4+50);
                 expContext.fillText(p1teamScore,p1Start+pWidth/2,frameTop+frameHeight/4+125);
                 expContext.fillText(p2teamScore,p2Start+pWidth/2,frameTop+frameHeight/4+125);
                 expContext.fillText(teams,expCanvas.width/2,frameTop+frameHeight/4+25);
                 expContext.fillText(teamCumScore,expCanvas.width/2,frameTop+frameHeight/4+50);
 
                 //hits
-                expContext.fillText("Hits",frameRight-frameWidth/2,frameTop+frameHeight/4+150); 
+                expContext.fillText("Hits",frameRight-frameWidth/2,frameTop+frameHeight/4+150);
                 expContext.fillText(hits1,p1Start+pWidth/2,frameTop+frameHeight/4+150);
                 expContext.fillText(hits2,p2Start+pWidth/2,frameTop+frameHeight/4+150);
                 //misses
-                expContext.fillText("Misses",frameRight-frameWidth/2,frameTop+frameHeight/4+175); 
+                expContext.fillText("Misses",frameRight-frameWidth/2,frameTop+frameHeight/4+175);
                 expContext.fillText(miss1,p1Start+pWidth/2,frameTop+frameHeight/4+175);
                 expContext.fillText(miss2,p2Start+pWidth/2,frameTop+frameHeight/4+175);
             }
@@ -1211,9 +1341,9 @@
         }
         function expEnd(){
             var paddle_txt   = "block" + "\t" + "groupType" + "\t" + "trlNum" + "\t" + "workload" + "\t" + "paddle1Coords" + "\t" + "paddle2Coords\n";
-            
+
             var ball_txt     = "block" + "\t" + "groupType" + "\t" + "trlNum" + "\t" + "workload" + "\t" + "bID" + "\t" + "xCoords" + "\t" + "yCoords\n";
-            
+
             var score_txt    = "block" + "\t" + "groupType" + "\t" + "trlNum" + "\t" + "workload" + "\t" + "dur" + "\t" + "hits1" + "\t" + "hits2" + "\t" + "miss1" + "\t" + "miss2" + "\t" + "hr1" + "\t" + "hr2" + "\t" + "hrt" + "\t" + "nDRTs" + "\t" + "mrt1" + "\t" + "mrt2" + "\t" + "drtm1" + "\t" + "drtm2" + "\t" + "fa1" + "\t" + "fa2\n";
 
             var drt_txt    = "block" + "\t" + "groupType" + "\t" + "trlNum" + "\t" + "workload" + "\t" + "stimOn" + "\t" + "p1RT" + "\t" + "p2RT" + "\t" + "missT1" + "\t" + "missT2" + "\t" +"faT1" + "\t" + "faT2" + "\t" + "hand1" + "\t" + "hand2\n";
@@ -1236,7 +1366,7 @@
     		var expVarSum       = outputSummary;
             var expVarDRT       = outputDRT;
             var expVarPos       = outputSprites;
-			
+
             var expVarFn1       = username1;
             var expVarFn2       = username2;
 
@@ -1257,7 +1387,7 @@
         	var xhttp = new XMLHttpRequest();
         	xhttp.open("GET", url, true);
 			xhttp.send();
-            
+
             // link participant 2 points
             var url = "https://newcastle.sona-systems.com/services/SonaAPI.svc/WebstudyCredit?experiment_id=1059&credit_token=ef8c1a701a954d229c4e02cd70842ad5&survey_code=" + username2;
         	var xhttp = new XMLHttpRequest();
