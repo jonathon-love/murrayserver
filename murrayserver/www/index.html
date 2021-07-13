@@ -98,7 +98,11 @@ ready(async function() {
 
     // this is the meat and potatoes right here:
 
-    setInterval(() => ws.send('hello'), 500);
+    let data = { 'paddle': { 'pos': 0, 'vel': 5 } };
+
+    setInterval(() => ws.send(JSON.stringify(data)), 2000);
+
+    setInterval(() => { data.paddle.pos = parseInt(Math.random() * 100); }, 10000);
 
     for await (const message of messages) {
         console.log(message);

@@ -1,6 +1,15 @@
 
 from .server import Server
 
-if __name__ == '__main__':
+from asyncio import get_event_loop
+
+
+async def run():
     server = Server()
-    server.run()
+    await server.start()
+
+
+if __name__ == '__main__':
+    loop = get_event_loop()
+    loop.run_until_complete(run())
+    loop.run_forever()
