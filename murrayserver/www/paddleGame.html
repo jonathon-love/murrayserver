@@ -1,0 +1,1269 @@
+<HTML>
+    <HEAD>
+        <script src="/study_assets/paddleGame/libs/jquery-3.3.1.min.js"></script>
+        <script src="/assets/javascripts/jatos.js"></script>
+    </HEAD>
+    <BODY>
+
+    <SCRIPT>
+
+ jatos.onLoad(function() {
+    //var username1 = jatos.studySessionData.username;
+    if (jatos.urlQueryParameters.hasOwnProperty("id")) {
+        //var username = "0"
+        username = jatos.urlQueryParameters.id;
+        jatos.studySessionData["SonaID"] = username1;
+        } 
+    else {
+        username1 = null;
+        jatos.studySessionData["SonaID"] = username1;
+}
+    // set block order based on jatos ids
+    var condOrderID = parseInt(jatos.studyResultId)%6;
+    var condOrders = [
+        ["nonCol","col","com"],
+        ["nonCol","com","col"],
+        ["col","nonCol","com"],
+        ["col","com","nonCol"],
+        ["com","nonCol","col"],
+        ["com","col","nonCol"]
+        ];
+    condOrder = condOrders[condOrderID];
+    initialise();
+});
+
+  </SCRIPT>
+
+    <canvas id="canvas" width = 800 height = 600></canvas>
+    <script>
+        
+    var skipIntro = true;
+
+    // Define variables
+        // Input variables
+
+        var nBlocks             = 3;
+        var nTrials             = 3;
+        var nTotalTrials        = nTrials*nBlocks;
+        //var condOrder;//          = ["nonCol","col","com"];
+
+        // workload
+        var workloadLevels      = [3,6,9]; 
+        var workloadTrials      = new Array(nTrials/workloadLevels.length).fill(workloadLevels).flat();
+        var trialDuration       = 20;           // seconds
+        var dirInst             = 5;            // second intervals to display practice trial instructions
+        var frameRate           = 10;
+        var sharedColour        = "DarkMagenta";
+        var p1Colour            = "FireBrick";
+        var p2Colour            = "RoyalBlue";
+        var frameColour         = "ivory";
+
+        // GameFrame
+        var frameWidth          = 900;
+        var frameHeight         = 600;         
+        var frameLeft;
+        var frameRight;
+        var frameTop;
+        var frameBottom;
+
+        // DRT
+        var drtWidth            = frameWidth*1.12;
+        var drtLeft;
+        var drtRight;
+        var drtOn               = "chartreuse";
+        var drtOff              = "black";
+        var drtMin              = 3;
+        var drtMax              = 5;
+        var respWin             = 2.5;
+        var drtDur              = 1;
+        let drtResp1            = false;
+        let drtResp2            = false;
+        let drtOnsets;
+        var onsets              = [];   // used to save the onset times for each trial
+        var plyr1DRTrespKeyR    = 81;   // Q
+        var plyr2DRTrespKeyR    = 191;  // Question, back-slash
+        var plyr1DRTrespKeyL    = 82;   // R
+        var plyr2DRTrespKeyL    = 220;  // Pipe, forward-slash
+        var plyr1DRTrespKey;
+        var plyr2DRTrespKey;
+        var hand1;
+        var hand2;
+
+        // Timing
+        var startDate;
+		var startTime;
+		var currentTime;
+		var endDate;
+		var endTime;
+		var rt1 = [];
+        var rt2 = [];
+        var fa1 = [];
+        var fa2 = [];
+        var missCode = -1;
+        
+        // Experiment control
+        var nCurrentBlock;
+        var nCurrentTrial;
+        var bInTrial                = false;
+		var bInInstructions1        = false;
+		var bInInstructions2        = false;
+        var bInInstructions3        = false;
+		var bInEndOfBlock           = false;
+		var bInBlockInstructions    = false;
+        var bInPractice             = false;
+        var blockBreakTime          = 2;
+        var trialBreakTime          = 2;
+        var proceed                 = false;
+        var bInTrialBreak           = false;
+        var justOncePlease          = true;
+        var dispCont                = true;
+        
+        //var errorUsernameSendingCounter = 0;
+		//var errorDataSendingCounter = 0;       
+        var username1; 
+        var username2;
+        
+        // Trial Start
+        let startCount          = 0;
+        let start;
+        var interval;
+        var timeout;
+
+        // Paddles
+        var nPaddles            = 2;
+        var pWidth              = frameWidth*0.1;
+        var pHeight             = pWidth*0.12;
+        var pSpeed              = Math.round(pHeight/2);
+        let p1Right             = false;
+        let p1Left              = false;
+        let p2Right             = false;
+        let p2Left              = false;         
+        let p1Start;
+        let p2Start;
+        var py;     
+        var plyr1Left           = "90";         // get the event.which from keycode.info
+        var plyr1Right          = 88;
+        var plyr2Left           = "ArrowLeft";  // event.code
+        var plyr2Right          = "ArrowRight";
+        var p1Hand              = [];
+        var p2Hand              = [];
+        var p1HandChosen        = false;
+        var p2HandChosen        = false;
+        var rtMin               = 0.1; // tenth of a second - used to clean RT times as they're made
+        var counter1 = true; // these are response counters so we don't have 100 RTs saved as hits for each DRT stimulus event.
+        var counter2 = true;
+        
+
+        // Balls
+        var bRad                = pHeight*0.9;
+        var bSpeed              = Math.ceil(pSpeed*0.8);
+        let moving              = false;
+        let lowLim              = 35;
+        let upperLim            = 155;
+        let p1Balls             =[];
+        let p2Balls             =[];
+        let allBalls            =[];
+        var bx;
+        var by;
+        var bAngles;
+
+        // Scoring
+        var hits1               = 0;
+        var miss1               = 0;
+        let score1              = 0;
+        var hits2               = 0;
+        var miss2               = 0;
+        let score2              = 0;
+        var teamScore           = 0;
+        var p1CumScore          = 0;
+        var p2CumScore          = 0;
+        var teamCumScore        = 0;
+        var p1teamScore         = 0;        
+        var p2teamScore         = 0;
+
+        // save Data
+        var paddleCoords        = [];
+        var ballCoords          = [];
+        var scoreData           = [];
+        var drtData             = [];
+		
+        var outputSummary;
+
+        // Sprite Classes
+        class Ball {
+            constructor(x, colour, ballId, angle) {// when you define object, this is where you pass values   
+            this.x      = x;
+            this.y      = by;
+            this.size   = bRad;
+            this.colour = colour;
+            this.speed  = bSpeed;
+            this.angle  = -deg2rad(angle);
+            this.identity = ballId;
+            this.xCoords = [];
+            this.yCoords = [];
+            }
+            move(paddlePos1,paddlePos2){
+                let dx = this.speed*Math.cos(this.angle);
+                let dy = this.speed*Math.sin(this.angle);
+                if (moving){
+                    this.x += dx; this.xCoords.push(this.x);
+                    this.y += dy; this.yCoords.push(this.y);
+                }
+                // collision detection
+                if (this.x > frameRight-bRad || this.x < frameLeft+bRad) {
+                    this.angle = Math.PI-this.angle;
+                }
+                if (this.y < frameTop + bRad) {
+                    this.angle = -this.angle;
+                } 
+                if (this.y > frameBottom) { 
+                    this.y = frameTop + bRad;
+                    if (condOrder[nCurrentBlock]=="nonCol"&& !bInPractice){
+                        if (this.identity < Math.max(...workloadLevels)){
+                            miss1++;
+                        } else {
+                            miss2++;
+                        }
+                    } else {
+                        miss1++;
+                        miss2++;
+                    }
+                }
+                if (this.y > py-bRad && this.y < py) {
+                    if (condOrder[nCurrentBlock]=="nonCol" && !bInPractice){
+                        if (this.identity < Math.max(...workloadLevels)){ // If the ball ID belongs to P1
+                            if (this.x > paddlePos1 - bRad && this.x < paddlePos1 + pWidth + bRad) {
+                                let impact  = (this.x+bRad) - (paddlePos1+(0.5*pWidth));
+                                let offset  = impact/(pWidth*0.5)/2;
+                                if (-this.angle+offset <= -deg2rad(upperLim)){
+                                    this.angle = -this.angle;
+                                } else if (-this.angle+offset>=-deg2rad(lowLim)){
+                                    this.angle = -this.angle;
+                                } else {
+                                    this.angle = -this.angle+offset
+                                }
+                                this.y = py - bRad+1
+                                hits1++;
+                            }
+                        } else {
+                            if (this.x > paddlePos2 - bRad && this.x < paddlePos2 + pWidth + bRad) {
+                                let impact  = (this.x+bRad) - (paddlePos2+(0.5*pWidth));
+                                let offset  = impact/(pWidth*0.5)/2;
+                                if (-this.angle+offset <= -deg2rad(upperLim)){
+                                    this.angle = -this.angle;
+                                } else if (-this.angle+offset>=-deg2rad(lowLim)){
+                                    this.angle = -this.angle;
+                                } else {
+                                    this.angle = -this.angle+offset
+                                }                
+                                this.y = py - bRad+1
+                                hits2++
+                            }
+                        }
+                    } else { // if it's any of the group conditions
+                        if (this.x > paddlePos1 - bRad && this.x < paddlePos1 + pWidth + bRad) {
+                            let impact  = (this.x+bRad) - (paddlePos1+(0.5*pWidth));
+                            let offset  = impact/(pWidth*0.5)/2;
+                            if (-this.angle+offset <= -deg2rad(upperLim)){
+                                this.angle = -this.angle;
+                            } else if (-this.angle+offset>=-deg2rad(lowLim)){
+                                this.angle = -this.angle;
+                            } else {
+                                this.angle = -this.angle+offset
+                            }
+                            this.y = py - bRad+1
+                            if (this.x > paddlePos2 && this.x < paddlePos2 + pWidth) {
+                                hits1 += 0.5;
+                                hits2 += 0.5;
+                            } else {
+                                hits1++;
+                            }
+                        } else if (this.x > paddlePos2 - bRad && this.x < paddlePos2 + pWidth + bRad) {
+                            let impact  = (this.x+bRad) - (paddlePos2+(0.5*pWidth));
+                            let offset  = impact/(pWidth*0.5)/2;
+                            if (-this.angle+offset <= -deg2rad(upperLim)){
+                                this.angle = -this.angle;
+                            } else if (-this.angle+offset>=-deg2rad(lowLim)){
+                                this.angle = -this.angle;
+                            } else {
+                                this.angle = -this.angle+offset
+                            }                
+                            this.y = py - bRad+1
+                            hits2++                      
+                        }
+                    }
+                }
+            }
+            draw(){
+                expContext.beginPath();
+                expContext.arc(this.x, this.y, this.size, 0, Math.PI*2);
+                expContext.fillStyle = this.colour;
+                expContext.fill();
+                expContext.stroke();
+                //expContext.closePath();
+            }
+        }
+        class Paddle {
+            constructor(x,colour){
+                this.x      = x;
+                this.colour = colour;
+                this.coords = [];
+                }
+            move(mvLeft = false, mvRight = false) {
+                if(moving){
+                    this.coords.push(this.x);
+                }
+                if (mvLeft){
+                    this.x -= pSpeed;
+                    if (this.x < frameLeft) {
+                        this.x = frameLeft;
+                    }
+                }
+                if (mvRight){
+                    this.x  += pSpeed;
+                    if (this.x + pWidth > frameRight){
+                        this.x = frameRight - pWidth;
+                    }
+                }
+            }
+
+            draw(){
+                expContext.beginPath();
+                expContext.rect(this.x,py,pWidth,pHeight);
+                expContext.fillStyle = this.colour;
+                expContext.fill();
+                expContext.stroke();
+            }
+        }
+        class DRT {
+            constructor(){
+            }
+            draw(drtColour){
+                expContext.beginPath();
+                expContext.rect(drtLeft,frameTop,drtWidth,frameHeight);
+                expContext.fillStyle = drtColour;
+                expContext.fill();
+                expContext.stroke();
+            }        
+        }
+     
+        function roundedRect(ctx,x,y,width,height,radius,fill,stroke){
+            ctx.strokeStyle = "white";
+            ctx.beginPath();
+            // draw top and top right corner
+            ctx.moveTo(x+radius,y);
+            ctx.arcTo(x+width,y,x+width,y+radius,radius);
+            // draw right side and bottom right corner
+            ctx.arcTo(x+width,y+height,x+width-radius,y+height,radius); 
+            // draw bottom and bottom left corner
+            ctx.arcTo(x,y+height,x,y+height-radius,radius);
+            // draw left and top left corner
+            ctx.arcTo(x,y,x+radius,y,radius);
+            if(fill){
+                ctx.fill();
+            }
+            if(stroke){
+                ctx.stroke();
+            }
+            ctx.strokeStyle = "black";
+        }  
+        function drawKeyDepth(x, y) {
+            expContext.strokeStyle = "white";
+            expContext.beginPath();
+            expContext.moveTo(x - 10, y - 10);
+            expContext.lineTo(x + 30, y + 30);
+            expContext.moveTo(x + 29, y - 9);
+            expContext.lineTo(x - 10, y + 29);
+            expContext.stroke();
+            expContext.strokeStyle = "black";
+        }
+        function drawKey(ctx, faceVal, x, y, width, height, radius, fill, stroke, specialChar){
+            // Perimeter / Base
+            ctx.lineWidth = 4;
+            roundedRect(ctx,x-10,y-10,width, height, radius, false, stroke);           
+            // Key top
+            expContext.lineWidth = 3;
+            drawKeyDepth(x,y);
+            expContext.fillStyle = "black";
+            roundedRect(ctx,x-5,y-6,width-10,height-10, radius-1, true, stroke);
+            // Key Content
+            expContext.fillStyle = "white";         
+            if (specialChar){ // used for the directional arrows
+                var uni = '"\\u' + faceVal+'"';
+                var faceVal = eval(uni);
+            } 
+            expContext.fillText(faceVal, x+10, y+10);
+            ctx.lineWidth = 1;
+        }
+        function keyInsts(p1, p2, drt1, drt2){
+            // Player 1 Keys
+            if (p1){        
+                expContext.fillStyle = p1Colour;
+                expContext.fillText("Player 1:", expCanvas.width/3+15,expCanvas.height/2-25);
+                expContext.fillStyle = "white";
+                if (drt1 == plyr1DRTrespKeyR){
+                    drawKey(expContext,"Q",expCanvas.width/3-15,expCanvas.height/2, 40, 40, 3,true,true,false);
+                } else if (drt1 == plyr1DRTrespKeyL){
+                    drawKey(expContext,"R",expCanvas.width/3+15,expCanvas.height/2, 40, 40, 3,true,true,false);
+                }
+                drawKey(expContext,"Z",expCanvas.width/3-25,expCanvas.height/2+50, 40, 40, 3,true,true,false);
+                drawKey(expContext,"X",expCanvas.width/3+25,expCanvas.height/2+50, 40, 40, 3,true,true,false);
+                expContext.fillText("Left", expCanvas.width/3-30,expCanvas.height/2+100);
+                expContext.fillText("Right", expCanvas.width/3+50,expCanvas.height/2+100);
+                expContext.fillText("Response", expCanvas.width/3-80,expCanvas.height/2+15);
+            // Hand instructions
+                expContext.fillText("Hand:", expCanvas.width/2,expCanvas.height/2-25);
+                expContext.fillText("Non-Dominant", expCanvas.width/2,expCanvas.height/2+15);
+                expContext.fillText("Dominant Hand", expCanvas.width/2,expCanvas.height/2+60);
+            }
+            
+            if (p2){
+            // Player 2 Keys
+                expContext.fillStyle = p2Colour;
+                expContext.fillText("Player 2:", expCanvas.width*.67+15,expCanvas.height/2-25);
+                expContext.fillStyle = "white";
+                if (drt2 == plyr2DRTrespKeyR){
+                    drawKey(expContext,"?/",expCanvas.width*0.67-15,expCanvas.height/2, 40, 40, 3,true,true,false);
+                } else if (drt2 == plyr2DRTrespKeyL){
+                    drawKey(expContext,"| \\",expCanvas.width*.67+15,expCanvas.height/2, 40, 40, 3,true,true,false);
+                }
+                drawKey(expContext,"2190",expCanvas.width*.67-25,expCanvas.height/2+50, 40, 40, 3,true,true,true);
+                drawKey(expContext,"2192",expCanvas.width*.67+25,expCanvas.height/2+50, 40, 40, 3,true,true,true);
+                expContext.fillText("Left", expCanvas.width*.67-30,expCanvas.height/2+100);
+                expContext.fillText("Right", expCanvas.width*.67+50,expCanvas.height/2+100);
+                expContext.fillText("Response", expCanvas.width*.67+100,expCanvas.height/2+15);
+            }
+        }
+
+        // Handling input
+        document.addEventListener("keydown",keyDownHandler, false);
+        document.addEventListener("keyup", keyUpHandler, false);
+        function keyDownHandler(e) {
+            if (e.keyCode == plyr1Right) { // d
+                p1Right = true;
+            } else if (e.keyCode == plyr1Left) { // a
+                p1Left = true;
+            }
+            if (e.key == plyr2Right) {
+                p2Right = true;
+            } else if (e.key == plyr2Left) {
+                p2Left = true;
+            }
+            if (e.keyCode == plyr1DRTrespKey) {
+                drtResp1 = true;
+            } else if (e.keyCode == plyr2DRTrespKey) {
+                drtResp2 = true;
+            }
+            /*if (e.key === "Enter"){
+                toggleFullScreen();
+            }*/
+            if (event.keyCode === 9){// Disable Tab key function
+                event.preventDefault();
+            }    
+
+            if (bInInstructions1){
+				if (event.keyCode == 32) {
+                    event.preventDefault();
+                    bInInstructions1 = false;
+                    instructions2();
+                }
+            } else if (bInInstructions2){
+                if (p1Hand.length == 0 && !p1HandChosen){
+                    if (e.keyCode == plyr1DRTrespKeyR){
+                        p1Hand.push(plyr1DRTrespKeyR);
+                        plyr1DRTrespKey = plyr1DRTrespKeyR;
+                        hand1 = 'right';
+                        p1HandChosen = true;
+                    } else if (e.keyCode == plyr1DRTrespKeyL && !p1HandChosen){
+                        p1Hand.push(plyr1DRTrespKeyL);
+                        plyr1DRTrespKey = plyr1DRTrespKeyL;
+                        hand1 = 'left';
+                        p1HandChosen = true;
+                    }
+                } 
+                if (p1Hand.length == 1 && p1HandChosen){
+                    expContext.fillText("Player 2, please indicate if you are right-handed by pressing '?/' or if you are left-handed press '|\\' (above enter').",expCanvas.width/2,expCanvas.height/4+75);
+                    keyInsts(true,false,plyr1DRTrespKey,plyr2DRTrespKey);
+                    p1HandChosen = false;
+                }
+                if (p2Hand.length == 0 && !p2HandChosen){
+                    if (e.keyCode == plyr2DRTrespKeyR){
+                        p2Hand.push(plyr2DRTrespKeyR);
+                        plyr2DRTrespKey = plyr2DRTrespKeyR;
+                        hand2 = 'right';
+                        p2HandChosen = true;
+                    } else if (e.keyCode == plyr2DRTrespKeyL){
+                        p2Hand.push(plyr2DRTrespKeyL);
+                        plyr2DRTrespKey = plyr2DRTrespKeyL;
+                        hand2 = 'left';
+                        p2HandChosen = true;
+                    }
+                }
+                if (p2Hand.length == 1){
+                    if (p2HandChosen){
+                        keyInsts(false,true,plyr1DRTrespKey,plyr2DRTrespKey);
+                        expContext.fillText("Press 'spacebar' to continue", expCanvas.width*.75,expCanvas.height-50);
+                        p2HandChosen = false;
+                    }
+                    if (event.keyCode == 32) {
+                        event.preventDefault();
+                        bInInstructions2 = false;
+                        instructions3();
+                        keyInsts(true,true,plyr1DRTrespKey,plyr2DRTrespKey);
+                    }
+                } else if (event.keyCode == 66){ // b
+                    bInstructions2 = false;
+                    instructions1();
+                }
+            } else if (bInInstructions3){
+                if (event.keyCode == 32) {
+                    event.preventDefault();
+                    bInInstructions3 = false;
+                    
+                    if (skipIntro){
+                        blockInst(condOrder,nCurrentBlock);
+                    } else {
+                        practiceTrial();
+                    }
+                } else if (event.keyCode == 66){ // b
+                    bInstructions3 = false;
+                    p1HandChosen = true;
+                    p2HandChosen = true;
+                    instructions2();
+                    keyInsts(true,true,plyr1DRTrespKey,plyr2DRTrespKey);
+                    expContext.fillText("Player 2, please indicate if you are right-handed by pressing '?/' or if you are left-handed press '|\\' (above enter').",expCanvas.width/2,expCanvas.height/4+75);
+                    expContext.fillText("Press 'spacebar' to continue", expCanvas.width*.75,expCanvas.height-50);
+                    expContext.fillStyle = "red";	
+                    expContext.font="30px Arial";
+                    expContext.fillText("Controls cannot be changed.",expCanvas.width/2,expCanvas.height/4);
+                    expContext.fillStyle = frameColour;	
+                    expContext.font="16px Arial";
+                }
+            }
+            if (bInTrial){
+                if (startCount == 0){
+                    if (event.keyCode == 32){
+                        event.preventDefault();
+                        startCount++
+                        moving  = true;
+                        start   = new Date();
+                    }
+                }
+                if (event.keyCode == plyr1DRTrespKey){ 
+                    event.preventDefault();
+                    drtResp1 = true;
+                }
+                if (event.keyCode == plyr2DRTrespKey){ 
+                    event.preventDefault();
+                    drtResp2 = true;
+                }
+            }
+            if (bInBlockInstructions){
+                if (event.keyCode == 32 && proceed){
+                    clearTimeout(timeout);
+                    nCurrentTrial = 1;
+                    scoreReset();
+                    expTrial();
+                    proceed = false;
+                    bInBlockInstructions = false;
+                    bInPractice = false;
+                }
+            }
+            if (bInTrialBreak){
+                if (event.keyCode == 32 && proceed){
+                    nCurrentTrial++;
+                    bInTrialBreak = false;
+                    scoreReset();
+                    if (nCurrentTrial<=nTrials){
+                        expTrial();
+                    } else if(nCurrentTrial>nTrials){
+                        nCurrentBlock++;
+                        if (nCurrentBlock == nBlocks){
+                            expEnd();
+                        } else {
+                            blockInst(condOrder,nCurrentBlock);
+                        }
+                    }
+                    proceed = false;
+                }
+            }
+        }  
+        function keyUpHandler(e) {
+            if (e.keyCode == plyr1Right) { //d
+                p1Right = false;
+            } else if (e.keyCode == plyr1Left) { //a
+                p1Left  = false;
+            }
+            if (e.key == plyr2Right) {
+                p2Right = false;
+            } else if (e.key == plyr2Left) {
+                p2Left  = false;
+            }
+            // DRT Response
+            if (e.key == plyr1DRTrespKey) {
+                drtResp1 = false;
+            } else if (e.key == plyr2DRTrespKey) {
+                drtResp2  = false;
+            }
+        }
+
+        // Set Instructions
+        function instructions1(){
+            bInInstructions1 = true;
+            drawCanvas();      
+			expContext.fillStyle = frameColour;	
+            expContext.font="30px Arial";
+			expContext.textAlign = "center";
+            expContext.fillText("Welcome to Team Spirit!",expCanvas.width/2,expCanvas.height/4-100);
+            expContext.font="16px Arial";
+            expContext.fillText("This experiment will examine your performance during a multiplayer arcade-style game.",expCanvas.width/2,expCanvas.height/4-50);
+            expContext.fillText("1/3", expCanvas.width*.75,25);
+            expContext.fillText("The game involves a set of balls flying around the screen and two paddles.",expCanvas.width/2,expCanvas.height/4);
+            expContext.fillText("Your task is to move your assigned paddle to deflect as many balls as you can within the time limit.",expCanvas.width/2,expCanvas.height/4+25);
+            expContext.fillText("You score points for each 'hit' and lose points for each 'miss'. The time remaining and your score will be displayed throughout each trial.",expCanvas.width/2,expCanvas.height/4+50);
+
+            expContext.fillText("The game runs over 3 blocks of 12 trials, where each trial lasts 60 seconds.", expCanvas.width/2,expCanvas.height/4+100);
+            expContext.fillText("There is a forced 20 second break between blocks but you can break for as long as you need.", expCanvas.width/2,expCanvas.height/4+125);
+            expContext.fillText("The experiment will take approximately 45 minutes and you will be reimbursed 1 SONA point per half hour.", expCanvas.width/2,expCanvas.height/4+150);
+            expContext.fillText("You may exit the study at any time without penalty by pressing 'Esc' or closing your browser window.", expCanvas.width/2,expCanvas.height/4+175);
+
+            expContext.fillText("Press 'spacebar' to continue", expCanvas.width*.75,expCanvas.height-50);
+        }
+        function instructions2(){
+            bInInstructions2 = true;
+            drawCanvas();                
+            expContext.fillStyle = "white";
+            expContext.fillText("2/3", expCanvas.width*.75,25);
+            expContext.fillText("Player 1 paddle is red and begins each trial on the left. Your score is shown in the top left corner of each trial.",expCanvas.width/2,expCanvas.height/4-50);
+            expContext.fillText("Player 2 paddle is blue and begins each trial on the right. Your score is shown in the top right corner of each trial.",expCanvas.width/2,expCanvas.height/4-25);
+            expContext.fillText("You should assign yourselves as one of these players now. Do not change your players once you have selected it.",expCanvas.width/2,expCanvas.height/4+25);
+            //expContext.fillText("The key controls for each player will be shown below shortly.",expCanvas.width/2,expCanvas.height/4+50);
+            expContext.fillText("Player 1, please indicate if you are right-handed by pressing 'Q' or if you are left-handed press 'R'.",expCanvas.width/2,expCanvas.height/4+50);
+
+            expContext.fillText("Please ensure that your dominant hand controls the directional keys, and your non-dominant hand controls the response key.",expCanvas.width/2,expCanvas.height-125);
+            expContext.fillText("Press 'b' to return", expCanvas.width*.25,expCanvas.height-50);
+        }
+        function instructions3(){
+            bInInstructions3 = true;
+            drawCanvas();
+            expContext.fillRect(0, 0, expCanvas.width, expCanvas.height);
+			expContext.fillStyle = frameColour;
+			expContext.font="16px Arial";
+			expContext.textAlign = "center";
+            expContext.fillText("3/3", expCanvas.width*.75,25);
+            expContext.fillText("A green light will also flash along the side of the playing screen throughout the experiment.",expCanvas.width/2,expCanvas.height/4-100);
+            expContext.fillText("The light will display briefly or until both players respond.",expCanvas.width/2,expCanvas.height/4-50);
+            expContext.fillText("You can still respond to the light a brief time after it disappears.",expCanvas.width/2,expCanvas.height/4-25);
+            expContext.fillText("Respond quickly and accurately to the light.",expCanvas.width/2,expCanvas.height/4);
+            expContext.fillText("The response key for each player is shown below.",expCanvas.width/2,expCanvas.height/4+25);
+            expContext.fillText("A walkthrough trial will commence following this screen.",expCanvas.width/2,expCanvas.height/4+50);
+            
+            expContext.fillText("Please ensure that your dominant hand controls the directional keys, and your non-dominant hand controls the response key.",expCanvas.width/2,expCanvas.height-125);
+            expContext.fillText("Press 'spacebar' to continue", expCanvas.width*.75,expCanvas.height-50);
+            expContext.fillText("Press 'b' to return", expCanvas.width*.25,expCanvas.height-50);
+        }
+
+        function drawPracInst(time){
+            expContext.fillStyle = "red";
+            expContext.fillText("PRACTICE TRIAL",frameLeft+frameWidth/2,frameTop+50);
+            expContext.fillStyle = "black";
+            if (!moving){
+                expContext.font = "20 px Arial";
+                expContext.fillStyle = "rgb(0,0,0)";
+                expContext.fillText("Each trial contains a different number of balls but",frameLeft+frameWidth/2,frameBottom-frameHeight/4-25);
+                expContext.fillText("they will always start from this position.",frameLeft+frameWidth/2,frameBottom-frameHeight/4);
+                expContext.fillText("Press 'space bar' to start the trial",frameLeft+frameWidth/2,frameBottom-frameHeight/4+25);
+            } else if (time > trialDuration-dirInst){
+                expContext.fillText("Player 1:",p1Start+pWidth/2,frameBottom-frameHeight/4-25);
+                expContext.fillText("Press 'a' to move left",p1Start+pWidth/2,frameBottom-frameHeight/4);
+                expContext.fillText("Press 's' to move right",p1Start+pWidth/2,frameBottom-frameHeight/4+25);
+                //expContext.textAlign = "left";
+                expContext.fillText("Player 2:",p2Start+pWidth/2,frameBottom-frameHeight/4-25);
+                expContext.fillText("Press 'left arrow' to move left",p2Start+pWidth/2,frameBottom-frameHeight /4);
+                expContext.fillText("Press 'right arrow' to move right",p2Start+pWidth/2,frameBottom-frameHeight/4+25);
+            } else if (time < trialDuration-dirInst && time > trialDuration-dirInst*4){
+                expContext.fillText("Overall score is computed from your hits AND misses!",expCanvas.width/2,frameTop+frameHeight/5);
+                ;
+                expContext.fillText("If both paddles hit the same ball at the same time you score half a hit-point each.",expCanvas.width/2,frameTop+frameHeight/5+20);
+            } else if (time < trialDuration-dirInst && time > trialDuration-dirInst*5){
+                expContext.fillText("Trials last 60 seconds.",expCanvas.width/2,frameTop+frameHeight/5);
+                expContext.fillText("Your score can be seen throughout the trial.",expCanvas.width/2,frameTop+frameHeight/5+20);
+                expContext.fillText("The maximum score for a trial is 1000.",expCanvas.width/2,frameTop+frameHeight/5+40);
+                
+            } else if (time < trialDuration-dirInst*5 && time > trialDuration-dirInst*8){
+                expContext.fillText("The panels on the side have now been activated.",expCanvas.width/2,frameTop+frameHeight/5);
+                expContext.fillText("They will regularly flash green throughout the game.",expCanvas.width/2,frameTop+frameHeight/5+20);
+                expContext.fillText("The light stays on briefly or until both players respond.",expCanvas.width/2,frameTop+frameHeight/5+40);
+                expContext.fillText("You need to respond as quickly and accurately as possible.",expCanvas.width/2,frameTop+frameHeight/5+60);
+
+                expContext.fillText("Player 1:",p1Start+pWidth/2,frameBottom-frameHeight/4-25);
+                expContext.fillText("Press 'q'",p1Start+pWidth/2,frameBottom-frameHeight/4);
+                
+                expContext.fillText("Player 2:",p2Start+pWidth/2,frameBottom-frameHeight/4-25);
+                expContext.fillText("Press '?/'",p2Start+pWidth/2,frameBottom-frameHeight/4);
+            }
+        }
+        function blockInst(blockTypes,count){
+            drawCanvas();
+            bInBlockInstructions    = true;
+            workloadTrials          = trialShuffle(workloadTrials);
+            count++;
+            p1CumScore  = 0; // the cumulative scores for both players throughout each block
+            p2CumScore  = 0;
+            scoreReset();
+			expContext.fillStyle    = frameColour;
+            expContext.font         ="16px Arial";
+            expContext.textAlign    = "center";
+            if (count !== 1){
+                expContext.fillText("Please take a short 20 second break before beginning the next block.",expCanvas.width/2, expCanvas.height/4-150);
+            }
+            expContext.fillText("You will now begin block "+count+" of "+nBlocks,expCanvas.width/2,expCanvas.height/4-100);
+            count--;
+            if (blockTypes[count] == "nonCol"){
+                expContext.fillText("During this block you will only be able to interact with balls that match the colour of your paddle.",expCanvas.width/2,expCanvas.height/4-50);
+            } else if (blockTypes[count] == "col"){
+                expContext.fillText("During this block you must work together.",expCanvas.width/2,expCanvas.height/4-25);
+                expContext.fillText("Both of your hits and misses count toward the team score.",expCanvas.width/2,expCanvas.height/4);
+            } else if (blockTypes[count] == "com"){
+                expContext.fillText("During this block you must compete against each other to outscore your opponent.",expCanvas.width/2,expCanvas.height/4-50);
+                expContext.fillText("Any 'miss' is scored against you both but your 'hits' are your own.",expCanvas.width/2,expCanvas.height/4-25);
+            }
+            expContext.fillText("Score as high as you can but don't forget to",expCanvas.width/2,expCanvas.height/4+25);
+            expContext.fillText("respond quickly and accurately to the flashing light.",expCanvas.width/2,expCanvas.height/4+50);
+            if (count == 0){
+                timeout = setTimeout(timedContinue,trialBreakTime*1000);
+            } else {
+                timeout = setTimeout(timedContinue,blockBreakTime*1000);
+            }
+        }
+        
+        // Set Functions
+		function initialise() {
+			nCurrentBlock       = 0; // start at zero
+			expCanvas           = document.getElementById("canvas");
+			expContext          = expCanvas.getContext("2d");
+			expCanvas.width     = document.body.clientWidth;
+			expCanvas.height    = document.body.clientHeight;
+			expContext.fillStyle= frameColour;
+			expContext.fillRect(0, 0, expCanvas.width, expCanvas.height);
+            frameLeft           = expCanvas.width/2 - frameWidth/2;
+			frameRight          = frameLeft + frameWidth;
+			frameTop            = expCanvas.height/2 - frameHeight/2;
+			frameBottom         = frameTop + frameHeight;
+            //DRT Panels
+            drtLeft             = expCanvas.width/2 - drtWidth/2;
+			drtRight            = drtLeft + drtWidth;
+			// Sprite positions
+            p1Start             = frameLeft+(frameWidth*0.33 - pWidth/2);
+            p2Start             = frameRight-(frameWidth*0.33 + pWidth/2);
+            py                  = frameBottom - pHeight*3;
+            bx                  = [frameRight-(frameWidth/2-bRad*4), frameRight-frameWidth/2, frameRight-(frameWidth/2+bRad*4)];
+            by                  = py-bRad;
+            
+
+            
+            disableScroll();
+			// Use math.floor to round down to closest integer.
+			// Use math.random()*2 to generate number between 0 & 2. Math.random() as default randomly generates between 0 & 1.
+			// Therefore initialConditionAssignment will be 0 or 1.
+			//var initialConditionAssignment =  Math.floor(Math.random()*differentResponseTypes.length);
+			// uses initial ConditionAssignment to index differentResponseTypes = ["close","far"];
+			//currentResponseDistance = differentResponseTypes[initialConditionAssignment];            
+            getUsername1();
+        }
+        //Addin
+        function getUsername1() {
+            //var username = jatos.studySessionData.SonaID;
+            if (username1 == null) {
+                username1 = prompt("Participant 1, please enter your 5 digit SONA ID");
+                getUsername1();
+            }
+            else if (username1.length != 5) {
+                username1 = prompt("Participant 1, please enter your 5 digit SONA ID");
+                //getUsername();
+                confirmUsername1();
+            }
+            else if (username1 != null && username1.length == 5) {
+                //confirmUsername();
+                confirmUsername1();
+            }
+        }
+        function getUsername2() {
+            //var username = jatos.studySessionData.SonaID;
+            if (username2 == null) {
+                username2 = prompt("Participant 2, please enter your 5 digit SONA ID");
+                getUsername2();
+            }
+            else if (username2.length != 5) {
+                username2 = prompt("Participant 2, please enter your 5 digit SONA ID");
+                //getUsername();
+                confirmUsername2();
+            }
+            else if (username2 != null && username2.length == 5) {
+                //confirmUsername();
+                confirmUsername2();
+            }
+        }
+        function confirmUsername1() {
+            if (username1.length!= 5) {
+                alert("Please ensure participant 1 username is 5 numerical characters long");
+                getUsername1();
+            }
+            else {
+                getUsername2()
+            }
+        }
+        function confirmUsername2() {
+            if (username2.length!=5){
+                alert("Please ensure participant 2 username is 5 numerical characters long");
+                getUsername2();
+            } else {
+                instructions1();
+            }
+        }
+
+        function removeAllVals(arr, value) {
+            var i = 0;
+            let eventN = 0; // number of items removed from list
+            let ePos = getAllIndexes(arr,value);
+            while (i < arr.length) {
+                if(arr[i] === value) {
+                    arr.splice(i, 1);
+                    eventN += 1;
+                } else {
+                    ++i;
+                }
+            }
+            return [arr,eventN, ePos];
+        }
+        function getAllIndexes(arr, val) {
+            var indexes = [], i;
+            for(i = 0; i < arr.length; i++)
+                if (arr[i] === val)
+                    indexes.push(i);
+            return indexes;
+        }
+        function mean(numbers,missID) {         
+            // remove misses from array, return mean without misses, and number of misses
+            let array = removeAllVals(numbers,missID);
+
+            var total = 0, i;
+            for (i = 0; i < array[0].length; i += 1) {
+                total += array[0][i];
+            }
+            return [total / array[0].length, array[1], array[2]];
+        }
+        function toggleFullScreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                if (document.exitFullscreen) {
+                document.exitFullscreen(); 
+                }
+            }
+        }
+        function disableScroll() { 
+            // Get the current page scroll position 
+            scrollTop = window.pageYOffset || document.documentElement.scrollTop; 
+            scrollLeft = window.pageXOffset || document.documentElement.scrollLeft, 
+            // if any scroll is attempted, set this to the previous value 
+            window.onscroll = function() { 
+            window.scrollTo(scrollLeft, scrollTop); 
+            }; 
+        } 
+        function timedContinue() {
+            if (dispCont){
+            expContext.fillText("Press 'spacebar' to continue.", expCanvas.width/2,expCanvas.height-200);
+            proceed = true;
+            }
+        }
+        function drawCanvas(){
+            expContext.fillStyle = "rgb(0,0,0)";
+			expContext.fillRect(0, 0, expCanvas.width, expCanvas.height);
+        }
+        function clearCanvas(){
+            expContext.clearRect(0, 0, expCanvas.width, expCanvas.height);
+        }
+        function drawFrame(){
+            expContext.beginPath();
+            expContext.rect(frameLeft,frameTop,frameWidth,frameHeight);
+            expContext.fillStyle = frameColour;
+            expContext.fill();
+            expContext.stroke();
+        }
+        function clearFrame(){
+            expContext.clearRect(frameLeft,frameTop,frameWidth,frameHeight);
+        }
+        function drawDRT(stimTimes,duration,start,trialBegin = false){
+            let tRem;
+            let drtTimer = new Date();
+            if (trialBegin){
+                tRem = (-(drtTimer.getTime()-start)/1000)+duration;
+            } else {
+                tRem = duration;
+            }
+            
+            if (drtResp1){
+                if (stimTimes[0]-tRem > rtMin && counter1){
+                    rt1.push(stimTimes[0]-tRem);
+                    counter1 = false;
+                } else {
+                    fa1.push(tRem);
+                }
+                drtResp1 = false;
+            }
+            if(drtResp2){
+                if (stimTimes[0]-tRem > rtMin && counter2){
+                    rt2.push(stimTimes[0]-tRem);
+                    counter2=false;
+                } else {
+                    fa2.push(tRem);
+                }
+                drtResp2 = false;
+            }
+
+            if (tRem > stimTimes[0]){
+                drtResp1 = false; drtResp2 = false;
+                drtPanels.draw(drtOff);
+            } 
+            if (tRem < stimTimes[0] && tRem > stimTimes[0]-drtDur && (drtResp1==false || drtResp2==false)){
+                drtPanels.draw(drtOn);
+            } 
+            if (tRem < stimTimes[0]-respWin){
+                onsets.push(stimTimes[0]);
+                stimTimes.shift();
+                if (counter1){ // if still true at this point then no response was made to this stimulus
+                    rt1.push(-1); // -1 == a miss                 
+                } else {counter1 = true;}
+                if (counter2){
+                    rt2.push(-1);
+                } else {counter2 = true;}
+            }
+
+            expContext.fill();
+            expContext.stroke();
+        }
+        function scoring(){
+            if (hits1 == 0){score1=0} else {score1=(Math.round((hits1/(hits1+miss1))*1000)).toFixed(0)}
+            if (hits2 == 0){score2=0} else {score2=(Math.round((hits2/(hits2+miss2))*1000)).toFixed(0)}
+            if(condOrder[nCurrentBlock]=="col" || condOrder[nCurrentBlock]=="com"){
+                if (hits1 == 0 && hits2 == 0){
+                    teamScore = 0;
+                }   else {
+                    teamScore = (Math.round(((hits1+hits2)/(hits1+hits2+miss1))*1000)).toFixed(0);
+                }
+            }
+        }
+        function scoreReset(){
+            hits1       = 0;
+            miss1       = 0;
+            score1      = 0;
+            hits2       = 0;
+            miss2       = 0;
+            score2      = 0;
+            teamScore   = 0;
+            p1teamScore = 0;        
+            p2teamScore = 0;
+            rt1         = [];
+            rt2         = [];
+            fa1         = [];
+            fa2         = [];
+            onsets      = [];
+        }
+        function drawScore(blockType,currentBlock){
+            if (blockType[currentBlock]=="col"){
+                expContext.textAlign = "left";
+                expContext.font = "16px Arial";
+                expContext.fillStyle = "rgb(0,0,0)";
+                expContext.fillText("Team Score: "+teamScore,frameLeft+10,frameTop+20);
+
+                expContext.textAlign = "right";
+                expContext.fillText("Team Score: "+teamScore,frameRight-10,frameTop+20);    
+            } else {
+                // Player 1 Score
+                expContext.textAlign = "left";
+                expContext.font = "16px Arial";
+                expContext.fillStyle = "rgb(0,0,0)";
+                expContext.fillText("P1 Score: "+score1,frameLeft+10,frameTop+20);
+                expContext.fillStyle = "#22BF15";
+                expContext.fillText("Hits: "+hits1,frameLeft+10,frameTop+40);         
+                expContext.fillStyle = "#DA4322";
+                expContext.fillText("Misses: "+miss1,frameLeft+10,frameTop+60);
+                
+                // Player 2 Score
+                expContext.textAlign = "right";
+                expContext.fillStyle = "rgb(0,0,0)";
+                expContext.fillText("P2 Score: "+score2,frameRight-10,frameTop+20);
+                expContext.fillStyle = "#22BF15";
+                expContext.fillText("Hits: "+hits2,frameRight-10,frameTop+40);
+                expContext.fillStyle = "#DA4322";
+                expContext.fillText("Misses: "+miss2,frameRight-10,frameTop+60);
+            }
+        }
+        function drawTimer(duration, start, trialBegin = false){
+            let timeRemaining;
+            let startTime = new Date();
+            if (trialBegin){
+                timeRemaining = (-(startTime.getTime()-start)/1000)+duration;
+            } else {
+                timeRemaining = duration;
+            }
+            let dispTime = timeRemaining.toFixed(2);
+            expContext.font = "16px Arial";
+            expContext.fillStyle = "rgb(0,0,0)";
+            expContext.textAlign = "center";
+            expContext.fillText(dispTime+'s',frameLeft+frameWidth/2,frameTop+20);
+
+            if (bInPractice){
+                drawPracInst(timeRemaining);
+            }
+            return timeRemaining;
+        }
+        function uniqueAngles(nBalls,min,max) {
+            let counter = 0;
+            let angles = new Array();
+            while (counter < nBalls*2){
+                let newAngle = Math.floor(Math.random()*(max-min)+min);
+                if (angles.includes(newAngle)) {
+                    continue;
+                } else{
+                    angles.push(newAngle);
+                    counter++;
+                }
+            }
+            return angles;       
+        }
+        function deg2rad(degrees) {
+            var pi = Math.PI;
+            return degrees*(pi/180);
+        }
+        function randRange(min,max){
+            return Math.random()*(max-min)+min;
+        }
+        function trialShuffle(trialTypes){
+            for (let i = trialTypes.length - 1; i > 0; i--) {
+                let j = Math.floor(Math.random() * (i + 1)); // random index from 0 to i
+                [trialTypes[i], trialTypes[j]] = [trialTypes[j], trialTypes[i]];
+            }
+            return trialTypes;
+        }
+        function drtStimTimes(min,max){
+            let drtTimes    = [max-randRange(drtMin,drtMax)];
+            while (drtTimes.slice(-1)>min){
+                drtTimes.push(drtTimes.slice(-1)-randRange(drtMin,drtMax));
+            }
+            drtTimes.pop()
+            return drtTimes;
+        }
+        function drawTrial(){
+            bInTrial = true;
+            bInTrialBreak = false
+            dispCont = false;
+            drawCanvas();
+            drawDRT(drtOnsets,trialDuration,start,moving);
+            drawFrame();
+            allBalls.forEach(function(ball){ // ball is the name of each element in the object, same as [for balls in balllist: ball.draw()]
+                ball.draw();
+                ball.move(this.paddle1.x, this.paddle2.x);
+            })
+            paddle1.draw(); paddle1.move(p1Left,p1Right);
+            paddle2.draw(); paddle2.move(p2Left,p2Right);
+            scoring();
+            drawScore(condOrder,nCurrentBlock);
+            trialTime = drawTimer(trialDuration, start, moving);
+            
+            if (trialTime <= 0){endTrial()};
+        }
+        function expTrial(){
+            drtOnsets   = drtStimTimes(respWin,trialDuration);
+            drtPanels   = new DRT();
+            p1Balls     =[];
+            p2Balls     =[];
+            allBalls    =[];
+            bAngles     = uniqueAngles(workloadTrials[nCurrentTrial-1],lowLim, upperLim);
+            justOncePlease = true; // this is a stupid line that allows me to make a stupid cumulative score
+
+            if (condOrder[nCurrentBlock]=="nonCol"){
+                for (let i = 0; i<workloadTrials[nCurrentTrial-1]; i++){
+                    p1Balls.push(new Ball(bx[i%3], p1Colour, i, bAngles[i]));
+                    allBalls.push(new Ball(bx[i%3], p1Colour, i, bAngles[i]));
+                }
+                for (let i = workloadTrials[nCurrentTrial-1]; i<workloadTrials[nCurrentTrial-1]*2; i++){
+                    p2Balls.push(new Ball(bx[i%3], p2Colour, i+Math.max(...workloadLevels), bAngles[i]));
+                    allBalls.push(new Ball(bx[i%3], p2Colour, i+Math.max(...workloadLevels), bAngles[i]));                    
+                }
+            } else {
+                for (let i = 0; i<workloadTrials[nCurrentTrial-1]*2; i++){
+                    allBalls.push(new Ball(bx[i%3], sharedColour, i, bAngles[i]));
+                }
+            }
+            paddle1     = new Paddle(p1Start,p1Colour);
+            paddle2     = new Paddle(p2Start,p2Colour);
+            interval    = setInterval(drawTrial,frameRate);
+        }
+        function practiceTrial(){
+            bInPractice = true;
+            drtOnsets   = drtStimTimes(respWin,trialDuration/2);
+            drtPanels   = new DRT();
+            bAngles     = uniqueAngles(workloadLevels[0]-1.5,lowLim, upperLim);
+            for (let i = 0; i<workloadLevels[0]*2; i++){
+                allBalls.push(new Ball(bx[i%3], sharedColour, i, bAngles[i]));
+            }
+            paddle1     = new Paddle(p1Start,p1Colour);
+            paddle2     = new Paddle(p2Start,p2Colour);
+            interval    = setInterval(drawTrial,frameRate); 
+        }
+        function endTrial(){
+            clearInterval(interval);
+            clearFrame();
+            saveTrial();
+            bInTrialBreak=true;
+            bInTrial    = false;
+            moving      = false;
+            dispCont    = true;
+            startCount  = 0;
+            if (bInPractice){
+                blockInst(condOrder,nCurrentBlock);
+            } else if (bInTrialBreak){
+                    interTrial(score1,score2,teamScore,condOrder[nCurrentBlock]);
+            }
+        }
+        
+        var p1DRTtrialData;
+        var p2DRTtrialData;
+        var p1MissEvents;
+        var p2MissEvents;
+        function saveTrial(){
+			//averageFrameRate = Math.round((eventCount / (rt/1000)) * 1000)/1000; 
+            p1DRTtrialData = mean(rt1,missCode);
+            p2DRTtrialData = mean(rt2,missCode);
+            p1MissEvents = [];
+            p2MissEvents = [];
+            // Use index positions for DRT misses to find the onset times of the missed stimuli
+            p1DRTtrialData[2].forEach(function(e){p1MissEvents.push(onsets[e])});
+            p2DRTtrialData[2].forEach(function(e){p2MissEvents.push(onsets[e])});
+
+            // Save hits/misses
+            scoreData.push(nCurrentBlock + "\t" + condOrder[nCurrentBlock] + "\t" + nCurrentTrial + "\t" + workloadTrials[nCurrentTrial-1] + "\t" +  trialDuration + "\t" + hits1 + "\t" + hits2 + "\t" + miss1 + "\t" + miss2 + "\t" + score1/1000 + "\t" + score2/1000 + "\t" + teamScore/1000 + "\t" +  onsets.length + "\t" + p1DRTtrialData[0] + "\t" + p2DRTtrialData[0] + "\t" + p1DRTtrialData[1] + "\t" + p2DRTtrialData[1] + "\t" + fa1.length + "\t" + fa2.length);
+
+            // Save DRT
+            drtData.push(nCurrentBlock + "\t" + condOrder[nCurrentBlock] + "\t" + nCurrentTrial + "\t" + workloadTrials[nCurrentTrial-1] + "\t" +  onsets + "\t" + rt1 + "\t" + rt2 + "\t" + p1MissEvents + "\t" + p2MissEvents + "\t" + fa1 + "\t" + fa2 + "\t" + hand1 + "\t" + hand2);
+            
+            // Save sprite coordinates
+            paddleCoords.push(nCurrentBlock + "\t" + condOrder[nCurrentBlock] + "\t" + nCurrentTrial + "\t" + workloadTrials[nCurrentTrial-1] + "\t" + paddle1.coords + "\t" + paddle2.coords)                 
+            allBalls.forEach(function(key) {ballCoords.push(nCurrentBlock + "\t" + condOrder[nCurrentBlock] + "\t" + nCurrentTrial + "\t" + workloadTrials[nCurrentTrial-1] + "\t" +  key.identity + "\t" + key.xCoords + "\t" + key.yCoords)});
+		}	
+
+        function interTrial(p1s, p2s, teams, blockType){
+            drawCanvas();
+			expContext.fillStyle = frameColour;
+            expContext.font="16px Arial";
+            expContext.textAlign = "center";
+            expContext.fillText("Trial "+nCurrentTrial+" of "+nTrials +" completed.",expCanvas.width/2,expCanvas.height/5);
+            // This notation is whack. Essentially - prepend a string with + to evaluate as a number
+            p1teamScore = Math.round((+p1s/(+p1s + +p2s))*+teams);
+            p2teamScore = parseInt(teams-p1teamScore); // you can't use addition with parseInt
+            if (justOncePlease){
+                p1CumScore += parseInt(p1s);
+                p2CumScore += parseInt(p2s);
+                teamCumScore+=parseInt(teams);                
+                justOncePlease = false;
+            }
+            if (blockType == "nonCol" || blockType == "com"){
+                expContext.fillText("Player 1:",p1Start+pWidth/2,frameTop+frameHeight/4+100);
+                expContext.fillText("Player 2:",p2Start+pWidth/2,frameTop+frameHeight/4+100);
+                expContext.fillText("Trial Score",frameRight-frameWidth/2,frameTop+frameHeight/4+125);
+                expContext.fillText("Total Score",frameRight-frameWidth/2,frameTop+frameHeight/4+175);   
+                expContext.fillText(p1s,p1Start+pWidth/2,frameTop+frameHeight/4+125);
+                expContext.fillText(p2s,p2Start+pWidth/2,frameTop+frameHeight/4+125);
+                expContext.fillText(p1CumScore,p1Start+pWidth/2,frameTop+frameHeight/4+175);
+                expContext.fillText(p2CumScore,p2Start+pWidth/2,frameTop+frameHeight/4+175);
+                //hits
+                expContext.fillText("Hits",frameRight-frameWidth/2,frameTop+frameHeight/4+200); 
+                expContext.fillText(hits1,p1Start+pWidth/2,frameTop+frameHeight/4+200);
+                expContext.fillText(hits2,p2Start+pWidth/2,frameTop+frameHeight/4+200);
+                //misses
+                expContext.fillText("Misses",frameRight-frameWidth/2,frameTop+frameHeight/4+225); 
+                expContext.fillText(miss1,p1Start+pWidth/2,frameTop+frameHeight/4+225);
+                expContext.fillText(miss2,p2Start+pWidth/2,frameTop+frameHeight/4+225);
+                
+            } else { // collaborative
+                expContext.fillText("Player 1:",p1Start+pWidth/2,frameTop+frameHeight/4+100);
+                expContext.fillText("Player 2:",p2Start+pWidth/2,frameTop+frameHeight/4+100);
+                expContext.fillText("Team: ",expCanvas.width/2,frameTop+frameHeight/4);
+                expContext.fillText("Trial Score",p1Start+pWidth/2,frameTop+frameHeight/4+25);
+                expContext.fillText("Total Score",p1Start+pWidth/2,frameTop+frameHeight/4+50); 
+                expContext.fillText(p1teamScore,p1Start+pWidth/2,frameTop+frameHeight/4+125);
+                expContext.fillText(p2teamScore,p2Start+pWidth/2,frameTop+frameHeight/4+125);
+                expContext.fillText(teams,expCanvas.width/2,frameTop+frameHeight/4+25);
+                expContext.fillText(teamCumScore,expCanvas.width/2,frameTop+frameHeight/4+50);
+
+                //hits
+                expContext.fillText("Hits",frameRight-frameWidth/2,frameTop+frameHeight/4+150); 
+                expContext.fillText(hits1,p1Start+pWidth/2,frameTop+frameHeight/4+150);
+                expContext.fillText(hits2,p2Start+pWidth/2,frameTop+frameHeight/4+150);
+                //misses
+                expContext.fillText("Misses",frameRight-frameWidth/2,frameTop+frameHeight/4+175); 
+                expContext.fillText(miss1,p1Start+pWidth/2,frameTop+frameHeight/4+175);
+                expContext.fillText(miss2,p2Start+pWidth/2,frameTop+frameHeight/4+175);
+            }
+            timeout = setTimeout(timedContinue,trialBreakTime*1000);
+        }
+        function expEnd(){
+            var paddle_txt   = "block" + "\t" + "groupType" + "\t" + "trlNum" + "\t" + "workload" + "\t" + "paddle1Coords" + "\t" + "paddle2Coords\n";
+            
+            var ball_txt     = "block" + "\t" + "groupType" + "\t" + "trlNum" + "\t" + "workload" + "\t" + "bID" + "\t" + "xCoords" + "\t" + "yCoords\n";
+            
+            var score_txt    = "block" + "\t" + "groupType" + "\t" + "trlNum" + "\t" + "workload" + "\t" + "dur" + "\t" + "hits1" + "\t" + "hits2" + "\t" + "miss1" + "\t" + "miss2" + "\t" + "hr1" + "\t" + "hr2" + "\t" + "hrt" + "\t" + "nDRTs" + "\t" + "mrt1" + "\t" + "mrt2" + "\t" + "drtm1" + "\t" + "drtm2" + "\t" + "fa1" + "\t" + "fa2\n";
+
+            var drt_txt    = "block" + "\t" + "groupType" + "\t" + "trlNum" + "\t" + "workload" + "\t" + "stimOn" + "\t" + "p1RT" + "\t" + "p2RT" + "\t" + "missT1" + "\t" + "missT2" + "\t" +"faT1" + "\t" + "faT2" + "\t" + "hand1" + "\t" + "hand2\n";
+
+            // Concatenate trial results into experiment results
+			for (var i = 0; i < paddleCoords.length; i++) {
+				paddle_txt  += paddleCoords[i].toString() + "\n";
+                score_txt   += scoreData[i].toString() + "\n";
+                drt_txt     += drtData[i].toString()+"\n";
+			}
+			for (var i = 0; i < ballCoords.length; i++) {
+                ball_txt    += ballCoords[i].toString() + "\n";
+            }
+
+            // Compile all results
+            outputSummary   = score_txt;
+            outputDRT       = score_txt + "\n" + drt_txt;
+            outputSprites   = score_txt + "\n" + paddle_txt + "\n" + ball_txt;
+
+    		var expVarSum       = outputSummary;
+            var expVarDRT       = outputDRT;
+            var expVarPos       = outputSprites;
+			
+            var expVarFn1       = username1;
+            var expVarFn2       = username2;
+
+			var expSendSummary  = "txt=" + expVarSum + "&fn=" + expVarFn1 + "&fn=" + expVarFn2;
+            var expSendDRT      = "txt=" + expVarDRT + "&fn=" + expVarFn1 + "&fn=" + expVarFn2;
+            var expSendSprites  = "txt=" + expVarPos + "&fn=" + expVarFn1 + "&fn=" + expVarFn2;
+
+			jatos.studySessionData["expSendSprites"] = expSendSprites;
+            jatos.studySessionData["expSendDRT"] = expSendDRT;
+			//experimentDataRequest.send(expSendVariables);
+			jatos.submitResultData(expSendSummary,jatos.startNextComponent);
+
+        }
+/*
+		function pointsLink() {
+            // Link participant 1 points
+        	var url = "https://newcastle.sona-systems.com/services/SonaAPI.svc/WebstudyCredit?experiment_id=1059&credit_token=ef8c1a701a954d229c4e02cd70842ad5&survey_code=" + username1;
+        	var xhttp = new XMLHttpRequest();
+        	xhttp.open("GET", url, true);
+			xhttp.send();
+            
+            // link participant 2 points
+            var url = "https://newcastle.sona-systems.com/services/SonaAPI.svc/WebstudyCredit?experiment_id=1059&credit_token=ef8c1a701a954d229c4e02cd70842ad5&survey_code=" + username2;
+        	var xhttp = new XMLHttpRequest();
+        	xhttp.open("GET", url, true);
+			xhttp.send();
+        }*/
+    </script>
+  </BODY>
+</HTML>
