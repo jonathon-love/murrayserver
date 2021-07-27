@@ -81,6 +81,7 @@ class ProgressStream {
 let ws;
 let messages;
 let updatingFromMessagesSentByTheServer = false;
+let player;
 
 
 ready(async() => {
@@ -876,7 +877,9 @@ ready(async() => {
 			//var initialConditionAssignment =  Math.floor(Math.random()*differentResponseTypes.length);
 			// uses initial ConditionAssignment to index differentResponseTypes = ["close","far"];
 			//currentResponseDistance = differentResponseTypes[initialConditionAssignment];
-            getUsername1();
+
+            // getUsername1();
+            blockInst(condOrder, nCurrentBlock);
         }
         //Addin
         function getUsername1() {
@@ -1176,7 +1179,7 @@ ready(async() => {
             paddle1.draw(); paddle1.move(p1Left,p1Right);
             paddle2.draw(); paddle2.move(p2Left,p2Right);
 
-            ws.send(JSON.stringify({'paddle': { 'pos': paddle2.x, 'vel': 0 }}));
+            ws.send(JSON.stringify({'paddle': { 'pos': paddle1.x, 'vel': 0 }}));
 
             scoring();
             drawScore(condOrder,nCurrentBlock);
@@ -1219,14 +1222,24 @@ ready(async() => {
             updatingFromMessagesSentByTheServer = true;
 
             for await (const message of messages) {
+
                 let state = JSON.parse(message);
-                paddle1.x = state.paddles[0].pos;
-                // paddle2.x = state.paddles[1].pos;
+
+                if ( ! moving && state.status === 'playing') {
+                    // begin playing
+                }
+
+                player = state.player;
+                let other = player ? 0 : 1;
+
+                let myPaddle = state.paddles[player];
+                let theirPaddle = state.paddles[other];
+
+                paddle2.x = theirPaddle.pos;
+                // also update the balls positions
 
                 if ( ! updatingFromMessagesSentByTheServer)
                     break;
-
-                // also update the balls positions
             }
         }
 
@@ -1244,7 +1257,7 @@ ready(async() => {
         }
         function endTrial(){
             clearInterval(interval);
-            updatingFromMessagesSendByTheServer = false;
+            updatingFromMessagesSentByTheServer = false;
             clearFrame();
             saveTrial();
             bInTrialBreak=true;

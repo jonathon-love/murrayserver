@@ -28,18 +28,24 @@ class Server:
         self._connections = [ ];
 
         self._state = {
+            'player': None,
             'status': 'waiting',
             'paddles': [
-                { 'pos': 200, 'vel': 0 },
-                { 'pos': 100, 'vel': 0 },
+                { 'pos': 200, 'status': 'notReady' },
+                { 'pos': 100, 'status': 'notReady' },
             ],
+            'balls': [
+
+            ]
         }
 
     async def _run_loop(self):
         while True:
-            state = json.dumps(self._state)
-            for conn in self._connections:
+            for index, conn in enumerate(self._connections):
+                self._state['player'] = index;
+                state = json.dumps(self._state)
                 await conn.send_str(state)
+
             if self._state['status'] == 'waiting':
                 await sleep(.5)
             else:
@@ -56,13 +62,20 @@ class Server:
         self._connections.append(ws)
 
         if player_num == 1:  # two players
-            self._state['status'] = 'playing'
+            self._state['status'] = 'ready'
 
         async for msg in ws:
             if msg.type == WSMsgType.TEXT:
                 data = json.loads(msg.data)
                 self._state['paddles'][player_num] = data['paddle']
-                print(f'received from player { player_num } the data { data }')
+
+            for paddle in self._state['paddles']:
+                if paddle['status'] != 'ready':
+                    break
+            else:
+                self._state['status'] = 'playing'
+
+            # print(f'received from player { player_num } the data { data }')
 
         return ws
 
