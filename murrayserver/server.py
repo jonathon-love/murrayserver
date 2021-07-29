@@ -33,12 +33,14 @@ class Server:
         ])
         self._runner = AppRunner(self._app)
 
-        self._current_game_no = 0;
-        self._current_game = Game()
-        self._current_game.add_player()
-        self._current_game.add_player()
-        self._start_game(self._current_game)
-        self._games = { '0': self._current_game }
+        game = Game()
+        game.add_player()
+        game.add_player()
+        self._start_game(game)
+        self._games = { '0': game }
+
+        self._current_game_no = 1;
+        self._current_game = None
 
     async def _enter(self, request):
         if self._current_game is None:
