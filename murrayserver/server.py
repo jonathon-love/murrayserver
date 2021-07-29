@@ -4,6 +4,8 @@ from aiohttp.web import static
 from aiohttp.web import get
 from aiohttp.web import run_app
 from aiohttp.web import WebSocketResponse
+from aiohttp.web import Response
+from aiohttp.web import HTTPFound
 from aiohttp.web import AppRunner
 from aiohttp.web import TCPSite
 from aiohttp import WSMsgType
@@ -11,8 +13,13 @@ from aiohttp import WSMsgType
 import json
 from asyncio import create_task
 from asyncio import sleep
+from uuid import uuid4
+from functools import partial
+import mimetypes
 
 from os import path
+
+from .game import Game
 
 
 class Server:
@@ -20,71 +27,75 @@ class Server:
     def __init__(self):
         self._app = Application()
         self._app.add_routes([
-            get('/coms', self._ws_handler),
-            static('/', path.join(path.dirname(__file__), 'www')),
+            get('/', self._enter),
+            get(r'/{game_id}/{player_id}/coms', self._ws_handler),
+            get(r'/{game_id}/{player_id}/{path}', self._get_assets),
         ])
         self._runner = AppRunner(self._app)
 
-        self._connections = [ ];
+        self._current_game_no = 0;
+        self._current_game = Game()
+        self._current_game.add_player()
+        self._current_game.add_player()
+        self._start_game(self._current_game)
+        self._games = { '0': self._current_game }
 
-        self._state = {
-            'player': None,
-            'status': 'waiting',
-            'paddles': [
-                { 'pos': 200, 'status': 'notReady' },
-                { 'pos': 100, 'status': 'notReady' },
-            ],
-            'balls': [
+    async def _enter(self, request):
+        if self._current_game is None:
+            self._current_game = Game()
+            self._start_game(self._current_game)
+            self._games[str(self._current_game_no)] = self._current_game
+        game_id = self._current_game_no
+        player_id = self._current_game.add_player()
+        if self._current_game.ready():
+            self._current_game = None
+            self._current_game_no += 1
 
-            ]
-        }
+        return HTTPFound(f'/{ game_id }/{ player_id }/paddleGame.html')
 
-    async def _run_loop(self):
-        while True:
-            for index, conn in enumerate(self._connections):
-                self._state['player'] = index;
-                state = json.dumps(self._state)
-                await conn.send_str(state)
+    async def _get_assets(self, request):
+        asset_path = request.match_info.get('path')
+        asset_path = path.join(path.dirname(__file__), 'www', asset_path)
 
-            if self._state['status'] == 'waiting':
-                await sleep(.5)
-            else:
-                await sleep(.1)
+        try:
+            with open(asset_path) as file:
+                blob = file.read()
+
+            content_type = 'application/octet-stream'
+            mt = mimetypes.guess_type(asset_path)
+            if mt[0] is not None:
+                content_type = mt[0]
+
+            return Response(body=blob, content_type=content_type)
+        except:
+            return Response(status='404', text='404')
+
+    def _start_game(self, game):
+        game_task = create_task(game.run())
+        callback = partial(self._game_complete, game)
+        game_task.add_done_callback(callback)
+
+    def _game_complete(self, game, result):
+        for key, value in self._games.items():
+            if value == game:
+                del self._games[key]
+                break
+        result.result()  # throw exception if necessary
 
     async def _ws_handler(self, request):
 
+        game_id = request.match_info.get('game_id')
+        player_id = request.match_info.get('player_id')
+        game = self._games[game_id]
+
         ws = WebSocketResponse()
         await ws.prepare(request)
-
-        print('player connected')
-
-        player_num = len(self._connections)
-        self._connections.append(ws)
-
-        if player_num == 1:  # two players
-            self._state['status'] = 'ready'
-
-        async for msg in ws:
-            if msg.type == WSMsgType.TEXT:
-                data = json.loads(msg.data)
-                self._state['paddles'][player_num] = data['paddle']
-
-            for paddle in self._state['paddles']:
-                if paddle['status'] != 'ready':
-                    break
-            else:
-                self._state['status'] = 'playing'
-
-            # print(f'received from player { player_num } the data { data }')
+        await game.join(player_id, ws)
 
         return ws
 
+
     async def start(self):
-        self._run_task = create_task(self._run_loop())
-
-        # raise exception if _run_loop() throws
-        self._run_task.add_done_callback(lambda t: t.result())
-
         await self._runner.setup()
         site = TCPSite(self._runner, '0.0.0.0', 8080)
         await site.start()

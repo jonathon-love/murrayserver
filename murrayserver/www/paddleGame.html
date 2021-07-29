@@ -120,7 +120,8 @@ ready(async() => {
        condOrder = condOrders[condOrderID];
 
        let protocol = (window.location.protocol === 'http:' ? 'ws:' : 'wss:')
-       let url = `${ protocol }//${ window.location.host }/coms`
+       let path = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
+       let url = `${ protocol }//${ window.location.host }${ path }coms`;
 
        ws = new WebSocket(url);
 
