@@ -3,8 +3,10 @@ import json
 from asyncio import Event
 from asyncio import create_task
 from asyncio import wait
+from asyncio import wait_for
 from asyncio import FIRST_COMPLETED
 from asyncio import sleep
+from asyncio import TimeoutError
 
 from collections import OrderedDict
 
@@ -48,7 +50,7 @@ class Game:
             async for msg in ws:
                 #if msg.type == WSMsgType.TEXT:
                 data = json.loads(msg.data)
-                self._state['players'][player_id] = data
+                self._state['players'][player_id].update(data)
                 self._receive_update.set()
 
         async def write():
@@ -113,13 +115,21 @@ class Game:
                         and state['players']['1']['status'] == 'ready'):
                     break
 
+            state['players']['0']['pos'] = 300
+            state['players']['1']['pos'] = 300
             state['status'] = 'playing'
             self.send()
 
-            # while True:
-                #await self.receive()
-                # updating the game state
-
             print(f'block { block_no }, begun!')
-            await sleep(5)
+
+            async def play():
+                while True:
+                    await self.receive()
+                    self.send()
+
+            try:
+                await wait_for(play(), 20)
+            except TimeoutError:
+                pass
+
             print(f'block { block_no }, complete!')

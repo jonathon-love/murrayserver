@@ -82,6 +82,7 @@ let ws;
 let messages;
 let updatingFromMessagesSentByTheServer = false;
 let player;
+let state = { }
 
 
 ready(async() => {
@@ -137,6 +138,8 @@ ready(async() => {
            });
        });
 
+       readMessages();
+       writeMessages();
        initialise();
    });
 
@@ -669,13 +672,14 @@ ready(async() => {
             }
             if (bInBlockInstructions){
                 if (event.keyCode == 32 && proceed){
-                    clearTimeout(timeout);
-                    nCurrentTrial = 1;
-                    scoreReset();
-                    expTrial();
-                    proceed = false;
-                    bInBlockInstructions = false;
-                    bInPractice = false;
+                    ws.send('{"status":"ready"}')
+                    // clearTimeout(timeout);
+                    // nCurrentTrial = 1;
+                    // scoreReset();
+                    // expTrial();
+                    // proceed = false;
+                    // bInBlockInstructions = false;
+                    // bInPractice = false;
                 }
             }
             if (bInTrialBreak){
@@ -1180,8 +1184,6 @@ ready(async() => {
             paddle1.draw(); paddle1.move(p1Left,p1Right);
             paddle2.draw(); paddle2.move(p2Left,p2Right);
 
-            ws.send(JSON.stringify({'paddle': { 'pos': paddle1.x, 'vel': 0 }}));
-
             scoring();
             drawScore(condOrder,nCurrentBlock);
             trialTime = drawTimer(trialDuration, start, moving);
@@ -1214,8 +1216,24 @@ ready(async() => {
             paddle1     = new Paddle(p1Start,p1Colour);
             paddle2     = new Paddle(p2Start,p2Colour);
             interval    = setInterval(drawTrial,frameRate);
+        }
 
-            readMessages();
+        async function writeMessages() {
+
+            let sleep = function(time) {
+                return new Promise((resolve) => setTimeout(resolve, time));
+            }
+
+            while (true) {
+
+                if (state.status === 'playing' && paddle1) {
+                    ws.send(JSON.stringify({ 'pos': paddle1.x }));
+                    await sleep(200);
+                }
+                else {
+                    await sleep(500);
+                }
+            }
         }
 
         async function readMessages() {
@@ -1224,20 +1242,26 @@ ready(async() => {
 
             for await (const message of messages) {
 
-                let state = JSON.parse(message);
+                let received = JSON.parse(message);
 
-                if ( ! moving && state.status === 'playing') {
-                    // begin playing
+                if (state.status === 'waiting' && received.status === 'playing') {
+                    clearTimeout(timeout);
+                    nCurrentTrial = 1;
+                    scoreReset();
+                    expTrial();
+                    proceed = false;
+                    bInBlockInstructions = false;
+                    bInPractice = false;
                 }
 
-                player = state.player;
-                let other = player ? 0 : 1;
+                Object.assign(state, received);
 
-                let myPaddle = state.paddles[player];
-                let theirPaddle = state.paddles[other];
-
-                paddle2.x = theirPaddle.pos;
-                // also update the balls positions
+                if (received.status === 'playing' && paddle2) {
+                    let playerId = received['player_id'];
+                    let otherId = playerId === '0' ? '1' : '0';
+                    let theirPos = state.players[otherId].pos;
+                    paddle2.x = theirPos;
+                }
 
                 if ( ! updatingFromMessagesSentByTheServer)
                     break;
