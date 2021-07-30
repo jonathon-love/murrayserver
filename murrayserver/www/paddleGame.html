@@ -152,12 +152,12 @@ ready(async() => {
         // Input variables
 
         var nBlocks             = 3;
-        var nTrials             = 3;
+        var nTrials             = 4;
         var nTotalTrials        = nTrials*nBlocks;
         //var condOrder;//          = ["nonCol","col","com"];
 
         // workload
-        var workloadLevels      = [3,6,9];
+        var workloadLevels      = [1, 3,6,9];
         var workloadTrials      = new Array(nTrials/workloadLevels.length).fill(workloadLevels).flat();
         var trialDuration       = 20;           // seconds
         var dirInst             = 5;            // second intervals to display practice trial instructions
