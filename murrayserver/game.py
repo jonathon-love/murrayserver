@@ -15,7 +15,7 @@ from .stream import ProgressStream
 
 class Game:
     def __init__(self):
-        self._n_players = 0
+        self._joined = { '0': False, '1': False }
         self._conns = { '0': None, '1': None }
         self._send_update = OrderedDict({ '0': Event(), '1': Event() })
         self._receive_update = Event()
@@ -23,7 +23,7 @@ class Game:
         self._blocks = [ 'nonCol', 'col', 'com' ]
         self._state = {
             'player_id': None,
-            'status': None,
+            'status': 'waiting',
             'block_type': None,
             'players': {
                 '0': { 'pos': 200, 'status': 'notReady' },
@@ -36,15 +36,25 @@ class Game:
 
 
     def add_player(self):
-        player_id = self._n_players
-        self._n_players += 1
-        if self._n_players == 2:
+        player_id = None
+        if not self._joined['0']:
+            self._joined['0'] = True
+            player_id = '0'
+        else:
+            self._joined['1'] = True
+            player_id = '1'
+        if self._joined['0'] and self._joined['1']:
             self._ready.set()
         return player_id
 
     async def join(self, player_id, ws):
 
         print(f'player { player_id } connected')
+
+        if not self._joined[player_id]:
+            self._joined[player_id] = True
+            if self._joined['0'] and self._joined['1']:
+                self._ready.set()
 
         async def read():
             async for msg in ws:
@@ -55,6 +65,8 @@ class Game:
 
         async def write():
             send_event = self._send_update[player_id]
+            send_event.set()
+
             while True:
                 await send_event.wait()
                 send_event.clear()
@@ -75,7 +87,7 @@ class Game:
             d.result()
 
     def ready(self):
-        return self._n_players >= 2
+        return self._ready.is_set()
 
     def send(self):
         for player_id, event in self._send_update.items():
@@ -88,15 +100,13 @@ class Game:
 
     async def run(self):
 
-        print('running!')
-
         await self._ready.wait()
         state = self._state
 
         print('ready!')
 
         for block_no, block in enumerate(self._blocks):
-            state['status'] = 'waiting'  # instructions
+            state['status'] = 'reading'  # instructions
             state['players']['0']['status'] = 'notReady'
             state['players']['1']['status'] = 'notReady'
             state['block_type'] = block

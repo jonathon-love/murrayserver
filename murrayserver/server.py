@@ -34,8 +34,6 @@ class Server:
         self._runner = AppRunner(self._app)
 
         game = Game()
-        game.add_player()
-        game.add_player()
         self._start_game(game)
         self._games = { '0': game }
 

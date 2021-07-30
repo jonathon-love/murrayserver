@@ -78,11 +78,15 @@ class ProgressStream {
     }
 }
 
+
 let ws;
 let messages;
-let updatingFromMessagesSentByTheServer = false;
 let player;
 let state = { }
+let notifyStateReady;
+let stateReady = new Promise((resolve) => {
+    notifyStateReady = resolve;
+});
 
 
 ready(async() => {
@@ -140,6 +144,8 @@ ready(async() => {
 
        readMessages();
        writeMessages();
+       await stateReady;
+
        initialise();
    });
 
@@ -528,7 +534,7 @@ ready(async() => {
                     expContext.fillText("Response", expCanvas.width/3,expCanvas.height/2+100);
                     expContext.fillText("Non-Dominant", expCanvas.width/3,expCanvas.height/2);
                     expContext.fillText("Dominant Hand", expCanvas.width*0.67,expCanvas.height/2);
-                }                
+                }
             }
         }
 
@@ -1200,13 +1206,11 @@ ready(async() => {
 
         async function readMessages() {
 
-            updatingFromMessagesSentByTheServer = true;
-
             for await (const message of messages) {
 
                 let received = JSON.parse(message);
 
-                if (state.status === 'waiting' && received.status === 'playing') {
+                if (state.status === 'reading' && received.status === 'playing') {
                     clearTimeout(timeout);
                     nCurrentTrial = 1;
                     scoreReset();
@@ -1216,12 +1220,16 @@ ready(async() => {
                     bInPractice = false;
                 }
 
-                // transition from playing to waiting
-                if (state.status === 'playing' && received.status === 'waiting'){
-                    // trial ended
+                if (state.status === 'playing' && received.status === 'reading') {
+                    Object.assign(state, received);
+                    // murray
+                    console.log('trial end');
+                    console.log('begin instructions for next block');
+                    console.log(`block type ${ state.block_type }`);
                 }
 
                 Object.assign(state, received);
+                notifyStateReady();
 
                 if (received.status === 'playing' && paddle2) {
                     let playerId = received['player_id'];
@@ -1229,9 +1237,6 @@ ready(async() => {
                     let theirPos = state.players[otherId].pos;
                     paddle2.x = theirPos;
                 }
-
-                if ( ! updatingFromMessagesSentByTheServer)
-                    break;
             }
         }
 
@@ -1249,7 +1254,6 @@ ready(async() => {
         }
         function endTrial(){
             clearInterval(interval);
-            updatingFromMessagesSentByTheServer = false;
             clearFrame();
             saveTrial();
             bInTrialBreak=true;
