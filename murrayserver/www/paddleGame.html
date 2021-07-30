@@ -155,7 +155,7 @@ ready(async() => {
         // Input variables
 
         var nBlocks             = 3;
-        var nTrials             = 4;
+        var nTrials             = 4; // 16
         var nTotalTrials        = nTrials*nBlocks;
         //var condOrder;//          = ["nonCol","col","com"];
 
@@ -192,10 +192,8 @@ ready(async() => {
         let drtResp2            = false;
         let drtOnsets;
         var onsets              = [];   // used to save the onset times for each trial
-        var plyr1DRTrespKeyR    = 81;   // Q
-        var plyr2DRTrespKeyR    = 191;  // Question, back-slash
-        var plyr1DRTrespKeyL    = 82;   // R
-        var plyr2DRTrespKeyL    = 220;  // Pipe, forward-slash
+        var plyr1DRTrespKeyR    = 38;    // Up Arrow
+        var plyr1DRTrespKeyL    = 90;   // Z
         var plyr1DRTrespKey;
         var plyr2DRTrespKey;
         var hand1;
@@ -223,8 +221,8 @@ ready(async() => {
 		var bInEndOfBlock           = false;
 		var bInBlockInstructions    = false;
         var bInPractice             = false;
-        var blockBreakTime          = 2;
-        var trialBreakTime          = 2;
+        var blockBreakTime          = 2; // 20
+        var trialBreakTime          = 2; // 5
         var proceed                 = false;
         var bInTrialBreak           = false;
         var justOncePlease          = true;
@@ -508,42 +506,29 @@ ready(async() => {
             ctx.lineWidth = 1;
         }
         function keyInsts(p1, p2, drt1, drt2){
-            // Player 1 Keys
+            // Player Keys
             if (p1){
                 expContext.fillStyle = p1Colour;
-                expContext.fillText("Player 1:", expCanvas.width/3+15,expCanvas.height/2-25);
                 expContext.fillStyle = "white";
                 if (drt1 == plyr1DRTrespKeyR){
-                    drawKey(expContext,"Q",expCanvas.width/3-15,expCanvas.height/2, 40, 40, 3,true,true,false);
+                    drawKey(expContext,"2191",expCanvas.width*0.67-15,expCanvas.height/2+50, 40, 40, 3,true,true,true);
+                    drawKey(expContext,"Z",expCanvas.width/3-25,expCanvas.height/2+50, 40, 40, 3,true,true,false);
+                    drawKey(expContext,"C",expCanvas.width/3+25,expCanvas.height/2+50, 40, 40, 3,true,true,false);
+                    expContext.fillText("Left", expCanvas.width/3-30,expCanvas.height/2+100);
+                    expContext.fillText("Right", expCanvas.width/3+50,expCanvas.height/2+100);
+                    expContext.fillText("Response", expCanvas.width*0.67,expCanvas.height/2+100);
+                    expContext.fillText("Non-Dominant", expCanvas.width*0.67,expCanvas.height/2);
+                    expContext.fillText("Dominant Hand", expCanvas.width/3,expCanvas.height/2);
                 } else if (drt1 == plyr1DRTrespKeyL){
-                    drawKey(expContext,"R",expCanvas.width/3+15,expCanvas.height/2, 40, 40, 3,true,true,false);
-                }
-                drawKey(expContext,"Z",expCanvas.width/3-25,expCanvas.height/2+50, 40, 40, 3,true,true,false);
-                drawKey(expContext,"X",expCanvas.width/3+25,expCanvas.height/2+50, 40, 40, 3,true,true,false);
-                expContext.fillText("Left", expCanvas.width/3-30,expCanvas.height/2+100);
-                expContext.fillText("Right", expCanvas.width/3+50,expCanvas.height/2+100);
-                expContext.fillText("Response", expCanvas.width/3-80,expCanvas.height/2+15);
-            // Hand instructions
-                expContext.fillText("Hand:", expCanvas.width/2,expCanvas.height/2-25);
-                expContext.fillText("Non-Dominant", expCanvas.width/2,expCanvas.height/2+15);
-                expContext.fillText("Dominant Hand", expCanvas.width/2,expCanvas.height/2+60);
-            }
-
-            if (p2){
-            // Player 2 Keys
-                expContext.fillStyle = p2Colour;
-                expContext.fillText("Player 2:", expCanvas.width*.67+15,expCanvas.height/2-25);
-                expContext.fillStyle = "white";
-                if (drt2 == plyr2DRTrespKeyR){
-                    drawKey(expContext,"?/",expCanvas.width*0.67-15,expCanvas.height/2, 40, 40, 3,true,true,false);
-                } else if (drt2 == plyr2DRTrespKeyL){
-                    drawKey(expContext,"| \\",expCanvas.width*.67+15,expCanvas.height/2, 40, 40, 3,true,true,false);
-                }
-                drawKey(expContext,"2190",expCanvas.width*.67-25,expCanvas.height/2+50, 40, 40, 3,true,true,true);
-                drawKey(expContext,"2192",expCanvas.width*.67+25,expCanvas.height/2+50, 40, 40, 3,true,true,true);
-                expContext.fillText("Left", expCanvas.width*.67-30,expCanvas.height/2+100);
-                expContext.fillText("Right", expCanvas.width*.67+50,expCanvas.height/2+100);
-                expContext.fillText("Response", expCanvas.width*.67+100,expCanvas.height/2+15);
+                    drawKey(expContext,"Z",expCanvas.width/3-15,expCanvas.height/2+50, 40, 40, 3,true,true,false);
+                    drawKey(expContext,"2190",expCanvas.width*0.67-25,expCanvas.height/2+50, 40, 40, 3,true,true,true);
+                    drawKey(expContext,"2192",expCanvas.width*0.67+25,expCanvas.height/2+50, 40, 40, 3,true,true,true);
+                    expContext.fillText("Left", expCanvas.width*0.67-30,expCanvas.height/2+100);
+                    expContext.fillText("Right", expCanvas.width*0.67+50,expCanvas.height/2+100);
+                    expContext.fillText("Response", expCanvas.width/3,expCanvas.height/2+100);
+                    expContext.fillText("Non-Dominant", expCanvas.width/3,expCanvas.height/2);
+                    expContext.fillText("Dominant Hand", expCanvas.width*0.67,expCanvas.height/2);
+                }                
             }
         }
 
@@ -566,9 +551,6 @@ ready(async() => {
             } else if (e.keyCode == plyr2DRTrespKey) {
                 drtResp2 = true;
             }
-            /*if (e.key === "Enter"){
-                toggleFullScreen();
-            }*/
             if (event.keyCode === 9){// Disable Tab key function
                 event.preventDefault();
             }
@@ -594,24 +576,11 @@ ready(async() => {
                     }
                 }
                 if (p1Hand.length == 1 && p1HandChosen){
-                    expContext.fillText("Player 2, please indicate if you are right-handed by pressing '?/' or if you are left-handed press '|\\' (above enter').",expCanvas.width/2,expCanvas.height/4+75);
-                    keyInsts(true,false,plyr1DRTrespKey,plyr2DRTrespKey);
-                    p1HandChosen = false;
+                    keyInsts(true,true,plyr1DRTrespKey,plyr2DRTrespKey);
+                    p1HandChosen = true;
                 }
-                if (p2Hand.length == 0 && !p2HandChosen){
-                    if (e.keyCode == plyr2DRTrespKeyR){
-                        p2Hand.push(plyr2DRTrespKeyR);
-                        plyr2DRTrespKey = plyr2DRTrespKeyR;
-                        hand2 = 'right';
-                        p2HandChosen = true;
-                    } else if (e.keyCode == plyr2DRTrespKeyL){
-                        p2Hand.push(plyr2DRTrespKeyL);
-                        plyr2DRTrespKey = plyr2DRTrespKeyL;
-                        hand2 = 'left';
-                        p2HandChosen = true;
-                    }
-                }
-                if (p2Hand.length == 1){
+
+                if (p1Hand.length == 1){
                     if (p2HandChosen){
                         keyInsts(false,true,plyr1DRTrespKey,plyr2DRTrespKey);
                         expContext.fillText("Press 'spacebar' to continue", expCanvas.width*.75,expCanvas.height-50);
@@ -747,13 +716,13 @@ ready(async() => {
             drawCanvas();
             expContext.fillStyle = "white";
             expContext.fillText("2/3", expCanvas.width*.75,25);
-            expContext.fillText("Player 1 paddle is red and begins each trial on the left. Your score is shown in the top left corner of each trial.",expCanvas.width/2,expCanvas.height/4-50);
-            expContext.fillText("Player 2 paddle is blue and begins each trial on the right. Your score is shown in the top right corner of each trial.",expCanvas.width/2,expCanvas.height/4-25);
-            expContext.fillText("You should assign yourselves as one of these players now. Do not change your players once you have selected it.",expCanvas.width/2,expCanvas.height/4+25);
-            //expContext.fillText("The key controls for each player will be shown below shortly.",expCanvas.width/2,expCanvas.height/4+50);
-            expContext.fillText("Player 1, please indicate if you are right-handed by pressing 'Q' or if you are left-handed press 'R'.",expCanvas.width/2,expCanvas.height/4+50);
+            expContext.fillText("Your paddle is red whereas your fellow participants paddle is blue. Your score is shown in the top left corner of each trial.",expCanvas.width/2,expCanvas.height/4-75);
+            expContext.fillText(" Your score is shown in the top right corner of each trial.",expCanvas.width/2,expCanvas.height/4-50);
+            expContext.fillText("Along with controlling paddle movement, you will also be required to periodically respond to a brief flashing light using your non-dominant hand.",expCanvas.width/2,expCanvas.height/4);
+            expContext.fillText("A more detailed explanation of this light will follow.",expCanvas.width/2,expCanvas.height/4+25);
+            expContext.fillText("For now, please indicate if you are right-handed by pressing 'Z' or if you are left-handed press the UP arrow.",expCanvas.width/2,expCanvas.height/4+50);
 
-            expContext.fillText("Please ensure that your dominant hand controls the directional keys, and your non-dominant hand controls the response key.",expCanvas.width/2,expCanvas.height-125);
+            expContext.fillText("Please ensure that your dominant hand controls the paddle movement keys and your non-dominant hand controls the response key.",expCanvas.width/2,expCanvas.height-125);
             expContext.fillText("Press 'b' to return", expCanvas.width*.25,expCanvas.height-50);
         }
         function instructions3(){
@@ -768,10 +737,10 @@ ready(async() => {
             expContext.fillText("The light will display briefly or until both players respond.",expCanvas.width/2,expCanvas.height/4-50);
             expContext.fillText("You can still respond to the light a brief time after it disappears.",expCanvas.width/2,expCanvas.height/4-25);
             expContext.fillText("Respond quickly and accurately to the light.",expCanvas.width/2,expCanvas.height/4);
-            expContext.fillText("The response key for each player is shown below.",expCanvas.width/2,expCanvas.height/4+25);
+            expContext.fillText("The response key is shown below.",expCanvas.width/2,expCanvas.height/4+25);
             expContext.fillText("A walkthrough trial will commence following this screen.",expCanvas.width/2,expCanvas.height/4+50);
 
-            expContext.fillText("Please ensure that your dominant hand controls the directional keys, and your non-dominant hand controls the response key.",expCanvas.width/2,expCanvas.height-125);
+            expContext.fillText("Please ensure that your dominant hand controls the paddle movement keys and your non-dominant hand controls the response key.",expCanvas.width/2,expCanvas.height-125);
             expContext.fillText("Press 'spacebar' to continue", expCanvas.width*.75,expCanvas.height-50);
             expContext.fillText("Press 'b' to return", expCanvas.width*.25,expCanvas.height-50);
         }
@@ -787,13 +756,13 @@ ready(async() => {
                 expContext.fillText("they will always start from this position.",frameLeft+frameWidth/2,frameBottom-frameHeight/4);
                 expContext.fillText("Press 'space bar' to start the trial",frameLeft+frameWidth/2,frameBottom-frameHeight/4+25);
             } else if (time > trialDuration-dirInst){
-                expContext.fillText("Player 1:",p1Start+pWidth/2,frameBottom-frameHeight/4-25);
-                expContext.fillText("Press 'a' to move left",p1Start+pWidth/2,frameBottom-frameHeight/4);
-                expContext.fillText("Press 's' to move right",p1Start+pWidth/2,frameBottom-frameHeight/4+25);
-                //expContext.textAlign = "left";
-                expContext.fillText("Player 2:",p2Start+pWidth/2,frameBottom-frameHeight/4-25);
-                expContext.fillText("Press 'left arrow' to move left",p2Start+pWidth/2,frameBottom-frameHeight /4);
-                expContext.fillText("Press 'right arrow' to move right",p2Start+pWidth/2,frameBottom-frameHeight/4+25);
+                if (plyr1DRTrespKey == plyr1DRTrespKeyL){
+                    expContext.fillText("Press left arrow to move left",frameLeft+frameWidth/2,frameBottom-frameHeight/4);
+                    expContext.fillText("Press right arrow to move right",frameLeft+frameWidth/2,frameBottom-frameHeight/4+25);
+                } else {
+                    expContext.fillText("Press 'Z' to move left",frameLeft+frameWidth/2,frameBottom-frameHeight/4);
+                    expContext.fillText("Press 'C' to move right",frameLeft+frameWidth/2,frameBottom-frameHeight/4+25);
+                }
             } else if (time < trialDuration-dirInst && time > trialDuration-dirInst*4){
                 expContext.fillText("Overall score is computed from your hits AND misses!",expCanvas.width/2,frameTop+frameHeight/5);
                 ;
@@ -808,14 +777,15 @@ ready(async() => {
                 expContext.fillText("They will regularly flash green throughout the game.",expCanvas.width/2,frameTop+frameHeight/5+20);
                 expContext.fillText("The light stays on briefly or until both players respond.",expCanvas.width/2,frameTop+frameHeight/5+40);
                 expContext.fillText("You need to respond as quickly and accurately as possible.",expCanvas.width/2,frameTop+frameHeight/5+60);
-
-                expContext.fillText("Player 1:",p1Start+pWidth/2,frameBottom-frameHeight/4-25);
-                expContext.fillText("Press 'q'",p1Start+pWidth/2,frameBottom-frameHeight/4);
-
-                expContext.fillText("Player 2:",p2Start+pWidth/2,frameBottom-frameHeight/4-25);
-                expContext.fillText("Press '?/'",p2Start+pWidth/2,frameBottom-frameHeight/4);
+                expContext.fillText("Light Response:", expCanvas.width/2, frameBottom-frameHeight/4-25);
+                if (plyr1DRTrespKey == plyr1DRTrespKeyL){
+                    expContext.fillText("Press 'Z'", expCanvas.width/2, frameBottom-frameHeight/4);
+                } else {
+                    expContext.fillText("Press 'UP' arrow", expCanvas.width/2, frameBottom-frameHeight/4);
+                }
             }
         }
+
         function blockInst(blockTypes,count){
             drawCanvas();
             bInBlockInstructions    = true;
@@ -968,15 +938,7 @@ ready(async() => {
             }
             return [total / array[0].length, array[1], array[2]];
         }
-        function toggleFullScreen() {
-            if (!document.fullscreenElement) {
-                document.documentElement.requestFullscreen();
-            } else {
-                if (document.exitFullscreen) {
-                document.exitFullscreen();
-                }
-            }
-        }
+
         function disableScroll() {
             // Get the current page scroll position
             scrollTop = window.pageYOffset || document.documentElement.scrollTop;
@@ -1252,6 +1214,11 @@ ready(async() => {
                     proceed = false;
                     bInBlockInstructions = false;
                     bInPractice = false;
+                }
+
+                // transition from playing to waiting
+                if (state.status === 'playing' && received.status === 'waiting'){
+                    // trial ended
                 }
 
                 Object.assign(state, received);
