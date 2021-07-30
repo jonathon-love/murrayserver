@@ -4,6 +4,7 @@ from asyncio import Event
 from asyncio import create_task
 from asyncio import wait
 from asyncio import FIRST_COMPLETED
+from asyncio import sleep
 
 from collections import OrderedDict
 
@@ -23,8 +24,8 @@ class Game:
             'status': None,
             'block_type': None,
             'players': {
-                '1': { 'pos': 200, 'status': 'notReady' },
-                '2': { 'pos': 100, 'status': 'notReady' },
+                '0': { 'pos': 200, 'status': 'notReady' },
+                '1': { 'pos': 100, 'status': 'notReady' },
             },
             'balls': [
 
@@ -45,18 +46,18 @@ class Game:
 
         async def read():
             async for msg in ws:
-                if msg.type == WSMsgType.TEXT:
-                    data = json.loads(msg.data)
-                    self._state[player_id] = data
-                    self._receive_update.set()
+                #if msg.type == WSMsgType.TEXT:
+                data = json.loads(msg.data)
+                self._state['players'][player_id] = data
+                self._receive_update.set()
 
         async def write():
             send_event = self._send_update[player_id]
             while True:
                 await send_event.wait()
                 send_event.clear()
-                state['player_id'] = player_id
-                state = json.dumps(state)
+                self._state['player_id'] = player_id
+                state = json.dumps(self._state)
                 await ws.send_str(state)
 
 
@@ -94,18 +95,31 @@ class Game:
 
         for block_no, block in enumerate(self._blocks):
             state['status'] = 'waiting'  # instructions
+            state['players']['0']['status'] = 'notReady'
             state['players']['1']['status'] = 'notReady'
-            state['players']['2']['status'] = 'notReady'
+            state['block_type'] = block
+
+            self.send()
 
             print(f'block { block_no }, awaiting players')
 
             while True:
                 await self.receive()
-                if (state['players']['1']['status'] == 'ready'
-                        and state['players']['2']['status'] == 'ready'):
+
+                print(f'player 0 { state["players"]["0"]["status"] }')
+                print(f'player 1 { state["players"]["1"]["status"] }')
+
+                if (state['players']['0']['status'] == 'ready'
+                        and state['players']['1']['status'] == 'ready'):
                     break
 
             state['status'] = 'playing'
             self.send()
 
+            # while True:
+                #await self.receive()
+                # updating the game state
+
             print(f'block { block_no }, begun!')
+            await sleep(5)
+            print(f'block { block_no }, complete!')
