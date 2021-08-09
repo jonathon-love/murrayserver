@@ -246,6 +246,8 @@ ready(async() => {
         var timeout;
 
         // Paddles
+        var paddle1;
+        var paddle2;
         var nPaddles            = 2;
         var pWidth              = frameWidth*0.1;
         var pHeight             = pWidth*0.12;
@@ -319,6 +321,19 @@ ready(async() => {
             this.yCoords = [];
             }
             move(paddlePos1,paddlePos2){
+
+                let identity = this.identity;
+                if (state.player_id === '1')
+                    identity = state.block.n_balls - identity - 1;
+
+                if (state.balls && identity >= 0 && identity < state.balls.length) {
+                    let s = state.balls[identity];
+                    this.x = s.x;
+                    this.y = s.y;
+                    this.speed = s.speed;
+                    this.angle = s.angle;
+                }
+
                 let dx = this.speed*Math.cos(this.angle);
                 let dy = this.speed*Math.sin(this.angle);
                 if (moving){
@@ -426,6 +441,12 @@ ready(async() => {
                 this.coords = [];
                 }
             move(mvLeft = false, mvRight = false) {
+
+                let playerId = state.player_id;
+                let otherId = playerId === '0' ? '1' : '0';
+                let theirPos = state.players[otherId].pos;
+                paddle2.x = theirPos;
+
                 if(moving){
                     this.coords.push(this.x);
                 }
@@ -1196,7 +1217,7 @@ ready(async() => {
 
                 if (state.status === 'playing' && paddle1) {
                     ws.send(JSON.stringify({ 'pos': paddle1.x }));
-                    await sleep(200);
+                    await sleep(50);
                 }
                 else {
                     await sleep(500);
@@ -1211,6 +1232,12 @@ ready(async() => {
                 let received = JSON.parse(message);
 
                 if (state.status === 'reading' && received.status === 'playing') {
+
+                    // transitioning from reading to playing (i.e. beginning trial)
+                    Object.assign(state, received);
+
+                    console.log(state.block);
+
                     clearTimeout(timeout);
                     nCurrentTrial = 1;
                     scoreReset();
@@ -1221,22 +1248,19 @@ ready(async() => {
                 }
 
                 if (state.status === 'playing' && received.status === 'reading') {
+
+                    // transitioning from playing to reading (i.e. end of trial)
+
                     Object.assign(state, received);
                     // murray
                     console.log('trial end');
                     console.log('begin instructions for next block');
-                    console.log(`block type ${ state.block_type }`);
+                    console.log(`block type ${ JSON.stringify(state.block) }`);
                 }
 
                 Object.assign(state, received);
                 notifyStateReady();
 
-                if (received.status === 'playing' && paddle2) {
-                    let playerId = received['player_id'];
-                    let otherId = playerId === '0' ? '1' : '0';
-                    let theirPos = state.players[otherId].pos;
-                    paddle2.x = theirPos;
-                }
             }
         }
 

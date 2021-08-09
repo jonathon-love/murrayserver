@@ -9,6 +9,8 @@ from asyncio import sleep
 from asyncio import TimeoutError
 
 from collections import OrderedDict
+from random import randint
+from random import shuffle
 
 from .stream import ProgressStream
 
@@ -20,18 +22,26 @@ class Game:
         self._send_update = OrderedDict({ '0': Event(), '1': Event() })
         self._receive_update = Event()
         self._ready = Event()
-        self._blocks = [ 'nonCol', 'col', 'com' ]
+        self._blocks = [ ]
+
+        block_types = [ 'nonCol', 'col', 'com' ]
+        n_balls = [6, 6, 6, 6]
+        shuffle(block_types)
+        shuffle(n_balls)
+
+        for block_type in block_types:
+            for n in n_balls:
+                self._blocks.append({ 'block_type': block_type, 'n_balls': n })
+
         self._state = {
             'player_id': None,
             'status': 'waiting',
-            'block_type': None,
+            'block': self._blocks[0],
             'players': {
                 '0': { 'pos': 200, 'status': 'notReady' },
                 '1': { 'pos': 100, 'status': 'notReady' },
             },
-            'balls': [
-
-            ]
+            'balls': [ ],
         }
 
 
@@ -94,9 +104,25 @@ class Game:
             event.set()
         self._send_update.move_to_end(player_id, last=False)
 
-    async def receive(self):
-        await self._receive_update.wait()
-        self._receive_update.clear()
+    async def update(self):
+        try:
+            timeout = None
+            if self._state['status'] == 'playing':
+                timeout = .02
+            await wait_for(self._receive_update.wait(), timeout)
+            self._receive_update.clear()
+        except TimeoutError:
+            pass
+
+        if self._state['status'] == 'playing':
+            for ball in self._state['balls']:
+                ball['x'] += 1
+                if ball['x'] > 400:
+                    ball['x'] = 200
+                ball['y'] += 1
+                if ball['y'] > 400:
+                    ball['y'] = 200
+
 
     async def run(self):
 
@@ -109,14 +135,24 @@ class Game:
             state['status'] = 'reading'  # instructions
             state['players']['0']['status'] = 'notReady'
             state['players']['1']['status'] = 'notReady'
-            state['block_type'] = block
+            state['block'] = block
+
+            balls = [None] * block['n_balls']
+            for i, _ in enumerate(balls):
+                balls[i] = {
+                    'x': randint(200, 300),
+                    'y': randint(200, 300),
+                    'speed': 0,
+                    'angle': 0,
+                }
+
+            state['balls'] = balls
 
             self.send()
 
             print(f'block { block_no }, awaiting players')
-
             while True:
-                await self.receive()
+                await self.update()
 
                 print(f'player 0 { state["players"]["0"]["status"] }')
                 print(f'player 1 { state["players"]["1"]["status"] }')
@@ -134,7 +170,7 @@ class Game:
 
             async def play():
                 while True:
-                    await self.receive()
+                    await self.update()
                     self.send()
 
             try:
