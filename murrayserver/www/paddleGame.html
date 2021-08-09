@@ -829,12 +829,13 @@ ready(async() => {
             }
             expContext.fillText("You will now begin block "+count+" of "+nBlocks,expCanvas.width/2,expCanvas.height/4-100);
             count--;
-            if (blockTypes[count] == "nonCol"){
+
+            if (state.block.block_type == "nonCol"){
                 expContext.fillText("During this block you will only be able to interact with balls that match the colour of your paddle.",expCanvas.width/2,expCanvas.height/4-50);
-            } else if (blockTypes[count] == "col"){
+            } else if (state.block.block_type == "col"){
                 expContext.fillText("During this block you must work together.",expCanvas.width/2,expCanvas.height/4-25);
                 expContext.fillText("Both of your hits and misses count toward the team score.",expCanvas.width/2,expCanvas.height/4);
-            } else if (blockTypes[count] == "com"){
+            } else if (state.block.block_type == "com"){
                 expContext.fillText("During this block you must compete against each other to outscore your opponent.",expCanvas.width/2,expCanvas.height/4-50);
                 expContext.fillText("Any 'miss' is scored against you both but your 'hits' are your own.",expCanvas.width/2,expCanvas.height/4-25);
             }
