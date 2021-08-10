@@ -166,7 +166,7 @@ ready(async() => {
         //var condOrder;//          = ["nonCol","col","com"];
 
         // workload
-        var workloadLevels      = [1, 3,6,9];
+        var workloadLevels      = [1,3,6,9];
         var workloadTrials      = new Array(nTrials/workloadLevels.length).fill(workloadLevels).flat();
         var trialDuration       = 20;           // seconds
         var dirInst             = 5;            // second intervals to display practice trial instructions
@@ -336,10 +336,10 @@ ready(async() => {
 
                 let dx = this.speed*Math.cos(this.angle);
                 let dy = this.speed*Math.sin(this.angle);
-                if (moving){
-                    this.x += dx; this.xCoords.push(this.x);
-                    this.y += dy; this.yCoords.push(this.y);
-                }
+                // if (moving){
+                this.x += dx; this.xCoords.push(this.x);
+                this.y += dy; this.yCoords.push(this.y);
+                // }
                 // collision detection
                 if (this.x > frameRight-bRad || this.x < frameLeft+bRad) {
                     this.angle = Math.PI-this.angle;
@@ -349,7 +349,7 @@ ready(async() => {
                 }
                 if (this.y > frameBottom) {
                     this.y = frameTop + bRad;
-                    if (condOrder[nCurrentBlock]=="nonCol"&& !bInPractice){
+                    if (state.block.block_type[nCurrentBlock]=="nonCol"&& !bInPractice){
                         if (this.identity < Math.max(...workloadLevels)){
                             miss1++;
                         } else {
@@ -361,7 +361,7 @@ ready(async() => {
                     }
                 }
                 if (this.y > py-bRad && this.y < py) {
-                    if (condOrder[nCurrentBlock]=="nonCol" && !bInPractice){
+                    if (state.block.block_type[nCurrentBlock]=="nonCol" && !bInPractice){
                         if (this.identity < Math.max(...workloadLevels)){ // If the ball ID belongs to P1
                             if (this.x > paddlePos1 - bRad && this.x < paddlePos1 + pWidth + bRad) {
                                 let impact  = (this.x+bRad) - (paddlePos1+(0.5*pWidth));
@@ -1175,7 +1175,7 @@ ready(async() => {
             paddle2.draw(); paddle2.move(p2Left,p2Right);
 
             scoring();
-            drawScore(condOrder,nCurrentBlock);
+            drawScore(state.block.block_type,nCurrentBlock);
             trialTime = drawTimer(trialDuration, start, moving);
 
             if (trialTime <= 0){endTrial()};
@@ -1186,20 +1186,21 @@ ready(async() => {
             p1Balls     =[];
             p2Balls     =[];
             allBalls    =[];
-            bAngles     = uniqueAngles(workloadTrials[nCurrentTrial-1],lowLim, upperLim);
+            // ballAngles should be determined by the server
+            bAngles     = uniqueAngles(state.block.n_balls,lowLim, upperLim);
             justOncePlease = true; // this is a stupid line that allows me to make a stupid cumulative score
 
-            if (condOrder[nCurrentBlock]=="nonCol"){
-                for (let i = 0; i<workloadTrials[nCurrentTrial-1]; i++){
+            if (state.block.block_type[nCurrentBlock]=="nonCol"){
+                for (let i = 0; i < state.block.n_balls; i++){
                     p1Balls.push(new Ball(bx[i%3], p1Colour, i, bAngles[i]));
                     allBalls.push(new Ball(bx[i%3], p1Colour, i, bAngles[i]));
                 }
-                for (let i = workloadTrials[nCurrentTrial-1]; i<workloadTrials[nCurrentTrial-1]*2; i++){
+                for (let i = state.block.n_balls; i < state.block.n_balls*2; i++){
                     p2Balls.push(new Ball(bx[i%3], p2Colour, i+Math.max(...workloadLevels), bAngles[i]));
                     allBalls.push(new Ball(bx[i%3], p2Colour, i+Math.max(...workloadLevels), bAngles[i]));
                 }
             } else {
-                for (let i = 0; i<workloadTrials[nCurrentTrial-1]*2; i++){
+                for (let i = 0; i < state.block.n_balls*2; i++){
                     allBalls.push(new Ball(bx[i%3], sharedColour, i, bAngles[i]));
                 }
             }

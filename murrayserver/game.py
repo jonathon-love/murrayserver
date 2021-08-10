@@ -137,13 +137,13 @@ class Game:
             state['players']['1']['status'] = 'notReady'
             state['block'] = block
 
-            balls = [None] * block['n_balls']
+            balls = [None] * block['n_balls'] * 2 # n_balls represents the number of balls per player, so should be doubled.
             for i, _ in enumerate(balls):
                 balls[i] = {
                     'x': randint(200, 300),
                     'y': randint(200, 300),
                     'speed': 0,
-                    'angle': 0,
+                    'angle': randint(35, 155), # these are the lower- and upper-bounds for ball angles/trajectories. If the ball is moving at an angle outside of these bounds then they just take forever to make it to the top of the screen and back again before they can be hit/missed again.
                 }
 
             state['balls'] = balls
