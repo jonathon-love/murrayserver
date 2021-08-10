@@ -116,12 +116,17 @@ class Game:
 
         if self._state['status'] == 'playing':
             for ball in self._state['balls']:
-                ball['x'] += 1
-                if ball['x'] > 400:
-                    ball['x'] = 200
-                ball['y'] += 1
-                if ball['y'] > 400:
-                    ball['y'] = 200
+                if ball['x'] >= 1300:
+                    ball['dx'] = -1
+                elif ball['x'] <= 400:
+                    ball['dx'] = 1
+                if ball['y'] <= 180:
+                    ball['dy'] = 1
+                if ball['y'] >= 780:
+                    ball['y'] = 179
+                
+                ball['x'] += ball['dx']
+                ball['y'] += ball['dy']
 
 
     async def run(self):
@@ -140,10 +145,12 @@ class Game:
             balls = [None] * block['n_balls'] * 2 # n_balls represents the number of balls per player, so should be doubled.
             for i, _ in enumerate(balls):
                 balls[i] = {
-                    'x': randint(200, 300),
-                    'y': randint(200, 300),
+                    'x': randint(600, 800),
+                    'y': 730,
                     'speed': 0,
                     'angle': randint(35, 155), # these are the lower- and upper-bounds for ball angles/trajectories. If the ball is moving at an angle outside of these bounds then they just take forever to make it to the top of the screen and back again before they can be hit/missed again.
+                    'dx': randint(-1,1),
+                    'dy': -1,
                 }
 
             state['balls'] = balls
