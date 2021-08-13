@@ -44,8 +44,8 @@ class Game:
             'status': 'waiting',
             'block': self._blocks[0],
             'players': {
-                '0': { 'pos': 600, 'status': 'notReady' },
-                '1': { 'pos': 300, 'status': 'notReady' },
+                '0': { 'pos': 300, 'status': 'notReady' },
+                '1': { 'pos': 600, 'status': 'notReady' },
             },
             'balls': [ ],
         }
@@ -122,6 +122,8 @@ class Game:
 
         if self._state['status'] == 'playing':
             for ball in self._state['balls']:
+                ball['x'] += ball['speed'] * math.cos(ball['angle'])
+                ball['y'] += ball['speed'] * math.sin(ball['angle'])
                 if ball['x'] >= 1300 or ball['x'] <= 400: ## approx FrameRight and Left
                     ball['angle'] = math.pi -ball['angle']
                 if ball['y'] <= 180: ## approx frameTop
@@ -129,10 +131,13 @@ class Game:
                 if ball['y'] >= 780: ## approx frameBottom (i.e., a miss)
                     ball['y'] = 179
                 
-                ball['x'] += ball['speed'] * math.cos(ball['angle'])
-                ball['y'] += ball['speed'] * math.sin(ball['angle'])
-
-
+                # If a player is in the right spot at the right time?
+                for player in self._state['players']:
+                    if ball['y'] > 730 and ball['y'] < 730 + 15: ## approx paddle height and ball_size
+                        if ball['x'] > self._state['players'][str(player)]['pos'] and ball['x'] < self._state['players'][str(player)]['pos'] + 100: ## approx paddle size - much to account for here.
+                            ball['angle'] = -ball['angle']
+                            ball['y'] = 729 ## reset to just above the threshold to stop it checking for a hit again.    
+    
     async def run(self):
 
         await self._ready.wait()
@@ -148,7 +153,7 @@ class Game:
 
             balls = [None] * block['n_balls'] * 2 # n_balls represents the number of balls per player, so should be doubled.
             angles = [0-math.radians(randint(35,155)) for angle in balls]
-            speed = 2
+            speed = 4
             for i, _ in enumerate(balls):
                 if state['block'] == "nonCol":
                     if i >= len(balls)/2:
@@ -193,7 +198,7 @@ class Game:
                     break
 
             state['players']['0']['pos'] = 300
-            state['players']['1']['pos'] = 300
+            state['players']['1']['pos'] = 600
             state['status'] = 'playing'
             self.send()
 
