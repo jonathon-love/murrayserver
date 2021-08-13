@@ -323,10 +323,10 @@ ready(async() => {
             move(paddlePos1,paddlePos2){
 
                 let identity = this.identity;
-                if (state.player_id === '1')
+                if (state.player_id === '1' && state.block.block_type[nCurrentBlock]=="nonCol")
                     identity = state.block.n_balls - identity - 1;
 
-                if (state.balls && identity >= 0 && identity < state.balls.length) {
+                if (state.balls && identity >= 0 && identity < 18) {
                     let s = state.balls[identity];
                     this.x = s.x;
                     this.y = s.y;
@@ -1192,16 +1192,16 @@ ready(async() => {
 
             if (state.block.block_type[nCurrentBlock]=="nonCol"){
                 for (let i = 0; i < state.block.n_balls; i++){
-                    p1Balls.push(new Ball(bx[i%3], p1Colour, i, bAngles[i]));
-                    allBalls.push(new Ball(bx[i%3], p1Colour, i, bAngles[i]));
+                    p1Balls.push(new Ball(bx[i%3], p1Colour, state.balls[i].id, state.balls[i].angle));
+                    allBalls.push(new Ball(bx[i%3], p1Colour, state.balls[i].id, state.balls[i].angle));
                 }
                 for (let i = state.block.n_balls; i < state.block.n_balls*2; i++){
-                    p2Balls.push(new Ball(bx[i%3], p2Colour, i+Math.max(...workloadLevels), bAngles[i]));
-                    allBalls.push(new Ball(bx[i%3], p2Colour, i+Math.max(...workloadLevels), bAngles[i]));
+                    p2Balls.push(new Ball(bx[i%3], p2Colour, state.balls[i].id, state.balls[i].angle));
+                    allBalls.push(new Ball(bx[i%3], p2Colour, state.balls[i].id, state.balls[i].angle));
                 }
             } else {
                 for (let i = 0; i < state.block.n_balls*2; i++){
-                    allBalls.push(new Ball(bx[i%3], sharedColour, i, bAngles[i]));
+                    allBalls.push(new Ball(bx[i%3], sharedColour, state.balls[i].id, state.balls[i].angle));
                 }
             }
             paddle1     = new Paddle(p1Start,p1Colour);

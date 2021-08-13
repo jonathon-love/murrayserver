@@ -25,7 +25,12 @@ class Game:
         self._blocks = [ ]
 
         block_types = [ 'nonCol', 'col', 'com' ]
-        n_balls = [6, 6, 6, 6]
+        n_balls = [1, 1, 1, 1,\
+                3, 3, 3, 3,\
+                6, 6, 6, 6,\
+                9, 9, 9, 9\
+                ]
+
         shuffle(block_types)
         shuffle(n_balls)
 
@@ -144,14 +149,38 @@ class Game:
 
             balls = [None] * block['n_balls'] * 2 # n_balls represents the number of balls per player, so should be doubled.
             for i, _ in enumerate(balls):
-                balls[i] = {
+                if state['block'] == "nonCol":
+                    if i >= len(balls)/2:
+                        balls[i] = {
+                            'x': randint(600, 800),
+                            'y': 730,
+                            'speed': 0,
+                            'angle': randint(35, 155), # these are the lower- and upper-bounds for ball angles/trajectories. If the ball is moving at an angle outside of these bounds then they just take forever to make it to the top of the screen and back again before they can be hit/missed again.
+                            'dx': randint(-1,1),
+                            'dy': -1,
+                            'id': 9 - ((len(balls)/2) - i)
+                        }
+                    else:
+                        balls[i] = {
+                        'x': randint(600, 800),
+                        'y': 730,
+                        'speed': 0,
+                        'angle': randint(35, 155), # these are the lower- and upper-bounds for ball angles/trajectories. If the ball is moving at an angle outside of these bounds then they just take forever to make it to the top of the screen and back again before they can be hit/missed again.
+                        'dx': randint(-1,1),
+                        'dy': -1,
+                        'id': i
+                        }
+                else:
+                    balls[i] = {
                     'x': randint(600, 800),
                     'y': 730,
                     'speed': 0,
                     'angle': randint(35, 155), # these are the lower- and upper-bounds for ball angles/trajectories. If the ball is moving at an angle outside of these bounds then they just take forever to make it to the top of the screen and back again before they can be hit/missed again.
                     'dx': randint(-1,1),
                     'dy': -1,
-                }
+                    'id': i
+                    }
+
 
             state['balls'] = balls
 
