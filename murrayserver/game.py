@@ -11,6 +11,7 @@ from asyncio import TimeoutError
 from collections import OrderedDict
 from random import randint
 from random import shuffle
+import math
 
 from .stream import ProgressStream
 
@@ -43,8 +44,8 @@ class Game:
             'status': 'waiting',
             'block': self._blocks[0],
             'players': {
-                '0': { 'pos': 200, 'status': 'notReady' },
-                '1': { 'pos': 100, 'status': 'notReady' },
+                '0': { 'pos': 600, 'status': 'notReady' },
+                '1': { 'pos': 300, 'status': 'notReady' },
             },
             'balls': [ ],
         }
@@ -121,17 +122,15 @@ class Game:
 
         if self._state['status'] == 'playing':
             for ball in self._state['balls']:
-                if ball['x'] >= 1300:
-                    ball['dx'] = -1
-                elif ball['x'] <= 400:
-                    ball['dx'] = 1
-                if ball['y'] <= 180:
-                    ball['dy'] = 1
-                if ball['y'] >= 780:
+                if ball['x'] >= 1300 or ball['x'] <= 400: ## approx FrameRight and Left
+                    ball['angle'] = math.pi -ball['angle']
+                if ball['y'] <= 180: ## approx frameTop
+                    ball['angle'] = -ball['angle']
+                if ball['y'] >= 780: ## approx frameBottom (i.e., a miss)
                     ball['y'] = 179
                 
-                ball['x'] += ball['dx']
-                ball['y'] += ball['dy']
+                ball['x'] += ball['speed'] * math.cos(ball['angle'])
+                ball['y'] += ball['speed'] * math.sin(ball['angle'])
 
 
     async def run(self):
@@ -148,36 +147,32 @@ class Game:
             state['block'] = block
 
             balls = [None] * block['n_balls'] * 2 # n_balls represents the number of balls per player, so should be doubled.
+            angles = [0-math.radians(randint(35,155)) for angle in balls]
+            speed = 2
             for i, _ in enumerate(balls):
                 if state['block'] == "nonCol":
                     if i >= len(balls)/2:
                         balls[i] = {
                             'x': randint(600, 800),
                             'y': 730,
-                            'speed': 0,
-                            'angle': randint(35, 155), # these are the lower- and upper-bounds for ball angles/trajectories. If the ball is moving at an angle outside of these bounds then they just take forever to make it to the top of the screen and back again before they can be hit/missed again.
-                            'dx': randint(-1,1),
-                            'dy': -1,
+                            'angle': angles[i],
+                            'speed': speed,
                             'id': 9 - ((len(balls)/2) - i)
                         }
                     else:
                         balls[i] = {
                         'x': randint(600, 800),
                         'y': 730,
-                        'speed': 0,
-                        'angle': randint(35, 155), # these are the lower- and upper-bounds for ball angles/trajectories. If the ball is moving at an angle outside of these bounds then they just take forever to make it to the top of the screen and back again before they can be hit/missed again.
-                        'dx': randint(-1,1),
-                        'dy': -1,
+                        'angle': angles[i],
+                        'speed': speed,
                         'id': i
                         }
                 else:
                     balls[i] = {
                     'x': randint(600, 800),
                     'y': 730,
-                    'speed': 0,
-                    'angle': randint(35, 155), # these are the lower- and upper-bounds for ball angles/trajectories. If the ball is moving at an angle outside of these bounds then they just take forever to make it to the top of the screen and back again before they can be hit/missed again.
-                    'dx': randint(-1,1),
-                    'dy': -1,
+                    'angle': angles[i],
+                    'speed': speed,
                     'id': i
                     }
 
