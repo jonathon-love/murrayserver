@@ -44,11 +44,19 @@ class Game:
             'status': 'waiting',
             'block': self._blocks[0],
             'players': {
-                '0': { 'pos': 300, 'status': 'notReady' },
-                '1': { 'pos': 600, 'status': 'notReady' },
+                '0': { 'pos': 300, 'status': 'notReady', 'drtResp': False },
+                '1': { 'pos': 600, 'status': 'notReady', 'drtResp': False },
             },
             'balls': [ ],
-        }
+            'drt': {
+                'onset': [20 - (randint(3000,5000)/1000)], ## change trial duration as necessary
+                'dispTime': [],
+                'window': [],
+                'resp1': False, ## you've got this in 'players', too. Take (some) care w redundancy
+                'resp2': False,
+                'progress': 0, ## n stimuli shown so far.
+                },
+            }
 
 
     def add_player(self):
@@ -121,6 +129,10 @@ class Game:
             pass
 
         if self._state['status'] == 'playing':
+            ## Currently using the times set by the state earlier and the timer in the client to show the stim but I feel like that is not correct.
+            ## if trialtime <= drt['onset'][drt['progress']] and >= drt['dispTime'][drt['progress']] and (not drt['resp1'] and not drt['resp2'] -- both need to be false for it to show)
+                ## drt['status'] = True
+
             for ball in self._state['balls']:
                 ball['x'] += ball['speed'] * math.cos(ball['angle'])
                 ball['y'] += ball['speed'] * math.sin(ball['angle'])
@@ -131,12 +143,13 @@ class Game:
                 if ball['y'] >= 780: ## approx frameBottom (i.e., a miss)
                     ball['y'] = 179
                 
-                # If a player is in the right spot at the right time?
+                # If a player is in the right spot at the right ?time?
                 for player in self._state['players']:
                     if ball['y'] > 730 and ball['y'] < 730 + 15: ## approx paddle height and ball_size
                         if ball['x'] > self._state['players'][str(player)]['pos'] and ball['x'] < self._state['players'][str(player)]['pos'] + 100: ## approx paddle size - much to account for here.
                             ball['angle'] = -ball['angle']
-                            ball['y'] = 729 ## reset to just above the threshold to stop it checking for a hit again.    
+                            ball['y'] = 729 ## reset to just above the threshold to stop it checking for a hit again.
+                
     
     async def run(self):
 
@@ -180,9 +193,17 @@ class Game:
                     'speed': speed,
                     'id': i
                     }
-
-
             state['balls'] = balls
+
+            ## DRT
+            # determine trial presentation intervals, display times, and response windows.
+            while state['drt']['onset'][-1] > 5:
+                state['drt']['onset'].append(state['drt']['onset'][-1] - (randint(3000,5000)/1000))
+
+            state['drt']['dispStim'] = [stim-1 for stim in state['drt']['onset']]
+            state['drt']['window'] = [stim-2.5 for stim in state['drt']['onset']]
+            if state['drt']['window'][-1] <= 0:  ## remove the last stimulus time if it's too close to the end of the trial.
+                state['drt']['onset'], state['drt']['dispStim'], state['drt']['window'] = state['drt']['onset'][0:-1], state['drt']['dispStim'][0:-1], state['drt']['window'][0:-1]
 
             self.send()
 

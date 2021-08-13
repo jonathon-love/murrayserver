@@ -1181,13 +1181,13 @@ ready(async() => {
             if (trialTime <= 0){endTrial()};
         }
         function expTrial(){
-            drtOnsets   = drtStimTimes(respWin,trialDuration);
+            drtOnsets = state.drt.onset
             drtPanels   = new DRT();
             p1Balls     =[];
             p2Balls     =[];
             allBalls    =[];
             // ballAngles should be determined by the server
-            bAngles     = uniqueAngles(state.block.n_balls,lowLim, upperLim);
+            // bAngles     = uniqueAngles(state.block.n_balls,lowLim, upperLim);
             justOncePlease = true; // this is a stupid line that allows me to make a stupid cumulative score
 
             if (state.block.block_type[nCurrentBlock]=="nonCol"){
