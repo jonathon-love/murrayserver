@@ -334,19 +334,19 @@ ready(async() => {
                     this.angle = s.angle;
                 }
 
-                let dx = this.speed*Math.cos(this.angle);
-                let dy = this.speed*Math.sin(this.angle);
-                // if (moving){
-                this.x += dx; this.xCoords.push(this.x);
-                this.y += dy; this.yCoords.push(this.y);
+                // let dx = this.speed*Math.cos(this.angle);
+                // let dy = this.speed*Math.sin(this.angle);
+                // // if (moving){
+                // this.x += dx; this.xCoords.push(this.x);
+                // this.y += dy; this.yCoords.push(this.y);
                 // }
                 // collision detection
-                if (this.x > frameRight-bRad || this.x < frameLeft+bRad) {
-                    this.angle = Math.PI-this.angle;
-                }
-                if (this.y < frameTop + bRad) {
-                    this.angle = -this.angle;
-                }
+                // if (this.x > frameRight-bRad || this.x < frameLeft+bRad) {
+                //     this.angle = Math.PI-this.angle;
+                // }
+                // if (this.y < frameTop + bRad) {
+                //     this.angle = -this.angle;
+                // }
                 if (this.y > frameBottom) {
                     this.y = frameTop + bRad;
                     if (state.block.block_type[nCurrentBlock]=="nonCol"&& !bInPractice){
@@ -1192,20 +1192,24 @@ ready(async() => {
 
             if (state.block.block_type[nCurrentBlock]=="nonCol"){
                 for (let i = 0; i < state.block.n_balls; i++){
-                    p1Balls.push(new Ball(bx[i%3], p1Colour, state.balls[i].id, state.balls[i].angle));
-                    allBalls.push(new Ball(bx[i%3], p1Colour, state.balls[i].id, state.balls[i].angle));
+                    p1Balls.push(new Ball(state.balls[i].x, p1Colour, state.balls[i].id, state.balls[i].angle));
+                    allBalls.push(new Ball(state.balls[i].x, p1Colour, state.balls[i].id, state.balls[i].angle));
                 }
                 for (let i = state.block.n_balls; i < state.block.n_balls*2; i++){
-                    p2Balls.push(new Ball(bx[i%3], p2Colour, state.balls[i].id, state.balls[i].angle));
-                    allBalls.push(new Ball(bx[i%3], p2Colour, state.balls[i].id, state.balls[i].angle));
+                    p2Balls.push(new Ball(state.balls[i].x, p2Colour, state.balls[i].id, state.balls[i].angle));
+                    allBalls.push(new Ball(state.balls[i].x, p2Colour, state.balls[i].id, state.balls[i].angle));
                 }
             } else {
                 for (let i = 0; i < state.block.n_balls*2; i++){
-                    allBalls.push(new Ball(bx[i%3], sharedColour, state.balls[i].id, state.balls[i].angle));
+                    allBalls.push(new Ball(state.balls[i].x, sharedColour, state.balls[i].id, state.balls[i].angle));
                 }
             }
-            paddle1     = new Paddle(p1Start,p1Colour);
-            paddle2     = new Paddle(p2Start,p2Colour);
+
+            playerId = state.player_id;
+            otherId = playerId === '0' ? '1' : '0';
+            paddle1     = new Paddle(state.players[playerId].pos,p1Colour);
+            paddle2     = new Paddle(state.players[otherId].pos,p2Colour);
+
             interval    = setInterval(drawTrial,frameRate);
         }
 

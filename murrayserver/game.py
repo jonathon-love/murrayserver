@@ -25,6 +25,22 @@ class Game:
         self._ready = Event()
         self._blocks = [ ]
 
+        self._dim = {
+            'frameLeft': 510 ,
+            'frameRight': 1410,
+            'frameTop': 160,
+            'frameBottom': 760,
+            'paddleY': 728,
+            'paddleW': 90,
+            'paddleH': 11,
+            'p1Start': 760,
+            'p2Start': 1070,
+            'ballR': 9,
+            'ballX': [1000, 960, 920],
+            'ballY': 725,
+
+        }
+
         block_types = [ 'nonCol', 'col', 'com' ]
         n_balls = [1, 1, 1, 1,\
                 3, 3, 3, 3,\
@@ -44,8 +60,8 @@ class Game:
             'status': 'waiting',
             'block': self._blocks[0],
             'players': {
-                '0': { 'pos': 300, 'status': 'notReady', 'drtResp': False },
-                '1': { 'pos': 600, 'status': 'notReady', 'drtResp': False },
+                '0': { 'pos': self._dim['p1Start'], 'status': 'notReady', 'drtResp': False },
+                '1': { 'pos': self._dim['p2Start'], 'status': 'notReady', 'drtResp': False },
             },
             'balls': [ ],
             'drt': {
@@ -54,7 +70,6 @@ class Game:
                 'window': [],
                 'resp1': False, ## you've got this in 'players', too. Take (some) care w redundancy
                 'resp2': False,
-                'progress': 0, ## n stimuli shown so far.
                 },
             }
 
@@ -136,19 +151,19 @@ class Game:
             for ball in self._state['balls']:
                 ball['x'] += ball['speed'] * math.cos(ball['angle'])
                 ball['y'] += ball['speed'] * math.sin(ball['angle'])
-                if ball['x'] >= 1300 or ball['x'] <= 400: ## approx FrameRight and Left
+                if ball['x'] <= self._dim['frameLeft'] or ball['x'] >= self._dim['frameRight']-self._dim['ballR']:
                     ball['angle'] = math.pi -ball['angle']
-                if ball['y'] <= 180: ## approx frameTop
+                if ball['y'] - self._dim['ballR'] <= self._dim['frameTop']:
                     ball['angle'] = -ball['angle']
-                if ball['y'] >= 780: ## approx frameBottom (i.e., a miss)
-                    ball['y'] = 179
+                if ball['y'] >= self._dim['frameBottom'] - 0.5*self._dim['ballR']:
+                    ball['y'] = self._dim['frameTop'] + self._dim['ballR'] # may need to add some value to this to make the balls appear more 'organically'
                 
                 # If a player is in the right spot at the right ?time?
                 for player in self._state['players']:
-                    if ball['y'] > 730 and ball['y'] < 730 + 15: ## approx paddle height and ball_size
-                        if ball['x'] > self._state['players'][str(player)]['pos'] and ball['x'] < self._state['players'][str(player)]['pos'] + 100: ## approx paddle size - much to account for here.
+                    if ball['y']+self._dim['ballR'] > self._dim['paddleY'] and ball['y'] < self._dim['paddleY']+self._dim['ballR']: ## approx paddle height and ball_size
+                        if ball['x'] + self._dim['ballR'] > self._state['players'][str(player)]['pos'] and ball['x'] < self._state['players'][str(player)]['pos'] + self._dim['paddleW'] + self._dim['ballR']: ## approx paddle width - much to account for here.
                             ball['angle'] = -ball['angle']
-                            ball['y'] = 729 ## reset to just above the threshold to stop it checking for a hit again.
+                            ball['y'] = self._dim['paddleY']-self._dim['ballR'] ## reset to just above the threshold to stop it checking for a hit again.
                 
     
     async def run(self):
@@ -171,24 +186,24 @@ class Game:
                 if state['block'] == "nonCol":
                     if i >= len(balls)/2:
                         balls[i] = {
-                            'x': randint(600, 800),
-                            'y': 730,
+                            'x': self._dim['ballX'][i%len(self._dim['ballX'])],
+                            'y': self._dim['ballY'],
                             'angle': angles[i],
                             'speed': speed,
                             'id': 9 - ((len(balls)/2) - i)
                         }
                     else:
                         balls[i] = {
-                        'x': randint(600, 800),
-                        'y': 730,
+                        'x': self._dim['ballX'][i%len(self._dim['ballX'])],
+                        'y': self._dim['ballY'],
                         'angle': angles[i],
                         'speed': speed,
                         'id': i
                         }
                 else:
                     balls[i] = {
-                    'x': randint(600, 800),
-                    'y': 730,
+                    'x': self._dim['ballX'][i%len(self._dim['ballX'])],
+                    'y': self._dim['ballY'],
                     'angle': angles[i],
                     'speed': speed,
                     'id': i
@@ -218,8 +233,8 @@ class Game:
                         and state['players']['1']['status'] == 'ready'):
                     break
 
-            state['players']['0']['pos'] = 300
-            state['players']['1']['pos'] = 600
+            state['players']['0']['pos'] = self._dim['p1Start']
+            state['players']['1']['pos'] = self._dim['p2Start']
             state['status'] = 'playing'
             self.send()
 
