@@ -151,7 +151,7 @@ class Game:
             for ball in self._state['balls']:
                 ball['x'] += ball['speed'] * math.cos(ball['angle'])
                 ball['y'] += ball['speed'] * math.sin(ball['angle'])
-                if ball['x'] <= self._dim['frameLeft'] or ball['x'] >= self._dim['frameRight']-self._dim['ballR']:
+                if ball['x'] <= self._dim['frameLeft']+self._dim['ballR'] or ball['x'] >= self._dim['frameRight']-self._dim['ballR']:
                     ball['angle'] = math.pi -ball['angle']
                 if ball['y'] - self._dim['ballR'] <= self._dim['frameTop']:
                     ball['angle'] = -ball['angle']
