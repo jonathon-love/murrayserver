@@ -152,7 +152,7 @@ ready(async() => {
 
   </SCRIPT>
 
-    <canvas id="canvas" width = 800 height = 600></canvas>
+    <canvas id="canvas" width = "800" height= "600"></canvas>
     <script>
 
     var skipIntro = true;
@@ -323,7 +323,7 @@ ready(async() => {
             move(paddlePos1,paddlePos2){
 
                 let identity = this.identity;
-                if (state.player_id === '1' && state.block.block_type[nCurrentBlock]=="nonCol")
+                if (state.player_id === '1' && state.block.block_type=="nonCol")
                     identity = state.block.n_balls - identity - 1;
 
                 if (state.balls && identity >= 0 && identity < 18) {
@@ -349,7 +349,7 @@ ready(async() => {
                 // }
                 if (this.y > frameBottom) {
                     this.y = frameTop + bRad;
-                    if (state.block.block_type[nCurrentBlock]=="nonCol"&& !bInPractice){
+                    if (state.block.block_type=="nonCol"&& !bInPractice){
                         if (this.identity < Math.max(...workloadLevels)){
                             miss1++;
                         } else {
@@ -361,7 +361,7 @@ ready(async() => {
                     }
                 }
                 if (this.y > py-bRad && this.y < py) {
-                    if (state.block.block_type[nCurrentBlock]=="nonCol" && !bInPractice){
+                    if (state.block.block_type=="nonCol" && !bInPractice){
                         if (this.identity < Math.max(...workloadLevels)){ // If the ball ID belongs to P1
                             if (this.x > paddlePos1 - bRad && this.x < paddlePos1 + pWidth + bRad) {
                                 let impact  = (this.x+bRad) - (paddlePos1+(0.5*pWidth));
@@ -1053,7 +1053,7 @@ ready(async() => {
         function scoring(){
             if (hits1 == 0){score1=0} else {score1=(Math.round((hits1/(hits1+miss1))*1000)).toFixed(0)}
             if (hits2 == 0){score2=0} else {score2=(Math.round((hits2/(hits2+miss2))*1000)).toFixed(0)}
-            if(state.block.block_type[nCurrentBlock]=="col" || state.block.block_type[nCurrentBlock]=="com"){
+            if(state.block.block_type=="col" || state.block.block_type=="com"){
                 if (hits1 == 0 && hits2 == 0){
                     teamScore = 0;
                 }   else {
@@ -1078,7 +1078,7 @@ ready(async() => {
             onsets      = [];
         }
         function drawScore(blockType,currentBlock){
-            if (blockType[currentBlock]=="col"){
+            if (blockType=="col"){
                 expContext.textAlign = "left";
                 expContext.font = "16px Arial";
                 expContext.fillStyle = "rgb(0,0,0)";
@@ -1192,7 +1192,7 @@ ready(async() => {
             // bAngles     = uniqueAngles(state.block.n_balls,lowLim, upperLim);
             justOncePlease = true; // this is a stupid line that allows me to make a stupid cumulative score
 
-            if (state.block.block_type[nCurrentBlock]=="nonCol"){
+            if (state.block.block_type=="nonCol"){
                 for (let i = 0; i < state.block.n_balls; i++){
                     p1Balls.push(new Ball(state.balls[i].x, p1Colour, state.balls[i].id, state.balls[i].angle));
                     allBalls.push(new Ball(state.balls[i].x, p1Colour, state.balls[i].id, state.balls[i].angle));
@@ -1256,7 +1256,7 @@ ready(async() => {
                         start   = new Date();
                     }
 
-                    nCurrentTrial = state.block.block; // this 'initialisation' needs to be determined elsewhere- 
+                    nCurrentTrial = state.trialNo+1; // this 'initialisation' needs to be determined elsewhere- 
                     scoreReset();
                     expTrial();
                     proceed = false;
@@ -1310,7 +1310,7 @@ ready(async() => {
                 blockInst(state.block.block_type,nCurrentBlock);
             } else if (bInTrialBreak){
                     // interTrial(score1,score2,teamScore,condOrder[nCurrentBlock]);
-                    interTrial(score1,score2,teamScore,state.block.block_type[nCurrentBlock])
+                    interTrial(score1,score2,teamScore,state.block.block_type)
             }
         }
 
@@ -1329,14 +1329,14 @@ ready(async() => {
             p2DRTtrialData[2].forEach(function(e){p2MissEvents.push(onsets[e])});
 
             // Save hits/misses
-            scoreData.push(nCurrentBlock + "\t" + state.block.block_type[nCurrentBlock] + "\t" + nCurrentTrial + "\t" + workloadTrials[nCurrentTrial-1] + "\t" +  trialDuration + "\t" + hits1 + "\t" + hits2 + "\t" + miss1 + "\t" + miss2 + "\t" + score1/1000 + "\t" + score2/1000 + "\t" + teamScore/1000 + "\t" +  onsets.length + "\t" + p1DRTtrialData[0] + "\t" + p2DRTtrialData[0] + "\t" + p1DRTtrialData[1] + "\t" + p2DRTtrialData[1] + "\t" + fa1.length + "\t" + fa2.length);
+            scoreData.push(nCurrentBlock + "\t" + state.block.block_type + "\t" + nCurrentTrial + "\t" + workloadTrials[nCurrentTrial-1] + "\t" +  trialDuration + "\t" + hits1 + "\t" + hits2 + "\t" + miss1 + "\t" + miss2 + "\t" + score1/1000 + "\t" + score2/1000 + "\t" + teamScore/1000 + "\t" +  onsets.length + "\t" + p1DRTtrialData[0] + "\t" + p2DRTtrialData[0] + "\t" + p1DRTtrialData[1] + "\t" + p2DRTtrialData[1] + "\t" + fa1.length + "\t" + fa2.length);
 
             // Save DRT
-            drtData.push(nCurrentBlock + "\t" + state.block.block_type[nCurrentBlock] + "\t" + nCurrentTrial + "\t" + workloadTrials[nCurrentTrial-1] + "\t" +  onsets + "\t" + rt1 + "\t" + rt2 + "\t" + p1MissEvents + "\t" + p2MissEvents + "\t" + fa1 + "\t" + fa2 + "\t" + hand1 + "\t" + hand2);
+            drtData.push(nCurrentBlock + "\t" + state.block.block_type + "\t" + nCurrentTrial + "\t" + workloadTrials[nCurrentTrial-1] + "\t" +  onsets + "\t" + rt1 + "\t" + rt2 + "\t" + p1MissEvents + "\t" + p2MissEvents + "\t" + fa1 + "\t" + fa2 + "\t" + hand1 + "\t" + hand2);
 
             // Save sprite coordinates
-            paddleCoords.push(nCurrentBlock + "\t" + state.block.block_type[nCurrentBlock] + "\t" + nCurrentTrial + "\t" + workloadTrials[nCurrentTrial-1] + "\t" + paddle1.coords + "\t" + paddle2.coords)
-            allBalls.forEach(function(key) {ballCoords.push(nCurrentBlock + "\t" + state.block.block_type[nCurrentBlock] + "\t" + nCurrentTrial + "\t" + workloadTrials[nCurrentTrial-1] + "\t" +  key.identity + "\t" + key.xCoords + "\t" + key.yCoords)});
+            paddleCoords.push(nCurrentBlock + "\t" + state.block.block_type + "\t" + nCurrentTrial + "\t" + workloadTrials[nCurrentTrial-1] + "\t" + paddle1.coords + "\t" + paddle2.coords)
+            allBalls.forEach(function(key) {ballCoords.push(nCurrentBlock + "\t" + state.block.block_type + "\t" + nCurrentTrial + "\t" + workloadTrials[nCurrentTrial-1] + "\t" +  key.identity + "\t" + key.xCoords + "\t" + key.yCoords)});
 		}
 
         function interTrial(p1s, p2s, teams, blockType){

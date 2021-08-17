@@ -178,6 +178,7 @@ class Game:
             state['players']['0']['status'] = 'notReady'
             state['players']['1']['status'] = 'notReady'
             state['block'] = block
+            state['trialNo'] = block_no
 
             balls = [None] * block['n_balls'] * 2 # n_balls represents the number of balls per player, so should be doubled.
             angles = [0-math.radians(randint(35,155)) for angle in balls]
