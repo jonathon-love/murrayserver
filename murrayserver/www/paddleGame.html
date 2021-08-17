@@ -152,7 +152,7 @@ ready(async() => {
 
   </SCRIPT>
 
-    <canvas id="canvas" width = "800" height= "600"></canvas>
+    <canvas id="canvas" width="800" height="600" style="width: 100% ;"></canvas>
     <script>
 
     var skipIntro = true;
@@ -855,8 +855,6 @@ ready(async() => {
 			nCurrentBlock       = 0; // start at zero
 			expCanvas           = document.getElementById("canvas");
 			expContext          = expCanvas.getContext("2d");
-			expCanvas.width     = document.body.clientWidth;
-			expCanvas.height    = document.body.clientHeight;
 			expContext.fillStyle= frameColour;
 			expContext.fillRect(0, 0, expCanvas.width, expCanvas.height);
             frameLeft           = expCanvas.width/2 - frameWidth/2;
