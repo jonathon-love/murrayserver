@@ -177,7 +177,8 @@ ready(async() => {
         var frameColour         = "ivory";
 
         // GameFrame
-        var frameWidth          = 900;
+        var drtWidth            = 800;
+        var frameWidth          = drtWidth*0.9;
         var frameHeight         = 600;
         var frameLeft;
         var frameRight;
@@ -185,7 +186,7 @@ ready(async() => {
         var frameBottom;
 
         // DRT
-        var drtWidth            = frameWidth*1.12;
+        
         var drtLeft;
         var drtRight;
         var drtOn               = "chartreuse";
@@ -857,13 +858,13 @@ ready(async() => {
 			expContext          = expCanvas.getContext("2d");
 			expContext.fillStyle= frameColour;
 			expContext.fillRect(0, 0, expCanvas.width, expCanvas.height);
-            frameLeft           = expCanvas.width/2 - frameWidth/2;
-			frameRight          = frameLeft + frameWidth;
-			frameTop            = expCanvas.height/2 - frameHeight/2;
-			frameBottom         = frameTop + frameHeight;
+            frameLeft           = drtWidth*0.05;
+			frameRight          = drtWidth*0.95;
+			frameTop            = 0;
+			frameBottom         = frameHeight;
             //DRT Panels
-            drtLeft             = expCanvas.width/2 - drtWidth/2;
-			drtRight            = drtLeft + drtWidth;
+            drtLeft             = 0;
+			drtRight            = frameRight;
 			// Sprite positions
             p1Start             = frameLeft+(frameWidth*0.33 - pWidth/2);
             p2Start             = frameRight-(frameWidth*0.33 + pWidth/2);
@@ -1308,7 +1309,7 @@ ready(async() => {
                 blockInst(state.block.block_type,nCurrentBlock);
             } else if (bInTrialBreak){
                     // interTrial(score1,score2,teamScore,condOrder[nCurrentBlock]);
-                    interTrial(score1,score2,teamScore,state.block.block_type)
+                    interTrial(score1,score2,teamScore, state.block.block_type)
             }
         }
 

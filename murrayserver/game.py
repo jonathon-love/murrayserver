@@ -24,21 +24,30 @@ class Game:
         self._receive_update = Event()
         self._ready = Event()
         self._blocks = [ ]
+        
+        drtWidth = 800
+        width  = drtWidth * 0.9
+        height = 600
+        pWidth = width * 0.10
+        pHeight= pWidth* 0.12
+        bRad   = pHeight*0.90
 
         self._dim = {
-            'frameLeft': 510 ,
-            'frameRight': 1410,
-            'frameTop': 160,
-            'frameBottom': 760,
-            'paddleY': 728,
-            'paddleW': 90,
-            'paddleH': 11,
-            'p1Start': 760,
-            'p2Start': 1070,
-            'ballR': 9,
-            'ballX': [1000, 960, 920],
-            'ballY': 725,
-
+            ## for 800x600
+            'frameWidth': width, # The DRT rect is the full screen and the game frame is drawn over the top of it.
+            'frameHeight': height,
+            'frameLeft': drtWidth*0.05,
+            'frameRight': drtWidth*0.95,
+            'frameTop': 0,
+            'frameBottom': height,
+            'paddleY': height - pHeight*3,
+            'p1Start': drtWidth*0.33 - (pWidth/2),
+            'p2Start': drtWidth*0.67 + (pWidth/2),
+            'ballX': [drtWidth/2 - bRad*4, drtWidth/2, drtWidth/2 + bRad*4],
+            'ballY': (height - pHeight*3) - bRad,
+            'pWidth': pWidth,
+            'pHeight': pHeight,
+            'ballR': bRad,
         }
 
         block_types = [ 'nonCol', 'col', 'com' ]
@@ -161,7 +170,7 @@ class Game:
                 # If a player is in the right spot at the right ?time?
                 for player in self._state['players']:
                     if ball['y']+self._dim['ballR'] > self._dim['paddleY'] and ball['y'] < self._dim['paddleY']+self._dim['ballR']: ## approx paddle height and ball_size
-                        if ball['x'] + self._dim['ballR'] > self._state['players'][str(player)]['pos'] and ball['x'] < self._state['players'][str(player)]['pos'] + self._dim['paddleW'] + self._dim['ballR']: ## approx paddle width - much to account for here.
+                        if ball['x'] + self._dim['ballR'] > self._state['players'][str(player)]['pos'] and ball['x'] < self._state['players'][str(player)]['pos'] + self._dim['pWidth'] + self._dim['ballR']: ## approx paddle width - much to account for here.
                             ball['angle'] = -ball['angle']
                             ball['y'] = self._dim['paddleY']-self._dim['ballR'] ## reset to just above the threshold to stop it checking for a hit again.
                 
