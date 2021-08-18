@@ -1201,14 +1201,16 @@ ready(async() => {
             playerId = state.player_id;
             otherId = playerId === '0' ? '1' : '0';
             
+            let pColours = [p1Colour, p2Colour];
+
             if (state.block.block_type=="nonCol"){
                 for (let i = 0; i < state.block.n_balls; i++){
-                    p1Balls.push(new Ball(state.balls[i].x, p1Colour, state.balls[i].id, state.balls[i].angle));
-                    allBalls.push(new Ball(state.balls[i].x, p1Colour, state.balls[i].id, state.balls[i].angle));
+                    p1Balls.push(new Ball(state.balls[i].x, pColours[parseInt(playerId)], state.balls[i].id, state.balls[i].angle));
+                    allBalls.push(new Ball(state.balls[i].x, pColours[parseInt(playerId)], state.balls[i].id, state.balls[i].angle));
                 }
                 for (let i = state.block.n_balls; i < state.block.n_balls*2; i++){
-                    p2Balls.push(new Ball(state.balls[i].x, p2Colour, state.balls[i].id, state.balls[i].angle));
-                    allBalls.push(new Ball(state.balls[i].x, p2Colour, state.balls[i].id, state.balls[i].angle));
+                    p2Balls.push(new Ball(state.balls[i].x, pColours[parseInt(otherId)], state.balls[i].id, state.balls[i].angle));
+                    allBalls.push(new Ball(state.balls[i].x, pColours[parseInt(otherId)], state.balls[i].id, state.balls[i].angle));
                 }
             } else {
                 for (let i = 0; i < state.block.n_balls*2; i++){
