@@ -1197,7 +1197,10 @@ ready(async() => {
             // ballAngles should be determined by the server
             // bAngles     = uniqueAngles(state.block.n_balls,lowLim, upperLim);
             justOncePlease = true; // this is a stupid line that allows me to make a stupid cumulative score
-
+            
+            playerId = state.player_id;
+            otherId = playerId === '0' ? '1' : '0';
+            
             if (state.block.block_type=="nonCol"){
                 for (let i = 0; i < state.block.n_balls; i++){
                     p1Balls.push(new Ball(state.balls[i].x, p1Colour, state.balls[i].id, state.balls[i].angle));
@@ -1213,10 +1216,8 @@ ready(async() => {
                 }
             }
 
-            playerId = state.player_id;
-            otherId = playerId === '0' ? '1' : '0';
-            paddle1     = new Paddle(state.players[playerId].pos,p1Colour);
-            paddle2     = new Paddle(state.players[otherId].pos,p2Colour);
+            paddle1     = new Paddle(state.players[playerId].pos, p1Colour);
+            paddle2     = new Paddle(state.players[otherId].pos, p2Colour);
 
             interval    = setInterval(drawTrial,frameRate);
         }

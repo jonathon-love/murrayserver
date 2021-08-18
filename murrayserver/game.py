@@ -50,7 +50,8 @@ class Game:
             'ballR': bRad,
         }
 
-        block_types = [ 'nonCol', 'col', 'com' ]
+        # block_types = [ 'nonCol', 'col', 'com' ]
+        block_types = ['nonCol']
         n_balls = [1, 1, 1, 1,\
                 3, 3, 3, 3,\
                 6, 6, 6, 6,\
@@ -169,9 +170,15 @@ class Game:
                 
                 # If a player is in the right spot at the right ?time?
                 if self._state['block']['block_type'] == 'nonCol':
-                    for player in self._state['players']:
+                    if self._state['player_id'] == "0" and ball['id'] < 9:
                         if ball['y']+self._dim['ballR'] > self._dim['paddleY'] and ball['y'] < self._dim['paddleY']+self._dim['ballR']: ## approx paddle height and ball_size
-                            if ball['x'] + self._dim['ballR'] > self._state['players'][str(player)]['pos'] and ball['x'] < self._state['players'][str(player)]['pos'] + self._dim['pWidth'] + self._dim['ballR']: ## approx paddle width - much to account for here.
+                            if ball['x'] + self._dim['ballR'] > self._state['players']['0']['pos'] and ball['x'] < self._state['players']['0']['pos'] + self._dim['pWidth'] + self._dim['ballR']: ## approx paddle width - much to account for here.
+                                ball['angle'] = -ball['angle']
+                                ball['y'] = self._dim['paddleY']-self._dim['ballR'] ## reset to just above the threshold to stop it checking for a hit again.
+
+                    if self._state['player_id'] == "1" and ball['id'] >= 9:
+                        if ball['y']+self._dim['ballR'] > self._dim['paddleY'] and ball['y'] < self._dim['paddleY']+self._dim['ballR']: ## approx paddle height and ball_size
+                            if ball['x'] + self._dim['ballR'] > self._state['players']['1']['pos'] and ball['x'] < self._state['players']['1']['pos'] + self._dim['pWidth'] + self._dim['ballR']: ## approx paddle width - much to account for here.
                                 ball['angle'] = -ball['angle']
                                 ball['y'] = self._dim['paddleY']-self._dim['ballR'] ## reset to just above the threshold to stop it checking for a hit again.
                 else:           
@@ -206,7 +213,7 @@ class Game:
                             'y': self._dim['ballY'],
                             'angle': angles[i],
                             'speed': speed,
-                            'id': 9 - ((len(balls)/2) - i)
+                            'id': int(9 - ((len(balls)/2) - i))
                         }
                     else:
                         balls[i] = {
