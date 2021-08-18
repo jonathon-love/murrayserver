@@ -186,7 +186,7 @@ ready(async() => {
         var frameBottom;
 
         // DRT
-        
+
         var drtLeft;
         var drtRight;
         var drtOn               = "chartreuse";
@@ -324,9 +324,16 @@ ready(async() => {
             move(paddlePos1,paddlePos2){
 
                 let identity = this.identity;
-                if (state.player_id === '1' && state.block.block_type=="nonCol")
-                    identity = state.block.n_balls - identity - 1;
-
+                // if (state.player_id === '1' && state.block.block_type == "nonCol"){
+                    // identity = identity - state.balls.length - 1;
+                //}
+                if (state.block.block_type === "nonCol"){
+                    if (identity>=9){
+                        if (state.block.n_balls == 1){identity = identity - 9}
+                        else if (state.block.n_balls == 3){identity = identity - 6}
+                        else if (state.block.n_balls == 6){identity = identity - 3}
+                    }
+                }
                 if (state.balls && identity >= 0 && identity < 18) {
                     let s = state.balls[identity];
                     this.x = s.x;
@@ -1246,7 +1253,7 @@ ready(async() => {
                     console.log(state.block);
 
                     clearTimeout(timeout);
-                     
+
                     if (startCount == 0){
                     // if (event.keyCode == 32){
                         // event.preventDefault();
@@ -1255,7 +1262,7 @@ ready(async() => {
                         start   = new Date();
                     }
 
-                    nCurrentTrial = state.trialNo+1; // this 'initialisation' needs to be determined elsewhere- 
+                    nCurrentTrial = state.trialNo+1; // this 'initialisation' needs to be determined elsewhere-
                     scoreReset();
                     expTrial();
                     proceed = false;
