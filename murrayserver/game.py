@@ -50,8 +50,8 @@ class Game:
             'ballR': bRad,
         }
 
-        # block_types = [ 'nonCol', 'col', 'com' ]
-        block_types = ['nonCol']
+        block_types = [ 'nonCol', 'col', 'com' ]
+        # block_types = ['nonCol']
         n_balls = [1, 1, 1, 1,\
                 3, 3, 3, 3,\
                 6, 6, 6, 6,\
@@ -196,11 +196,12 @@ class Game:
         print('ready!')
 
         for block_no, block in enumerate(self._blocks):
-            state['status'] = 'reading'  # instructions
+            state['status'] = 'reading'
             state['players']['0']['status'] = 'notReady'
             state['players']['1']['status'] = 'notReady'
             state['block'] = block
             state['trialNo'] = block_no
+            state['maxTrials'] = len(self._blocks) / 3 # trials per block
 
             balls = [None] * block['n_balls'] * 2 # n_balls represents the number of balls per player, so should be doubled.
             angles = [0-math.radians(randint(35,155)) for angle in balls]
