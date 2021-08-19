@@ -696,7 +696,6 @@ ready(async() => {
                         if (nCurrentBlock == nBlocks){
                             expEnd();
                         } else {
-                            ws.send({'status':"reading"})
                             blockInst(state.block.block_type,nCurrentBlock);
                         }
                     }
@@ -1296,7 +1295,6 @@ ready(async() => {
             clearInterval(interval);
             clearFrame();
             saveTrial();
-            ws.send('{"status":"reading"}')
             bInTrialBreak=true;
             bInTrial    = false;
             moving      = false;
@@ -1424,11 +1422,16 @@ ready(async() => {
             var expSendDRT      = "txt=" + expVarDRT + "&fn=" + expVarFn1 + "&fn=" + expVarFn2;
             var expSendSprites  = "txt=" + expVarPos + "&fn=" + expVarFn1 + "&fn=" + expVarFn2;
 
-			jatos.studySessionData["expSendSprites"] = expSendSprites;
-            jatos.studySessionData["expSendDRT"] = expSendDRT;
-			//experimentDataRequest.send(expSendVariables);
-			jatos.submitResultData(expSendSummary,jatos.startNextComponent);
-
+            if (window.location.hostname === 'localhost') {
+                console.log(expSendSummary)
+                console.log(expSendSprites)
+                console.log(expSendDRT)
+            } else {
+                jatos.studySessionData["expSendSprites"] = expSendSprites;
+                jatos.studySessionData["expSendDRT"] = expSendDRT;
+                //experimentDataRequest.send(expSendVariables);
+                jatos.submitResultData(expSendSummary,jatos.startNextComponent);
+            }
         }
 /*
 		function pointsLink() {

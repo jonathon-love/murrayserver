@@ -52,11 +52,7 @@ class Game:
 
         block_types = [ 'nonCol', 'col', 'com' ]
         # block_types = ['nonCol']
-        n_balls = [1, 1, 1, 1,\
-                3, 3, 3, 3,\
-                6, 6, 6, 6,\
-                9, 9, 9, 9\
-                ]
+        n_balls = [1, 1, 1, 1,]
 
         shuffle(block_types)
         shuffle(n_balls)
@@ -75,7 +71,7 @@ class Game:
             },
             'balls': [ ],
             'drt': {
-                'onset': [20 - (randint(3000,5000)/1000)], ## change trial duration as necessary
+                'onset': [], ## change trial duration as necessary
                 'dispTime': [],
                 'window': [],
                 'resp1': False, ## you've got this in 'players', too. Take (some) care w redundancy
@@ -235,6 +231,7 @@ class Game:
             state['balls'] = balls
 
             ## DRT
+            state['drt']['onset'] = [20 - (randint(3000,5000)/1000)] ## change trial duration as necessary
             # determine trial presentation intervals, display times, and response windows.
             while state['drt']['onset'][-1] > 5:
                 state['drt']['onset'].append(state['drt']['onset'][-1] - (randint(3000,5000)/1000))
