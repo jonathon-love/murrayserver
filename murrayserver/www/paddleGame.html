@@ -688,10 +688,10 @@ ready(async() => {
                     // nCurrentTrial++;
                     bInTrialBreak = false;
                     scoreReset();
-                    if (nCurrentTrial<=state.maxTrials){
+                    if (nCurrentTrial<state.maxTrials){
                         ws.send('{"status":"ready"}')
-                        expTrial();
-                    } else if(nCurrentTrial>state.maxTrials){
+                        // expTrial();
+                    } else if(nCurrentTrial>=state.maxTrials){
                         nCurrentBlock++;
                         if (nCurrentBlock == nBlocks){
                             expEnd();
@@ -1388,12 +1388,20 @@ ready(async() => {
             timeout = setTimeout(timedContinue,trialBreakTime*1000);
         }
         function expEnd(){
+            drawCanvas();
+            expContext.fillStyle = frameColour;
+            expContext.font="30px Arial";
+            expContext.textAlign = "center";
+            expContext.fillText("The experiment is complete!",expCanvas.width/2,expCanvas.height/4-100);
+            expContext.font="16px Arial";
+            expContext.fillText("Thank you for your participation.",expCanvas.width/2,expCanvas.height/4-50);
+            expContext.fillText("If you have any questions or concerns about the experiment please contact the", expCanvas.width/2, expCanvas.height/4-25);
+            expContext.filltext("researchers Murray Bennett or Ami Eidels at murray.bennett@uon.edu.au or ami.eidels@newcastle.edu.au.",expCanvas.width/2,expCanvas.height/4-25);
+            expContext.fillText("Participation credit has been automatically granted.",expCanvas.width/2,expCanvas.height/4+25);
+        
             var paddle_txt   = "block" + "\t" + "groupType" + "\t" + "trlNum" + "\t" + "workload" + "\t" + "paddle1Coords" + "\t" + "paddle2Coords\n";
-
             var ball_txt     = "block" + "\t" + "groupType" + "\t" + "trlNum" + "\t" + "workload" + "\t" + "bID" + "\t" + "xCoords" + "\t" + "yCoords\n";
-
             var score_txt    = "block" + "\t" + "groupType" + "\t" + "trlNum" + "\t" + "workload" + "\t" + "dur" + "\t" + "hits1" + "\t" + "hits2" + "\t" + "miss1" + "\t" + "miss2" + "\t" + "hr1" + "\t" + "hr2" + "\t" + "hrt" + "\t" + "nDRTs" + "\t" + "mrt1" + "\t" + "mrt2" + "\t" + "drtm1" + "\t" + "drtm2" + "\t" + "fa1" + "\t" + "fa2\n";
-
             var drt_txt    = "block" + "\t" + "groupType" + "\t" + "trlNum" + "\t" + "workload" + "\t" + "stimOn" + "\t" + "p1RT" + "\t" + "p2RT" + "\t" + "missT1" + "\t" + "missT2" + "\t" +"faT1" + "\t" + "faT2" + "\t" + "hand1" + "\t" + "hand2\n";
 
             // Concatenate trial results into experiment results
@@ -1426,11 +1434,15 @@ ready(async() => {
                 console.log(expSendSummary)
                 console.log(expSendSprites)
                 console.log(expSendDRT)
+
             } else {
-                jatos.studySessionData["expSendSprites"] = expSendSprites;
-                jatos.studySessionData["expSendDRT"] = expSendDRT;
-                //experimentDataRequest.send(expSendVariables);
-                jatos.submitResultData(expSendSummary,jatos.startNextComponent);
+                
+                // jatos.studySessionData["expSendSprites"] = expSendSprites;
+                // jatos.studySessionData["expSendDRT"] = expSendDRT;
+                // //experimentDataRequest.send(expSendVariables);
+                jatos.submitResultData(expSendSummary,jatos.endStudyAjax(true));
+
+                //pointslink();
             }
         }
 /*
