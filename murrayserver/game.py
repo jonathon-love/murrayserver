@@ -51,8 +51,13 @@ class Game:
         }
 
         # block_types = [ 'nonCol', 'col', 'com' ]
-        block_types = ['nonCol']
-        n_balls = [1, 3, 6, 9]
+        block_types = ['nonCol', 'nonCol', 'nonCol']
+        n_balls = [
+            1, 1, 1, 1,\
+                3, 3, 3, 3,\
+                    6, 6, 6, 6,\
+                        9, 9, 9, 9\
+                            ]
 
         shuffle(block_types)
         shuffle(n_balls)
@@ -66,8 +71,20 @@ class Game:
             'status': 'waiting',
             'block': self._blocks[0],
             'players': {
-                '0': { 'pos': self._dim['p1Start'], 'status': 'notReady', 'drtResp': False },
-                '1': { 'pos': self._dim['p2Start'], 'status': 'notReady', 'drtResp': False },
+                '0': {
+                    'pos': self._dim['p1Start'], 
+                    'status': 'notReady', 
+                    'drtResp': False,
+                    'hits': 0,
+                    'miss': 0,
+                    },
+                '1': {
+                    'pos': self._dim['p2Start'],
+                    'status': 'notReady',
+                    'drtResp': False,
+                    'hits': 0,
+                    'miss': 0,
+                    },
             },
             'balls': [ ],
             'drt': {
@@ -103,7 +120,6 @@ class Game:
 
         async def read():
             async for msg in ws:
-                #if msg.type == WSMsgType.TEXT:
                 data = json.loads(msg.data)
                 self._state['players'][player_id].update(data)
                 self._receive_update.set()
@@ -162,12 +178,20 @@ class Game:
                 if ball['y'] - self._dim['ballR'] <= self._dim['frameTop']:
                     ball['angle'] = -ball['angle']
                 if ball['y'] >= self._dim['frameBottom'] - 0.5*self._dim['ballR']:
-                    ball['y'] = self._dim['frameTop'] + self._dim['ballR'] # may need to add some value to this to make the balls appear more 'organically'
-                
+                    ball['y'] = self._dim['frameTop'] + self._dim['ballR']
+                    if self._state['block']['block_type'] == 'nonCol':
+                        if ball['id'] < 9:
+                            self._state['players']['0']['miss'] += 1
+                        else:
+                            self._state['players']['1']['miss'] += 1
+                    else:
+                        self._state['players']['0']['miss'] += 1
+                        self._state['players']['1']['miss'] += 1
+
                 # If a player is in the right spot at the right ?time?
                 if self._state['block']['block_type'] == 'nonCol':
                     if self._state['player_id'] == "0" and ball['id'] < 9:
-                        if ball['y']+self._dim['ballR'] > self._dim['paddleY'] and ball['y'] < self._dim['paddleY']+self._dim['ballR']: ## approx paddle height and ball_size
+                        if ball['y']+self._dim['ballR'] > self._dim['paddleY'] and ball['y'] < self._dim['paddleY']+self._dim['ballR']: 
                             if ball['x'] + self._dim['ballR'] > self._state['players']['0']['pos'] and ball['x'] < self._state['players']['0']['pos'] + self._dim['pWidth'] + self._dim['ballR']: ## approx paddle width - much to account for here.
                                 impact = (ball['x'] + self._dim['ballR']/2) - (self._state['players']['0']['pos']+ (self._dim['pWidth']/2))
                                 offset = impact/(self._dim['pWidth']/2)/2
@@ -176,9 +200,10 @@ class Game:
                                 else:
                                     ball['angle'] = -ball['angle']+offset
                                 ball['y'] = self._dim['paddleY']-self._dim['ballR']
+                                self._state['players']['0']['hits'] += 1
 
                     if self._state['player_id'] == "1" and ball['id'] >= 9:
-                        if ball['y']+self._dim['ballR'] > self._dim['paddleY'] and ball['y'] < self._dim['paddleY']+self._dim['ballR']: ## approx paddle height and ball_size
+                        if ball['y']+self._dim['ballR'] > self._dim['paddleY'] and ball['y'] < self._dim['paddleY']+self._dim['ballR']: 
                             if ball['x'] + self._dim['ballR'] > self._state['players']['1']['pos'] and ball['x'] < self._state['players']['1']['pos'] + self._dim['pWidth'] + self._dim['ballR']: ## approx paddle width - much to account for here.
                                 impact = (ball['x'] + self._dim['ballR']/2) - (self._state['players']['1']['pos']+ (self._dim['pWidth']/2))
                                 offset = impact/(self._dim['pWidth']/2)/2
@@ -187,17 +212,34 @@ class Game:
                                 else:
                                     ball['angle'] = -ball['angle']+offset
                                 ball['y'] = self._dim['paddleY']-self._dim['ballR']
-                else:           
-                    for player in self._state['players']:
-                        if ball['y']+self._dim['ballR'] > self._dim['paddleY'] and ball['y'] < self._dim['paddleY']+self._dim['ballR']: ## approx paddle height and ball_size
-                            if ball['x'] + self._dim['ballR'] > self._state['players'][str(player)]['pos'] and ball['x'] < self._state['players'][str(player)]['pos'] + self._dim['pWidth'] + self._dim['ballR']: ## approx paddle width - much to account for here.
-                                impact = (ball['x'] + self._dim['ballR']/2) - (self._state['players'][str(player)]['pos']+ (self._dim['pWidth']/2))
-                                offset = impact/(self._dim['pWidth']/2)/2
-                                if (-ball['angle']+offset) <= -math.radians(155) or (-ball['angle'] + offset >= -math.radians(35)):
-                                    ball['angle'] = -ball['angle']
-                                else:
-                                    ball['angle'] = -ball['angle']+offset
-                                ball['y'] = self._dim['paddleY']-self._dim['ballR']
+                                self._state['players']['1']['hits'] += 1
+                else:
+                    # for player in self._state['players']:
+                    if ball['y']+self._dim['ballR'] > self._dim['paddleY'] and ball['y'] < self._dim['paddleY']+self._dim['ballR']: 
+                        if ball['x'] + self._dim['ballR'] > self._state['players']['0']['pos'] and ball['x'] < self._state['players']['0']['pos'] + self._dim['pWidth'] + self._dim['ballR']:
+                            impact = (ball['x'] + self._dim['ballR']/2) - (self._state['players']['0']['pos']+ (self._dim['pWidth']/2))
+                            offset = impact/(self._dim['pWidth']/2)/2
+                            if (-ball['angle']+offset) <= -math.radians(155) or (-ball['angle'] + offset >= -math.radians(35)):
+                                ball['angle'] = -ball['angle']
+                            else:
+                                ball['angle'] = -ball['angle']+offset
+                            ball['y'] = self._dim['paddleY']-self._dim['ballR']
+                            if ball['x'] + self._dim['ballR'] > self._state['players']['1']['pos'] and ball['x'] < self._state['players']['1']['pos'] + self._dim['pWidth'] + self._dim['ballR']:
+                                    self._state['players']['0']['hits'] += 0.5
+                                    self._state['players']['1']['hits'] += 0.5
+                            else:
+                                self._state['players']['0']['hits'] += 1
+
+                        elif ball['x'] + self._dim['ballR'] > self._state['players']['1']['pos'] and ball['x'] < self._state['players']['1']['pos'] + self._dim['pWidth'] + self._dim['ballR']:
+                            impact = (ball['x'] + self._dim['ballR']/2) - (self._state['players']['1']['pos']+ (self._dim['pWidth']/2))
+                            offset = impact/(self._dim['pWidth']/2)/2
+                            if (-ball['angle']+offset) <= -math.radians(155) or (-ball['angle'] + offset >= -math.radians(35)):
+                                ball['angle'] = -ball['angle']
+                            else:
+                                ball['angle'] = -ball['angle']+offset
+                            ball['y'] = self._dim['paddleY']-self._dim['ballR']
+                            self._state['players']['1']['hits'] += 1
+                                
     async def run(self):
 
         await self._ready.wait()
@@ -211,7 +253,15 @@ class Game:
             state['players']['1']['status'] = 'notReady'
             state['block'] = block
             state['trialNo'] = block_no%(len(self._blocks) / 3)
-            state['maxTrials'] = len(self._blocks) / 3 # trials per block
+            state['maxTrials'] = len(self._blocks) / 3# trials per block
+
+            # print(f"p1H: {self._state['players']['0']['hits']}, p1M: {self._state['players']['0']['miss']}")
+            # print(f"p2H: {self._state['players']['1']['hits']}, p2M: {self._state['players']['1']['miss']}")
+
+            self._state['players']['0']['hits'] = 0
+            self._state['players']['1']['hits'] = 0
+            self._state['players']['0']['miss'] = 0
+            self._state['players']['1']['miss'] = 0
 
             balls = [None] * block['n_balls'] * 2 # n_balls represents the number of balls per player, so should be doubled.
             angles = [0-math.radians(randint(45,135)) for angle in balls]
