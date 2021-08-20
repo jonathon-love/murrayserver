@@ -52,7 +52,7 @@ class Game:
 
         block_types = [ 'nonCol', 'col', 'com' ]
         # block_types = ['nonCol']
-        n_balls = [1, 1, 1, 1,]
+        n_balls = [1, 1, 1, 1]
 
         shuffle(block_types)
         shuffle(n_balls)
