@@ -152,10 +152,10 @@ ready(async() => {
 
   </SCRIPT>
 
-    <canvas id="canvas" width="800" height="600" style="width: 100% ;"></canvas>
+    <canvas id="canvas" width="800" height="600" style="width: 100%; height:100%"></canvas>
     <script>
 
-    var skipIntro = false;
+    var skipIntro = true;
 
     // Define variables
         // Input variables
@@ -190,16 +190,19 @@ ready(async() => {
         var drtOff              = "black";
         var drtMin              = 3;
         var drtMax              = 5;
-        var respWin             = 2.5;
-        var drtDur              = 1;
+        var respWin             = 2.5; // change back to 2.5
+        var drtDur              = 1; // change back to 1
         let drtResp1            = false;
-        let drtResp2            = false;
+        // let drtResp2            = false;
         let drtOnsets;
         var onsets              = [];   // used to save the onset times for each trial
-        var plyr1DRTrespKeyR    = 38;    // Up Arrow
-        var plyr1DRTrespKeyL    = 90;   // Z
+
+        var LHdrtRespKey        = "38"
+        var RHdrtRespKey        = "90"
+
         var plyr1DRTrespKey;
-        var plyr2DRTrespKey;
+        // var plyr2DRTrespKey;
+
         var hand1;
         var hand2;
 
@@ -258,14 +261,26 @@ ready(async() => {
         let p1Start;
         let p2Start;
         var py;
-        var plyr1Left           = "90";         // get the event.which from keycode.info
-        var plyr1Right          = 88;
-        var plyr2Left           = "ArrowLeft";  // event.code
-        var plyr2Right          = "ArrowRight";
+        var LHleft              = "90"; //Z
+        var LHright             = "67"; //C
+        var RHleft              = "37"; //left arrow
+        var RHright             = "39"; // right arrow
+        var left;
+        var right;              
+
+        if (skipIntro){
+            left = RHleft; 
+            right = RHright; 
+            plyr1DRTrespKey = RHdrtRespKey;
+        }
+        
+        // var plyr2Left           = "ArrowLeft";  // event.code
+        // var plyr2Right          = "ArrowRight";
+        
         var p1Hand              = [];
-        var p2Hand              = [];
+        // var p2Hand              = [];
         var p1HandChosen        = false;
-        var p2HandChosen        = false;
+        // var p2HandChosen        = false;
         var rtMin               = 0.1; // tenth of a second - used to clean RT times as they're made
         var counter1 = true; // these are response counters so we don't have 100 RTs saved as hits for each DRT stimulus event.
         var counter2 = true;
@@ -444,11 +459,11 @@ ready(async() => {
                 let playerId = state.player_id;
                 let otherId = playerId === '0' ? '1' : '0';
                 let theirPos = state.players[otherId].pos;
-                paddle2.x = theirPos;
+                // paddle2.x = theirPos;
 
-                if(moving){
-                    this.coords.push(this.x);
-                }
+                // if(moving){
+                //     this.coords.push(this.x);
+                // }
                 if (mvLeft){
                     this.x -= pSpeed;
                     if (this.x < frameLeft) {
@@ -532,7 +547,7 @@ ready(async() => {
             if (p1){
                 expContext.fillStyle = p1Colour;
                 expContext.fillStyle = "white";
-                if (drt1 == plyr1DRTrespKeyR){
+                if (drt1 == LHdrtRespKey){
                     drawKey(expContext,"2191",expCanvas.width*0.67-15,expCanvas.height/2+50, 40, 40, 3,true,true,true);
                     drawKey(expContext,"Z",expCanvas.width/3-25,expCanvas.height/2+50, 40, 40, 3,true,true,false);
                     drawKey(expContext,"C",expCanvas.width/3+25,expCanvas.height/2+50, 40, 40, 3,true,true,false);
@@ -541,7 +556,7 @@ ready(async() => {
                     expContext.fillText("Response", expCanvas.width*0.67,expCanvas.height/2+100);
                     expContext.fillText("Non-Dominant", expCanvas.width*0.67,expCanvas.height/2+25);
                     expContext.fillText("Dominant Hand", expCanvas.width/3,expCanvas.height/2+25);
-                } else if (drt1 == plyr1DRTrespKeyL){
+                } else if (drt1 == RHdrtRespKey){
                     drawKey(expContext,"Z",expCanvas.width/3-15,expCanvas.height/2+50, 40, 40, 3,true,true,false);
                     drawKey(expContext,"2190",expCanvas.width*0.67-25,expCanvas.height/2+50, 40, 40, 3,true,true,true);
                     drawKey(expContext,"2192",expCanvas.width*0.67+25,expCanvas.height/2+50, 40, 40, 3,true,true,true);
@@ -558,9 +573,9 @@ ready(async() => {
         document.addEventListener("keydown",keyDownHandler, false);
         document.addEventListener("keyup", keyUpHandler, false);
         function keyDownHandler(e) {
-            if (e.keyCode == plyr1Right) {
+            if (e.keyCode == right) {
                 p1Right = true;
-            } else if (e.keyCode == plyr1Left) {
+            } else if (e.keyCode == left) {
                 p1Left = true;
             }
             // if (e.key == plyr2Right) {
@@ -570,6 +585,7 @@ ready(async() => {
             // }
             if (e.keyCode == plyr1DRTrespKey) {
                 drtResp1 = true;
+                ws.send(JSON.stringify({ 'drtResp': true }));
             } 
             // else if (e.keyCode == plyr2DRTrespKey) {
             //     drtResp2 = true;
@@ -596,15 +612,19 @@ ready(async() => {
                 }
             } else if (bInInstructions2){
                 if (p1Hand.length == 0 && !p1HandChosen){
-                    if (e.keyCode == plyr1DRTrespKeyR){
-                        p1Hand.push(plyr1DRTrespKeyR);
-                        plyr1DRTrespKey = plyr1DRTrespKeyR;
-                        hand1 = 'right';
-                        p1HandChosen = true;
-                    } else if (e.keyCode == plyr1DRTrespKeyL && !p1HandChosen){
-                        p1Hand.push(plyr1DRTrespKeyL);
-                        plyr1DRTrespKey = plyr1DRTrespKeyL;
+                    if (e.keyCode == LHdrtRespKey){
                         hand1 = 'left';
+                        p1Hand.push(LHdrtRespKey);
+                        plyr1DRTrespKey = LHdrtRespKey;
+                        left    = LHleft;
+                        right   = LHright;
+                        p1HandChosen = true;
+                    } else if (e.keyCode == RHdrtRespKey && !p1HandChosen){
+                        hand1 = 'right';
+                        p1Hand.push(RHdrtRespKey);
+                        plyr1DRTrespKey = RHdrtRespKey;
+                        left    = RHleft;
+                        right   = RHright;
                         p1HandChosen = true;
                     }
                 }
@@ -713,9 +733,9 @@ ready(async() => {
             }
         }
         function keyUpHandler(e) {
-            if (e.keyCode == plyr1Right) { //d
+            if (e.keyCode == right) {
                 p1Right = false;
-            } else if (e.keyCode == plyr1Left) { //a
+            } else if (e.keyCode == left) {
                 p1Left  = false;
             }
             // if (e.key == plyr2Right) {
@@ -724,8 +744,9 @@ ready(async() => {
             //     p2Left  = false;
             // }
             // DRT Response
-            if (e.key == plyr1DRTrespKey) {
+            if (e.keyCode == plyr1DRTrespKey) {
                 drtResp1 = false;
+                ws.send(JSON.stringify({ 'drtResp': false }));
             } 
             // else if (e.key == plyr2DRTrespKey) {
             //     drtResp2  = false;
@@ -823,7 +844,7 @@ ready(async() => {
                 expContext.fillText("they will always start from the bottom of the screen and fly upward.",frameLeft+frameWidth/2,frameBottom-frameHeight/4);
                 expContext.fillText("Experiment trials will begin automatically. For now, press 'space bar' to start the trial",frameLeft+frameWidth/2,frameBottom-frameHeight/4+25);
             } else if (time > trialDuration-dirInst){
-                if (plyr1DRTrespKey == plyr1DRTrespKeyL){
+                if (plyr1DRTrespKey == RHdrtRespKey){
                     expContext.fillText("Press left arrow to move left",frameLeft+frameWidth/2,frameBottom-frameHeight/4);
                     expContext.fillText("Press right arrow to move right",frameLeft+frameWidth/2,frameBottom-frameHeight/4+25);
                 } else {
@@ -845,7 +866,7 @@ ready(async() => {
                 expContext.fillText("The light stays on briefly or until both players respond.",expCanvas.width/2,frameTop+frameHeight/5+40);
                 expContext.fillText("You need to respond as quickly and accurately as possible.",expCanvas.width/2,frameTop+frameHeight/5+60);
                 expContext.fillText("Light Response:", expCanvas.width/2, frameBottom-frameHeight/4-25);
-                if (plyr1DRTrespKey == plyr1DRTrespKeyL){
+                if (plyr1DRTrespKey == RHdrtRespKey){
                     expContext.fillText("Press 'Z'", expCanvas.width/2, frameBottom-frameHeight/4);
                 } else {
                     expContext.fillText("Press 'UP' arrow", expCanvas.width/2, frameBottom-frameHeight/4);
@@ -1036,21 +1057,23 @@ ready(async() => {
                 }
                 drtResp1 = false;
             }
-            if(drtResp2){
-                if (stimTimes[0]-tRem > rtMin && counter2){
-                    rt2.push(stimTimes[0]-tRem);
-                    counter2=false;
-                } else {
-                    fa2.push(tRem);
-                }
-                drtResp2 = false;
-            }
+            
+            // if(drtResp2){
+            //     if (stimTimes[0]-tRem > rtMin && counter2){
+            //         rt2.push(stimTimes[0]-tRem);
+            //         counter2=false;
+            //     } else {
+            //         fa2.push(tRem);
+            //     }
+                // drtResp2 = false;
+            // }
 
             if (tRem > stimTimes[0]){
-                drtResp1 = false; drtResp2 = false;
+                drtResp1 = false; 
+                // drtResp2 = false;
                 drtPanels.draw(drtOff);
             }
-            if (tRem < stimTimes[0] && tRem > stimTimes[0]-drtDur && (drtResp1==false || drtResp2==false)){
+            if (tRem < stimTimes[0] && tRem > stimTimes[0]-drtDur && drtResp1==false && counter1){
                 drtPanels.draw(drtOn);
             }
             if (tRem < stimTimes[0]-respWin){
@@ -1058,15 +1081,18 @@ ready(async() => {
                 stimTimes.shift();
                 if (counter1){ // if still true at this point then no response was made to this stimulus
                     rt1.push(-1); // -1 == a miss
-                } else {counter1 = true;}
-                if (counter2){
-                    rt2.push(-1);
-                } else {counter2 = true;}
+                } 
+                else {
+                    counter1 = true;
+                }
             }
-
+                // if (counter2){
+                //     rt2.push(-1);
+                // } else {counter2 = true;}
             expContext.fill();
             expContext.stroke();
         }
+
         function scoring(){
             playerId = state.player_id;
             otherId = playerId === '0' ? '1' : '0';
@@ -1206,25 +1232,41 @@ ready(async() => {
             if (trialTime <= 0){endTrial()};
         }
 
-        function drawTrial(){
+        function drawTrial(drawStartTime){
             bInTrial = true;
             bInTrialBreak = false
             dispCont = false;
+
+            if (!drawStartTime){
+                drawStartTime = drawStartTime;
+            }
+
             drawCanvas();
             drawDRT(drtOnsets,trialDuration,start,moving);
             drawFrame();
             allBalls.forEach(function(ball){ // ball is the name of each element in the object, same as [for balls in balllist: ball.draw()]
                 ball.draw();
                 ball.move(this.paddle1.x, this.paddle2.x);
+
+                ball.xCoords.push([ball.x, ball.y])
             })
             paddle1.draw(); paddle1.move(p1Left,p1Right);
             paddle2.draw(); paddle2.move(p2Left,p2Right);
+
+            paddle1.coords.push(paddle1.x)
 
             scoring();
             drawScore(state.block.block_type,nCurrentBlock);
             trialTime = drawTimer(trialDuration, start, moving);
 
-            if (trialTime <= 0){endTrial()};
+
+            rAF = requestAnimationFrame(drawTrial)
+            if (trialTime <= 0){
+                endTrial()
+            }
+
+
+
         }
         function expTrial(){
             drtOnsets = state.drt.onset
@@ -1255,7 +1297,11 @@ ready(async() => {
             paddle1     = new Paddle(state.players[playerId].pos, p1Colour);
             paddle2     = new Paddle(state.players[otherId].pos, p2Colour);
 
-            interval    = setInterval(drawTrial,frameRate);
+            // interval    = setInterval(drawTrial,frameRate);
+            let drawStartTime = null;
+            let rAf;
+            drawTrial();
+
         }
 
         async function writeMessages() {
@@ -1335,7 +1381,8 @@ ready(async() => {
             interval    = setInterval(drawPracticeTrial,frameRate);
         }
         function endTrial(){
-            clearInterval(interval);
+            // clearInterval(interval);
+            cancelAnimationFrame(rAF);
             clearFrame();
             bInTrialBreak=true;
             bInTrial    = false;

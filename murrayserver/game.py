@@ -166,10 +166,6 @@ class Game:
             pass
 
         if self._state['status'] == 'playing':
-            ## Currently using the times set by the state earlier and the timer in the client to show the stim but I feel like that is not correct.
-            ## if trialtime <= drt['onset'][drt['progress']] and >= drt['dispTime'][drt['progress']] and (not drt['resp1'] and not drt['resp2'] -- both need to be false for it to show)
-                ## drt['status'] = True
-
             for ball in self._state['balls']:
                 ball['x'] += ball['speed'] * math.cos(ball['angle'])
                 ball['y'] += ball['speed'] * math.sin(ball['angle'])
