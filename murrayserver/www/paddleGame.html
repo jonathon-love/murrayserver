@@ -201,7 +201,7 @@ ready(async() => {
         var RHdrtRespKey        = "90"
 
         var plyr1DRTrespKey;
-        // var plyr2DRTrespKey;
+        var plyr2DRTrespKey;
 
         var hand1;
         var hand2;
@@ -217,6 +217,12 @@ ready(async() => {
         var fa1 = [];
         var fa2 = [];
         var missCode = -1;
+        
+        var startingTime;
+        var lastTime;
+        var totalElapsedTimed;
+        var elapsedSinceLastLoop;
+        var calc = pSpeed/1000;
 
         // Experiment control
         var nCurrentBlock;
@@ -280,7 +286,7 @@ ready(async() => {
         var p1Hand              = [];
         // var p2Hand              = [];
         var p1HandChosen        = false;
-        // var p2HandChosen        = false;
+        var p2HandChosen        = false;
         var rtMin               = 0.1; // tenth of a second - used to clean RT times as they're made
         var counter1 = true; // these are response counters so we don't have 100 RTs saved as hits for each DRT stimulus event.
         var counter2 = true;
@@ -307,9 +313,9 @@ ready(async() => {
         var miss2               = 0;
         let score2              = 0;
         var teamScore           = 0;
-        var p1CumScore          = 0;
-        var p2CumScore          = 0;
-        var teamCumScore        = 0;
+        var p1CumulativeScore          = 0;
+        var p2CumulativeScore          = 0;
+        var teamCumulativeScore        = 0;
         var p1teamScore         = 0;
         var p2teamScore         = 0;
 
@@ -454,8 +460,7 @@ ready(async() => {
                 this.colour = colour;
                 this.coords = [];
                 }
-            move(mvLeft = false, mvRight = false) {
-
+            move(mvLeft = false, mvRight = false, speed) {
                 let playerId = state.player_id;
                 let otherId = playerId === '0' ? '1' : '0';
                 let theirPos = state.players[otherId].pos;
@@ -465,13 +470,13 @@ ready(async() => {
                 //     this.coords.push(this.x);
                 // }
                 if (mvLeft){
-                    this.x -= pSpeed;
+                    this.x -= speed;
                     if (this.x < frameLeft) {
                         this.x = frameLeft;
                     }
                 }
                 if (mvRight){
-                    this.x  += pSpeed;
+                    this.x  += speed;
                     if (this.x + pWidth > frameRight){
                         this.x = frameRight - pWidth;
                     }
@@ -878,8 +883,8 @@ ready(async() => {
             drawCanvas();
             bInBlockInstructions    = true;
             count++;
-            p1CumScore  = 0; // the cumulative scores for both players throughout each block
-            p2CumScore  = 0;
+            p1CumulativeScore  = 0; // the cumulative scores for both players throughout each block
+            p2CumulativeScore  = 0;
             scoreReset();
 			expContext.fillStyle    = frameColour;
             expContext.font         ="16px Arial";
@@ -1212,46 +1217,74 @@ ready(async() => {
             return drtTimes;
         }
 
-        function drawPracticeTrial(){
+        function drawPracticeTrial(drawStartTime){
             bInTrial = true;
             bInTrialBreak = false
             dispCont = false;
+            if (!drawStartTime){
+                drawStartTime = drawStartTime;
+            }
+            if(!startingTime){startingTime=drawStartTime;}
+            if(!lastTime){lastTime=drawStartTime;}
+            totalElapsedTimed=(drawStartTime-startingTime);
+            elapsedSinceLastLoop=(drawStartTime-lastTime);
+            lastTime=drawStartTime;
+            let frProp = pSpeed * elapsedSinceLastLoop / 60;
+            let speedCorrected = pSpeed * frProp;
+            let ballSpeedCorrected = bSpeed * frProp;
+
             drawCanvas();
             drawDRT(drtOnsets,trialDuration,start,moving);
             drawFrame();
             allBalls.forEach(function(ball){ // ball is the name of each element in the object, same as [for balls in balllist: ball.draw()]
                 ball.draw();
+                ball.speed = ballSpeedCorrected;
                 ball.movePractice(this.paddle1.x);
             })
-            paddle1.draw(); paddle1.move(p1Left,p1Right);
+            paddle1.draw(); paddle1.move(p1Left,p1Right, speedCorrected);
 
             scoring();
             drawScore(state.block.block_type,nCurrentBlock);
             trialTime = drawTimer(trialDuration, start, moving);
 
-            if (trialTime <= 0){endTrial()};
+            rAF = requestAnimationFrame(drawPracticeTrial)
+
+            if (trialTime <= 0){
+                console.log('end the trial');
+                endTrial()
+            };
         }
 
         function drawTrial(drawStartTime){
             bInTrial = true;
             bInTrialBreak = false
             dispCont = false;
-
             if (!drawStartTime){
                 drawStartTime = drawStartTime;
             }
-
+            if(!startingTime){startingTime=drawStartTime;}
+            if(!lastTime){lastTime=drawStartTime;}
+            totalElapsedTimed=(drawStartTime-startingTime);
+            elapsedSinceLastLoop=(drawStartTime-lastTime);
+            lastTime=drawStartTime;
+            // console.log("time since last loop: " + elapsedSinceLastLoop+'ms');
+            let frProp = pSpeed * elapsedSinceLastLoop / 60;
+            let speedCorrected = pSpeed * frProp;
+            let ballSpeedCorrected = bSpeed * frProp;
+            // console.log("You should be going at "+pSpeed+"px per frame but you are set to "+speedCorrected+"px")
+            console.log(ballSpeedCorrected)
             drawCanvas();
             drawDRT(drtOnsets,trialDuration,start,moving);
             drawFrame();
             allBalls.forEach(function(ball){ // ball is the name of each element in the object, same as [for balls in balllist: ball.draw()]
                 ball.draw();
+                ball.speed = ballSpeedCorrected;
                 ball.move(this.paddle1.x, this.paddle2.x);
 
                 ball.xCoords.push([ball.x, ball.y])
             })
-            paddle1.draw(); paddle1.move(p1Left,p1Right);
-            paddle2.draw(); paddle2.move(p2Left,p2Right);
+            paddle1.draw(); paddle1.move(p1Left,p1Right,speedCorrected);
+            paddle2.draw(); paddle2.move(p2Left,p2Right,speedCorrected);
 
             paddle1.coords.push(paddle1.x)
 
@@ -1274,7 +1307,7 @@ ready(async() => {
             p1Balls     =[];
             p2Balls     =[];
             allBalls    =[];
-            justOncePlease = true; // this is a stupid line that allows me to make a stupid cumulative score
+            justOncePlease = true; // For the calculation of cumulative scores
             
             playerId = state.player_id;
             otherId = playerId === '0' ? '1' : '0';
@@ -1300,6 +1333,7 @@ ready(async() => {
             // interval    = setInterval(drawTrial,frameRate);
             let drawStartTime = null;
             let rAf;
+            
             drawTrial();
 
         }
@@ -1343,6 +1377,7 @@ ready(async() => {
                         startCount++
                     }
                     scoreReset();
+                    
                     expTrial();
                     proceed = false;
                     bInBlockInstructions = false;
@@ -1378,7 +1413,11 @@ ready(async() => {
             otherId = playerId === '0' ? '1' : '0';
             paddle1     = new Paddle(state.players[playerId].pos, p1Colour);
             // paddle2     = new Paddle(state.players[otherId].pos, p2Colour);
-            interval    = setInterval(drawPracticeTrial,frameRate);
+            
+            let drawStartTime = null;
+            let rAf;
+            drawPracticeTrial()
+            // interval    = setInterval(drawPracticeTrial,frameRate);
         }
         function endTrial(){
             // clearInterval(interval);
@@ -1432,9 +1471,9 @@ ready(async() => {
             p1teamScore = Math.round((+p1s/(+p1s + +p2s))*+teams);
             p2teamScore = parseInt(teams-p1teamScore); // you can't use addition with parseInt
             if (justOncePlease){
-                p1CumScore += parseInt(p1s);
-                p2CumScore += parseInt(p2s);
-                teamCumScore+=parseInt(teams);
+                p1CumulativeScore += parseInt(p1s);
+                p2CumulativeScore += parseInt(p2s);
+                teamCumulativeScore+=parseInt(teams);
                 justOncePlease = false;
             }
             if (blockType == "nonCol" || blockType == "com"){
@@ -1444,8 +1483,8 @@ ready(async() => {
                 expContext.fillText("Total Score",frameRight-frameWidth/2,frameTop+frameHeight/4+175);
                 expContext.fillText(p1s,p1Start+pWidth/2,frameTop+frameHeight/4+125);
                 expContext.fillText(p2s,p2Start+pWidth/2,frameTop+frameHeight/4+125);
-                expContext.fillText(p1CumScore,p1Start+pWidth/2,frameTop+frameHeight/4+175);
-                expContext.fillText(p2CumScore,p2Start+pWidth/2,frameTop+frameHeight/4+175);
+                expContext.fillText(p1CumulativeScore,p1Start+pWidth/2,frameTop+frameHeight/4+175);
+                expContext.fillText(p2CumulativeScore,p2Start+pWidth/2,frameTop+frameHeight/4+175);
 
                 // expContext.fillText("Hits",frameRight-frameWidth/2,frameTop+frameHeight/4+200);
                 // expContext.fillText(hits1,p1Start+pWidth/2,frameTop+frameHeight/4+200);
@@ -1464,7 +1503,7 @@ ready(async() => {
                 expContext.fillText(p1teamScore,p1Start+pWidth/2,frameTop+frameHeight/4+125);
                 expContext.fillText(p2teamScore,p2Start+pWidth/2,frameTop+frameHeight/4+125);
                 expContext.fillText(teams,expCanvas.width/2,frameTop+frameHeight/4+25);
-                expContext.fillText(teamCumScore,expCanvas.width/2,frameTop+frameHeight/4+50);
+                expContext.fillText(teamCumulativeScore,expCanvas.width/2,frameTop+frameHeight/4+50);
 
                 //hits
                 // expContext.fillText("Hits",frameRight-frameWidth/2,frameTop+frameHeight/4+150);
