@@ -12,19 +12,38 @@ from collections import OrderedDict
 from random import randint
 from random import shuffle
 import math
+import sys
 
 from .stream import ProgressStream
 
+import logging
+
+handler = logging.StreamHandler(sys.stdout)
+handler.setLevel(logging.INFO)
+formatter = logging.Formatter('%(message)s')
+handler.setFormatter(formatter)
+
 
 class Game:
-    def __init__(self):
+    def __init__(self, game_no):
+        self._game_no = game_no
         self._joined = { '0': False, '1': False }
         self._conns = { '0': None, '1': None }
         self._send_update = OrderedDict({ '0': Event(), '1': Event() })
         self._receive_update = Event()
         self._ready = Event()
         self._blocks = [ ]
-        
+
+        self._log = logging.getLogger(f'game{ game_no }')
+        self._log.setLevel(logging.INFO)
+        self._log.addHandler(handler)
+
+        fileHandler = logging.FileHandler(f'game{ game_no }.txt', mode='w')
+        fileHandler.setLevel(logging.INFO)
+        formatter = logging.Formatter('%(message)s')
+        fileHandler.setFormatter(formatter)
+        self._log.addHandler(fileHandler)
+
         drtWidth = 800
         width  = drtWidth * 0.9
         height = 600
