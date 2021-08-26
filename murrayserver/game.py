@@ -11,6 +11,7 @@ from asyncio import TimeoutError
 from collections import OrderedDict
 from random import randint
 from random import shuffle
+from time import time
 import math
 import sys
 
@@ -22,6 +23,11 @@ handler = logging.StreamHandler(sys.stdout)
 handler.setLevel(logging.INFO)
 formatter = logging.Formatter('%(message)s')
 handler.setFormatter(formatter)
+
+
+async def run_later(coro, delay):
+    await sleep(delay)
+    return await coro
 
 
 class Game:
@@ -137,6 +143,13 @@ class Game:
             if self._joined['0'] and self._joined['1']:
                 self._ready.set()
 
+        async def send(obj, delay=None):
+            if delay is not None:
+                t = create_task(run_later(send(obj), delay))
+                t.add_done_callback(lambda f: f.result())
+            else:
+                await ws.send_str(obj)
+
         async def read():
             async for msg in ws:
                 data = json.loads(msg.data)
@@ -152,7 +165,12 @@ class Game:
                 send_event.clear()
                 self._state['player_id'] = player_id
                 state = json.dumps(self._state)
-                await ws.send_str(state)
+                delay = None
+                # delay = time() % 4
+                # if delay > 2:
+                #     delay = 4 - delay
+                # delay /= 2
+                await send(state, delay)
 
 
         write_task = create_task(write())
