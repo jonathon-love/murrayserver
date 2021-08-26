@@ -82,12 +82,17 @@ class ProgressStream {
 let ws;
 let messages;
 let player;
+let serverTimeDelta;
+let messageDelay = 0;
 let state = { }
 let notifyStateReady;
 let stateReady = new Promise((resolve) => {
     notifyStateReady = resolve;
 });
 
+function adjustedTime() {
+    return Date.now() + serverTimeDelta;
+}
 
 ready(async() => {
 
@@ -1347,7 +1352,7 @@ ready(async() => {
             while (true) {
 
                 if (state.status === 'playing' && paddle1) {
-                    ws.send(JSON.stringify({ 'pos': paddle1.x }));
+                    ws.send(JSON.stringify({ 'pos': paddle1.x, serverTimeDelta, messageDelay }));
                     await sleep(50);
                 }
                 else {
@@ -1361,6 +1366,22 @@ ready(async() => {
             for await (const message of messages) {
 
                 let received = JSON.parse(message);
+
+                let serverTime = parseInt(1000 * received.timestamp);
+                let clientTime = Date.now();
+                let delta = serverTime - clientTime;
+
+                if (serverTimeDelta === undefined) {
+                    serverTimeDelta = delta;
+                    messageDelay = 0;
+                }
+                else if (delta > serverTimeDelta) {
+                    serverTimeDelta = delta;
+                    messageDelay = 0;
+                }
+                else {
+                    messageDelay = clientTime + serverTimeDelta - serverTime;
+                }
 
                 if (state.status === 'reading' && received.status === 'playing') {
                     // transitioning from reading to playing (i.e. beginning trial)
