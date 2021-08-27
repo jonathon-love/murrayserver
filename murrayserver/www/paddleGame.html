@@ -325,7 +325,7 @@ ready(async() => {
             this.xCoords = [];
             this.yCoords = [];
             }
-            move(paddlePos1,paddlePos2){
+            move(paddlePos1,paddlePos2,elapsed){
 
                 let identity = this.identity;
 
@@ -338,10 +338,10 @@ ready(async() => {
                 }
                 if (state.balls && identity >= 0 && identity < 18) {
                     let s = state.balls[identity];
-                    this.x = s.x;
-                    this.y = s.y;
                     this.speed = s.speed;
                     this.angle = s.angle;
+                    this.x = s.x + this.speed * Math.cos(this.angle) * elapsed / 1000 / 0.02;
+                    this.y = s.y + this.speed * Math.sin(this.angle) * elapsed / 1000 / 0.02;
                 }
             }
 
@@ -1162,9 +1162,8 @@ ready(async() => {
             drawDRT(drtOnsets,trialDuration,start,moving);
             drawFrame();
             allBalls.forEach(function(ball){
+                ball.move(this.paddle1.x, this.paddle2.x, elapsed);
                 ball.draw();
-                ball.speed = ballSpeedCorrected;
-                ball.move(this.paddle1.x, this.paddle2.x);
 
                 ball.xCoords.push([ball.x, ball.y])
             })
