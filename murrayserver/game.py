@@ -43,7 +43,7 @@ class Game:
 
         self._log = logging.getLogger(f'game{ game_no }')
         self._log.setLevel(logging.INFO)
-        self._log.addHandler(handler)
+        # self._log.addHandler(handler)
 
         fileHandler = logging.FileHandler(f'game{ game_no }.txt', mode='w')
         fileHandler.setLevel(logging.INFO)
@@ -303,6 +303,7 @@ class Game:
                             ball['y'] = self._dim['paddleY']-self._dim['ballR']
                             self._state['players']['1']['hits'] += 1
 
+        self._log.info(json.dumps(self._state))
         self._last_status = self._state['status']
 
     async def run(self):
