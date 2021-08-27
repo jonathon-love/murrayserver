@@ -78,6 +78,17 @@ class Game:
 
         # block_types = [ 'nonCol', 'col', 'com' ]
         block_types = ['nonCol', 'nonCol', 'nonCol']
+
+        block_orders = [
+           ["nonCol","col","com"],
+           ["nonCol","com","col"],
+           ["col","nonCol","com"],
+           ["col","com","nonCol"],
+           ["com","nonCol","col"],
+           ["com","col","nonCol"]
+           ]
+
+
         n_balls = [
             1, 1, 1, 1,\
                 3, 3, 3, 3,\
@@ -101,16 +112,20 @@ class Game:
                 '0': {
                     'pos': self._dim['p1Start'], 
                     'status': 'notReady', 
-                    'drtResp': False,
+                    'trialStart': 0,
                     'hits': 0,
                     'miss': 0,
+                    'rt': 0,
+                    'fa': 0,
                     },
                 '1': {
                     'pos': self._dim['p2Start'],
                     'status': 'notReady',
-                    'drtResp': False,
+                    'trialStart': 0,
                     'hits': 0,
                     'miss': 0,
+                    'rt': 0,
+                    'fa': 0,
                     },
             },
             'balls': [ ],
@@ -118,8 +133,6 @@ class Game:
                 'onset': [], ## change trial duration as necessary
                 'dispTime': [],
                 'window': [],
-                'resp1': False, ## you've got this in 'players', too. Take (some) care w redundancy
-                'resp2': False,
                 },
             }
 
@@ -198,7 +211,7 @@ class Game:
         try:
             timeout = None
             if self._state['status'] == 'playing':
-                timeout = .02
+                timeout = 0.02
             else:
                 timeout = 3
             await wait_for(self._receive_update.wait(), timeout)
@@ -212,14 +225,21 @@ class Game:
         elapsed = now - last_time
 
         if self._state['status'] == 'playing' and self._last_status == 'playing':
-
             for ball in self._state['balls']:
-                ball['x'] += ball['speed'] * math.cos(ball['angle'])
-                ball['y'] += ball['speed'] * math.sin(ball['angle'])
-                if ball['x'] <= self._dim['frameLeft']+self._dim['ballR'] or ball['x'] >= self._dim['frameRight']-self._dim['ballR']:
+                ball['x'] += ball['speed'] * math.cos(ball['angle']) * elapsed / 0.02
+                ball['y'] += ball['speed'] * math.sin(ball['angle']) * elapsed / 0.02
+                if ball['x'] <= self._dim['frameLeft']+self._dim['ballR']:
                     ball['angle'] = math.pi -ball['angle']
+                    ball['x'] = self._dim['frameLeft']+self._dim['ballR'] + 1
+                
+                if ball['x'] >= self._dim['frameRight']-self._dim['ballR']:
+                    ball['angle'] = math.pi -ball['angle']
+                    ball['x'] = self._dim['frameRight']-self._dim['ballR'] - 1
+                
                 if ball['y'] - self._dim['ballR'] <= self._dim['frameTop']:
                     ball['angle'] = -ball['angle']
+                    ball['y'] = self._dim['frameTop'] + self._dim['ballR'] 
+
                 if ball['y'] >= self._dim['frameBottom'] - 0.5*self._dim['ballR']:
                     ball['y'] = self._dim['frameTop'] + self._dim['ballR']
                     if self._state['block']['block_type'] == 'nonCol':
@@ -292,6 +312,16 @@ class Game:
 
         print('ready!')
 
+        def resetVars():
+            self._state['players']['0']['hits'] = 0
+            self._state['players']['1']['hits'] = 0
+            self._state['players']['0']['miss'] = 0
+            self._state['players']['1']['miss'] = 0
+            self._state['players']['0']['rt'] = 0
+            self._state['players']['1']['rt'] = 0
+            self._state['players']['0']['fa'] = 0
+            self._state['players']['1']['fa'] = 0
+
         for block_no, block in enumerate(self._blocks):
             state['status'] = 'reading'
             state['players']['0']['status'] = 'notReady'
@@ -300,13 +330,7 @@ class Game:
             state['trialNo'] = block_no%(len(self._blocks) / 3)
             state['maxTrials'] = len(self._blocks) / 3# trials per block
 
-            # print(f"p1H: {self._state['players']['0']['hits']}, p1M: {self._state['players']['0']['miss']}")
-            # print(f"p2H: {self._state['players']['1']['hits']}, p2M: {self._state['players']['1']['miss']}")
-
-            self._state['players']['0']['hits'] = 0
-            self._state['players']['1']['hits'] = 0
-            self._state['players']['0']['miss'] = 0
-            self._state['players']['1']['miss'] = 0
+            resetVars()
 
             balls = [None] * block['n_balls'] * 2 # n_balls represents the number of balls per player, so should be doubled.
             angles = [0-math.radians(randint(45,135)) for angle in balls]

@@ -117,17 +117,6 @@ ready(async() => {
             }
         });
     }
-       // set block order based on jatos ids
-
-       var condOrders = [
-           ["nonCol","col","com"],
-           ["nonCol","com","col"],
-           ["col","nonCol","com"],
-           ["col","com","nonCol"],
-           ["com","nonCol","col"],
-           ["com","col","nonCol"]
-           ];
-       condOrder = condOrders[condOrderID];
 
        let protocol = (window.location.protocol === 'http:' ? 'ws:' : 'wss:')
        let path = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
@@ -163,8 +152,6 @@ ready(async() => {
     var skipIntro = true;
 
     // Define variables
-        // Input variables
-
         var nBlocks             = 3;
 
         // workload
@@ -195,10 +182,9 @@ ready(async() => {
         var drtOff              = "black";
         var drtMin              = 3;
         var drtMax              = 5;
-        var respWin             = 2.5; // change back to 2.5
-        var drtDur              = 1; // change back to 1
+        var respWin             = 2.5;
+        var drtDur              = 1;
         let drtResp1            = false;
-        // let drtResp2            = false;
         let drtOnsets;
         var onsets              = [];   // used to save the onset times for each trial
 
@@ -240,15 +226,13 @@ ready(async() => {
 		var bInEndOfBlock           = false;
 		var bInBlockInstructions    = false;
         var bInPractice             = false;
-        var blockBreakTime          = 0; // 20
-        var trialBreakTime          = 0; // 5
+        var blockBreakTime          = 1; // 20
+        var trialBreakTime          = 1; // 5
         var proceed                 = false;
         var bInTrialBreak           = false;
         var justOncePlease          = true;
         var dispCont                = true;
 
-        //var errorUsernameSendingCounter = 0;
-		//var errorDataSendingCounter = 0;
         var username1;
         var username2;
 
@@ -285,11 +269,7 @@ ready(async() => {
             plyr1DRTrespKey = RHdrtRespKey;
         }
         
-        // var plyr2Left           = "ArrowLeft";  // event.code
-        // var plyr2Right          = "ArrowRight";
-        
         var p1Hand              = [];
-        // var p2Hand              = [];
         var p1HandChosen        = false;
         var p2HandChosen        = false;
         var rtMin               = 0.1; // tenth of a second - used to clean RT times as they're made
@@ -318,9 +298,9 @@ ready(async() => {
         var miss2               = 0;
         let score2              = 0;
         var teamScore           = 0;
-        var p1CumulativeScore          = 0;
-        var p2CumulativeScore          = 0;
-        var teamCumulativeScore        = 0;
+        var p1CumulativeScore   = 0;
+        var p2CumulativeScore   = 0;
+        var teamCumulativeScore = 0;
         var p1teamScore         = 0;
         var p2teamScore         = 0;
 
@@ -334,7 +314,7 @@ ready(async() => {
 
         // Sprite Classes
         class Ball {
-            constructor(x, colour, ballId, angle) {// when you define object, this is where you pass values
+            constructor(x, colour, ballId, angle) {
             this.x      = x;
             this.y      = by;
             this.size   = bRad;
@@ -348,9 +328,7 @@ ready(async() => {
             move(paddlePos1,paddlePos2){
 
                 let identity = this.identity;
-                // if (state.player_id === '1' && state.block.block_type == "nonCol"){
-                    // identity = identity - state.balls.length - 1;
-                //}
+
                 if (state.block.block_type === "nonCol"){
                     if (identity>=9){
                         if (state.block.n_balls == 1){identity = identity - 8}
@@ -384,41 +362,9 @@ ready(async() => {
                 if (this.y > frameBottom) {
                     this.y = frameTop + bRad;
                 } else {
-                    miss1++; // might need to adjust the scoring here or where you tell the scores to be server or client based.
-                        // miss2++;
+                    miss1++;
                 }
                 if (this.y > py-bRad && this.y < py) {
-            //     if (state.block.block_type=="nonCol" && !bInPractice){
-            //         if (this.identity < Math.max(...workloadLevels)){ // If the ball ID belongs to P1
-            //             if (this.x > paddlePos1 - bRad && this.x < paddlePos1 + pWidth + bRad) {
-            //                 let impact  = (this.x+bRad) - (paddlePos1+(0.5*pWidth));
-            //                 let offset  = impact/(pWidth*0.5)/2;
-            //                 if (-this.angle+offset <= -deg2rad(upperLim)){
-            //                     this.angle = -this.angle;
-            //                 } else if (-this.angle+offset>=-deg2rad(lowLim)){
-            //                     this.angle = -this.angle;
-            //                 } else {
-            //                     this.angle = -this.angle+offset
-            //                 }
-            //                 this.y = py - bRad+1
-            //                 hits1++;
-            //             }
-            //         } else {
-            //             if (this.x > paddlePos2 - bRad && this.x < paddlePos2 + pWidth + bRad) {
-            //                 let impact  = (this.x+bRad) - (paddlePos2+(0.5*pWidth));
-            //                 let offset  = impact/(pWidth*0.5)/2;
-            //                 if (-this.angle+offset <= -deg2rad(upperLim)){
-            //                     this.angle = -this.angle;
-            //                 } else if (-this.angle+offset>=-deg2rad(lowLim)){
-            //                     this.angle = -this.angle;
-            //                 } else {
-            //                     this.angle = -this.angle+offset
-            //                 }
-            //                 this.y = py - bRad+1
-            //                 hits2++
-            //             }
-            //         }
-            //     } else { // if it's any of the group conditions
                     if (this.x > paddlePos1 - bRad && this.x < paddlePos1 + pWidth + bRad) {
                         let impact  = (this.x+bRad) - (paddlePos1+(0.5*pWidth));
                         let offset  = impact/(pWidth*0.5)/2;
@@ -430,24 +376,7 @@ ready(async() => {
                             this.angle = -this.angle+offset
                         }
                         this.y = py - bRad+1
-                        // if (this.x > paddlePos2 && this.x < paddlePos2 + pWidth) {
-                        //     hits1 += 0.5;
-                        //     hits2 += 0.5;
-                        // } else {
                         hits1++;
-                        // }
-                    // } else if (this.x > paddlePos2 - bRad && this.x < paddlePos2 + pWidth + bRad) {
-                    //     let impact  = (this.x+bRad) - (paddlePos2+(0.5*pWidth));
-                    //     let offset  = impact/(pWidth*0.5)/2;
-                    //     if (-this.angle+offset <= -deg2rad(upperLim)){
-                    //         this.angle = -this.angle;
-                    //     } else if (-this.angle+offset>=-deg2rad(lowLim)){
-                    //         this.angle = -this.angle;
-                    //     } else {
-                    //         this.angle = -this.angle+offset
-                    //     }
-                    //     this.y = py - bRad+1
-                    //     hits2++
                     }
                 }
             }
@@ -469,11 +398,7 @@ ready(async() => {
                 let playerId = state.player_id;
                 let otherId = playerId === '0' ? '1' : '0';
                 let theirPos = state.players[otherId].pos;
-                // paddle2.x = theirPos;
 
-                // if(moving){
-                //     this.coords.push(this.x);
-                // }
                 if (mvLeft){
                     this.x -= speed;
                     if (this.x < frameLeft) {
@@ -588,18 +513,11 @@ ready(async() => {
             } else if (e.keyCode == left) {
                 p1Left = true;
             }
-            // if (e.key == plyr2Right) {
-            //     p2Right = true;
-            // } else if (e.key == plyr2Left) {
-            //     p2Left = true;
-            // }
+
             if (e.keyCode == plyr1DRTrespKey) {
                 drtResp1 = true;
-                ws.send(JSON.stringify({ 'drtResp': true }));
             } 
-            // else if (e.keyCode == plyr2DRTrespKey) {
-            //     drtResp2 = true;
-            // }
+
             if (event.keyCode === 9){// Disable Tab key function
                 event.preventDefault();
             }
@@ -688,48 +606,27 @@ ready(async() => {
                     if (startCount == 0 && event.keyCode == 32){
                         event.preventDefault();
                         moving = true;
-                        start = new Date();
+                        start = Date.now();
                         startCount++
                     }
                 }
-                // if (startCount == 0){
-                    // if (state.status == 'playing'){
-                    // // if (event.keyCode == 32){
-                    //     event.preventDefault();
-                    //     startCount++
-                    //     moving  = true;
-                    //     start   = new Date();
-                    // }
-                // }
+
                 if (event.keyCode == plyr1DRTrespKey){
                     event.preventDefault();
                     drtResp1 = true;
                 }
-                // if (event.keyCode == plyr2DRTrespKey){
-                //     event.preventDefault();
-                //     drtResp2 = true;
-                // }
             }
             if (bInBlockInstructions){
                 if (event.keyCode == 32 && proceed){
                     ws.send('{"status":"ready"}')
-                    // clearTimeout(timeout);
-                    // nCurrentTrial = 1;
-                    // scoreReset();
-                    // expTrial();
-                    // proceed = false;
-                    // bInBlockInstructions = false;
-                    // bInPractice = false;
                 }
             }
             if (bInTrialBreak){
                 if (event.keyCode == 32 && proceed){
-                    // nCurrentTrial++;
                     bInTrialBreak = false;
                     scoreReset();
                     if (nCurrentTrial<state.maxTrials){
                         ws.send('{"status":"ready"}')
-                        // expTrial();
                     } else if(nCurrentTrial>=state.maxTrials){
                         nCurrentBlock++;
                         if (nCurrentBlock == nBlocks){
@@ -748,19 +645,12 @@ ready(async() => {
             } else if (e.keyCode == left) {
                 p1Left  = false;
             }
-            // if (e.key == plyr2Right) {
-            //     p2Right = false;
-            // } else if (e.key == plyr2Left) {
-            //     p2Left  = false;
-            // }
             // DRT Response
             if (e.keyCode == plyr1DRTrespKey) {
                 drtResp1 = false;
                 ws.send(JSON.stringify({ 'drtResp': false }));
             } 
-            // else if (e.key == plyr2DRTrespKey) {
-            //     drtResp2  = false;
-            // }
+
         }
 
         // Set Instructions
@@ -938,19 +828,29 @@ ready(async() => {
             py                  = frameBottom - pHeight*3;
             bx                  = [frameRight-(frameWidth/2-bRad*4), frameRight-frameWidth/2, frameRight-(frameWidth/2+bRad*4)];
             by                  = py-bRad;
-
-
-
             disableScroll();
-			// Use math.floor to round down to closest integer.
-			// Use math.random()*2 to generate number between 0 & 2. Math.random() as default randomly generates between 0 & 1.
-			// Therefore initialConditionAssignment will be 0 or 1.
-			//var initialConditionAssignment =  Math.floor(Math.random()*differentResponseTypes.length);
-			// uses initial ConditionAssignment to index differentResponseTypes = ["close","far"];
-			//currentResponseDistance = differentResponseTypes[initialConditionAssignment];
 
-            // getUsername1();
-            if (skipIntro){
+            if (state.status === 'playing') {
+                console.log(state.block);
+                clearTimeout(timeout)
+                nCurrentTrial = state.trialNo+1;
+                moving  = true;
+                start   = state['players'][state.player_id]['trialStart'];
+                startCount++
+                scoreReset();
+                expTrial();
+                proceed = false;
+                bInBlockInstructions = false;
+                bInPractice = false;
+            } else if (state.status === 'reading' && state.trialNo+1 > 1){
+                bInTrialBreak=true;
+                bInTrial    = false;
+                moving      = false;
+                dispCont    = true;
+                startCount  = 0;
+                nCurrentTrial = state.trialNo;
+                interTrial(score1,score2,teamScore, state.block.block_type);   
+            } else if (skipIntro){
                 blockInst(state.block.block_type, nCurrentBlock);
             } else {
                 getUsername1();
@@ -965,12 +865,9 @@ ready(async() => {
             }
             else if (username1.length!= 5 && username1.length!=6) {
                 username1 = prompt("Participant 1, please enter your 5 or 6 digit SONA ID");
-                //getUsername();
                 confirmUsername1();
             }
             else if (username1 != null && username1.length == 5 || username1.length == 6) {
-                //confirmUsername();
-                // confirmUsername1();
                 instructions1();
             }
         }
@@ -1051,9 +948,9 @@ ready(async() => {
         }
         function drawDRT(stimTimes,duration,start,trialBegin = false){
             let tRem;
-            let drtTimer = new Date();
+            let drtTimer = Date.now();
             if (trialBegin){
-                tRem = (-(drtTimer.getTime()-start)/1000)+duration;
+                tRem = (-(drtTimer-start)/1000)+duration;
             } else {
                 tRem = duration;
             }
@@ -1061,26 +958,17 @@ ready(async() => {
             if (drtResp1){
                 if (stimTimes[0]-tRem > rtMin && counter1){
                     rt1.push(stimTimes[0]-tRem);
+                    ws.send(JSON.stringify({'rt' : stimTimes[0] - tRem}))
                     counter1 = false;
                 } else {
                     fa1.push(tRem);
+                    ws.send(JSON.stringify({'fa': tRem}))
                 }
                 drtResp1 = false;
             }
             
-            // if(drtResp2){
-            //     if (stimTimes[0]-tRem > rtMin && counter2){
-            //         rt2.push(stimTimes[0]-tRem);
-            //         counter2=false;
-            //     } else {
-            //         fa2.push(tRem);
-            //     }
-                // drtResp2 = false;
-            // }
-
             if (tRem > stimTimes[0]){
                 drtResp1 = false; 
-                // drtResp2 = false;
                 drtPanels.draw(drtOff);
             }
             if (tRem < stimTimes[0] && tRem > stimTimes[0]-drtDur && drtResp1==false && counter1){
@@ -1091,14 +979,13 @@ ready(async() => {
                 stimTimes.shift();
                 if (counter1){ // if still true at this point then no response was made to this stimulus
                     rt1.push(-1); // -1 == a miss
+                    ws.send(JSON.stringify({'rt': -1}))
                 } 
                 else {
                     counter1 = true;
                 }
             }
-                // if (counter2){
-                //     rt2.push(-1);
-                // } else {counter2 = true;}
+
             expContext.fill();
             expContext.stroke();
         }
@@ -1151,26 +1038,18 @@ ready(async() => {
                 expContext.font = "16px Arial";
                 expContext.fillStyle = "rgb(0,0,0)";
                 expContext.fillText("Your Score: "+score1,frameLeft+10,frameTop+20);
-                // expContext.fillStyle = "#22BF15";
-                // expContext.fillText("Hits: "+hits1,frameLeft+10,frameTop+40);
-                // expContext.fillStyle = "#DA4322";
-                // expContext.fillText("Misses: "+miss1,frameLeft+10,frameTop+60);
 
                 // Player 2 Score
                 expContext.textAlign = "right";
                 expContext.fillStyle = "rgb(0,0,0)";
                 expContext.fillText("Player 2 Score: "+score2,frameRight-10,frameTop+20);
-                // expContext.fillStyle = "#22BF15";
-                // expContext.fillText("Hits: "+hits2,frameRight-10,frameTop+40);
-                // expContext.fillStyle = "#DA4322";
-                // expContext.fillText("Misses: "+miss2,frameRight-10,frameTop+60);
             }
         }
         function drawTimer(duration, start, trialBegin = false){
             let timeRemaining;
-            let startTime = new Date();
+            let startTime = Date.now();
             if (trialBegin){
-                timeRemaining = (-(startTime.getTime()-start)/1000)+duration;
+                timeRemaining = (-(startTime-start)/1000)+duration;
             } else {
                 timeRemaining = duration;
             }
@@ -1253,7 +1132,6 @@ ready(async() => {
             trialTime = drawTimer(trialDuration, start, moving);
 
             rAF = requestAnimationFrame(drawPracticeTrial)
-
             if (trialTime <= 0){
                 console.log('end the trial');
                 endTrial()
@@ -1272,16 +1150,18 @@ ready(async() => {
             totalElapsedTimed=(drawStartTime-startingTime);
             elapsedSinceLastLoop=(drawStartTime-lastTime);
             lastTime=drawStartTime;
-            // console.log("time since last loop: " + elapsedSinceLastLoop+'ms');
             let frProp = pSpeed * elapsedSinceLastLoop / 60;
+            let bProp   = bSpeed * (messageDelay) / 60;
             let speedCorrected = pSpeed * frProp;
-            let ballSpeedCorrected = bSpeed * frProp;
-            // console.log("You should be going at "+pSpeed+"px per frame but you are set to "+speedCorrected+"px")
-            console.log(ballSpeedCorrected)
+            // let ballSpeedCorrected = bSpeed * bProp;
+            
+            let elapsed = adjustedTime() - (state.timestamp*1000);
+            let ballSpeedCorrected = bSpeed * (bSpeed * elapsed / 60);
+            
             drawCanvas();
             drawDRT(drtOnsets,trialDuration,start,moving);
             drawFrame();
-            allBalls.forEach(function(ball){ // ball is the name of each element in the object, same as [for balls in balllist: ball.draw()]
+            allBalls.forEach(function(ball){
                 ball.draw();
                 ball.speed = ballSpeedCorrected;
                 ball.move(this.paddle1.x, this.paddle2.x);
@@ -1297,13 +1177,10 @@ ready(async() => {
             drawScore(state.block.block_type,nCurrentBlock);
             trialTime = drawTimer(trialDuration, start, moving);
 
-
             rAF = requestAnimationFrame(drawTrial)
             if (trialTime <= 0){
                 endTrial()
             }
-
-
 
         }
         function expTrial(){
@@ -1335,7 +1212,6 @@ ready(async() => {
             paddle1     = new Paddle(state.players[playerId].pos, p1Colour);
             paddle2     = new Paddle(state.players[otherId].pos, p2Colour);
 
-            // interval    = setInterval(drawTrial,frameRate);
             let drawStartTime = null;
             let rAf;
             
@@ -1388,13 +1264,12 @@ ready(async() => {
                     Object.assign(state, received);
                     console.log(state.block);
                     clearTimeout(timeout)
-                    nCurrentTrial = state.trialNo+1; // this 'initialisation' needs to be determined elsewhere-
+                    nCurrentTrial = state.trialNo+1;
 
                     if (startCount == 0){
-                    // if (event.keyCode == 32){
-                        // event.preventDefault();
                         moving  = true;
-                        start   = new Date();
+                        start   = Date.now();
+                        ws.send(JSON.stringify({ 'trialStart': start}));
                         startCount++
                     }
                     scoreReset();
@@ -1433,15 +1308,12 @@ ready(async() => {
             playerId = state.player_id;
             otherId = playerId === '0' ? '1' : '0';
             paddle1     = new Paddle(state.players[playerId].pos, p1Colour);
-            // paddle2     = new Paddle(state.players[otherId].pos, p2Colour);
             
             let drawStartTime = null;
             let rAf;
             drawPracticeTrial()
-            // interval    = setInterval(drawPracticeTrial,frameRate);
         }
         function endTrial(){
-            // clearInterval(interval);
             cancelAnimationFrame(rAF);
             clearFrame();
             bInTrialBreak=true;
@@ -1452,7 +1324,6 @@ ready(async() => {
             if (bInPractice){
                 blockInst(state.block.block_type,nCurrentBlock);
             } else if (bInTrialBreak){
-                saveTrial(); // this was below clearFrame() but moved it down here as the new drawPracticeTrial function (might) require it given that I've removed the second paddle.
                 interTrial(score1,score2,teamScore, state.block.block_type)
             }
         }
@@ -1461,26 +1332,6 @@ ready(async() => {
         var p2DRTtrialData;
         var p1MissEvents;
         var p2MissEvents;
-        function saveTrial(){
-			//averageFrameRate = Math.round((eventCount / (rt/1000)) * 1000)/1000;
-            p1DRTtrialData = mean(rt1,missCode);
-            p2DRTtrialData = mean(rt2,missCode);
-            p1MissEvents = [];
-            p2MissEvents = [];
-            // Use index positions for DRT misses to find the onset times of the missed stimuli
-            p1DRTtrialData[2].forEach(function(e){p1MissEvents.push(onsets[e])});
-            p2DRTtrialData[2].forEach(function(e){p2MissEvents.push(onsets[e])});
-
-            // Save hits/misses
-            scoreData.push(nCurrentBlock + "\t" + state.block.block_type + "\t" + nCurrentTrial + "\t" + state.block.n_balls + "\t" +  trialDuration + "\t" + hits1 + "\t" + hits2 + "\t" + miss1 + "\t" + miss2 + "\t" + score1/1000 + "\t" + score2/1000 + "\t" + teamScore/1000 + "\t" +  onsets.length + "\t" + p1DRTtrialData[0] + "\t" + p2DRTtrialData[0] + "\t" + p1DRTtrialData[1] + "\t" + p2DRTtrialData[1] + "\t" + fa1.length + "\t" + fa2.length);
-
-            // Save DRT
-            drtData.push(nCurrentBlock + "\t" + state.block.block_type + "\t" + nCurrentTrial + "\t" + state.block.n_balls + "\t" +  onsets + "\t" + rt1 + "\t" + rt2 + "\t" + p1MissEvents + "\t" + p2MissEvents + "\t" + fa1 + "\t" + fa2 + "\t" + hand1 + "\t" + hand2);
-
-            // Save sprite coordinates
-            paddleCoords.push(nCurrentBlock + "\t" + state.block.block_type + "\t" + nCurrentTrial + "\t" + state.block.n_balls + "\t" + paddle1.coords + "\t" + paddle2.coords)
-            allBalls.forEach(function(key) {ballCoords.push(nCurrentBlock + "\t" + state.block.block_type + "\t" + nCurrentTrial + "\t" + state.block.n_balls + "\t" +  key.identity + "\t" + key.xCoords + "\t" + key.yCoords)});
-		}
 
         function interTrial(p1s, p2s, teams, blockType){
             drawCanvas();
@@ -1507,14 +1358,6 @@ ready(async() => {
                 expContext.fillText(p1CumulativeScore,p1Start+pWidth/2,frameTop+frameHeight/4+175);
                 expContext.fillText(p2CumulativeScore,p2Start+pWidth/2,frameTop+frameHeight/4+175);
 
-                // expContext.fillText("Hits",frameRight-frameWidth/2,frameTop+frameHeight/4+200);
-                // expContext.fillText(hits1,p1Start+pWidth/2,frameTop+frameHeight/4+200);
-                // expContext.fillText(hits2,p2Start+pWidth/2,frameTop+frameHeight/4+200);
-                // //misses
-                // expContext.fillText("Misses",frameRight-frameWidth/2,frameTop+frameHeight/4+225);
-                // expContext.fillText(miss1,p1Start+pWidth/2,frameTop+frameHeight/4+225);
-                // expContext.fillText(miss2,p2Start+pWidth/2,frameTop+frameHeight/4+225);
-
             } else { // collaborative
                 expContext.fillText("You:",p1Start+pWidth/2,frameTop+frameHeight/4+100);
                 expContext.fillText("Player 2:",p2Start+pWidth/2,frameTop+frameHeight/4+100);
@@ -1525,23 +1368,8 @@ ready(async() => {
                 expContext.fillText(p2teamScore,p2Start+pWidth/2,frameTop+frameHeight/4+125);
                 expContext.fillText(teams,expCanvas.width/2,frameTop+frameHeight/4+25);
                 expContext.fillText(teamCumulativeScore,expCanvas.width/2,frameTop+frameHeight/4+50);
-
-                //hits
-                // expContext.fillText("Hits",frameRight-frameWidth/2,frameTop+frameHeight/4+150);
-                // expContext.fillText(hits1,p1Start+pWidth/2,frameTop+frameHeight/4+150);
-                // expContext.fillText(hits2,p2Start+pWidth/2,frameTop+frameHeight/4+150);
-                // //misses
-                // expContext.fillText("Misses",frameRight-frameWidth/2,frameTop+frameHeight/4+175);
-                // expContext.fillText(miss1,p1Start+pWidth/2,frameTop+frameHeight/4+175);
-                // expContext.fillText(miss2,p2Start+pWidth/2,frameTop+frameHeight/4+175);
             }
             timeout = setTimeout(timedContinue,trialBreakTime*1000);
-            
-            // if (state.players[theirId]['status'] === 'ready'){
-            //     expContext.font="24px Arial";
-            //     expContext.fillText('Player 2 is ready. Please proceed to the next trial.',expCanvas.width/2,expCanvas.height/5 + 50);
-            //     expContext.font="16px Arial";
-            // }
         }
         function expEnd(){
             drawCanvas();
@@ -1554,52 +1382,6 @@ ready(async() => {
             expContext.fillText("If you have any questions or concerns about the experiment please contact the", expCanvas.width/2, expCanvas.height/4-25);
             expContext.filltext("researchers Murray Bennett or Ami Eidels at murray.bennett@uon.edu.au or ami.eidels@newcastle.edu.au.",expCanvas.width/2,expCanvas.height/4-25);
             expContext.fillText("Participation credit has been automatically granted.",expCanvas.width/2,expCanvas.height/4+25);
-        
-            var paddle_txt   = "block" + "\t" + "groupType" + "\t" + "trlNum" + "\t" + "workload" + "\t" + "paddle1Coords" + "\t" + "paddle2Coords\n";
-            var ball_txt     = "block" + "\t" + "groupType" + "\t" + "trlNum" + "\t" + "workload" + "\t" + "bID" + "\t" + "xCoords" + "\t" + "yCoords\n";
-            var score_txt    = "block" + "\t" + "groupType" + "\t" + "trlNum" + "\t" + "workload" + "\t" + "dur" + "\t" + "hits1" + "\t" + "hits2" + "\t" + "miss1" + "\t" + "miss2" + "\t" + "hr1" + "\t" + "hr2" + "\t" + "hrt" + "\t" + "nDRTs" + "\t" + "mrt1" + "\t" + "mrt2" + "\t" + "drtm1" + "\t" + "drtm2" + "\t" + "fa1" + "\t" + "fa2\n";
-            var drt_txt    = "block" + "\t" + "groupType" + "\t" + "trlNum" + "\t" + "workload" + "\t" + "stimOn" + "\t" + "p1RT" + "\t" + "p2RT" + "\t" + "missT1" + "\t" + "missT2" + "\t" +"faT1" + "\t" + "faT2" + "\t" + "hand1" + "\t" + "hand2\n";
-
-            // Concatenate trial results into experiment results
-			for (var i = 0; i < paddleCoords.length; i++) {
-				paddle_txt  += paddleCoords[i].toString() + "\n";
-                score_txt   += scoreData[i].toString() + "\n";
-                drt_txt     += drtData[i].toString()+"\n";
-			}
-			for (var i = 0; i < ballCoords.length; i++) {
-                ball_txt    += ballCoords[i].toString() + "\n";
-            }
-
-            // Compile all results
-            outputSummary   = score_txt;
-            outputDRT       = score_txt + "\n" + drt_txt;
-            outputSprites   = score_txt + "\n" + paddle_txt + "\n" + ball_txt;
-
-    		var expVarSum       = outputSummary;
-            var expVarDRT       = outputDRT;
-            var expVarPos       = outputSprites;
-
-            var expVarFn1       = username1;
-            var expVarFn2       = username2;
-
-			var expSendSummary  = "txt=" + expVarSum + "&fn=" + expVarFn1 + "&fn=" + expVarFn2;
-            var expSendDRT      = "txt=" + expVarDRT + "&fn=" + expVarFn1 + "&fn=" + expVarFn2;
-            var expSendSprites  = "txt=" + expVarPos + "&fn=" + expVarFn1 + "&fn=" + expVarFn2;
-
-            if (window.location.hostname === 'localhost') {
-                console.log(expSendSummary)
-                console.log(expSendSprites)
-                console.log(expSendDRT)
-
-            } else {
-                
-                // jatos.studySessionData["expSendSprites"] = expSendSprites;
-                // jatos.studySessionData["expSendDRT"] = expSendDRT;
-                // //experimentDataRequest.send(expSendVariables);
-                jatos.submitResultData(expSendSummary,jatos.endStudyAjax(true));
-
-                //pointslink();
-            }
         }
 /*
 		function pointsLink() {
