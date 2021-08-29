@@ -325,9 +325,6 @@ ready(async() => {
             this.xCoords = [];
             this.yCoords = [];
             this.bounced = false;
-            this.xBounce = x;
-            this.yBounce = by;
-            this.aBounce = -deg2rad(angle);
             }
             move(paddlePos1,paddlePos2,elapsed){
                 
@@ -366,11 +363,7 @@ ready(async() => {
                     if (this.bounced){
                         y = bounds.paddle - (y - bounds.paddle) - bRad;
                     }
-
                     let playerId = state.player_id;
-                    let otherId = playerId === '0' ? '1' : '0';
-                    let theirPos = state.players[otherId].pos;
-                    
                     if (y + bRad > bounds.paddle && !this.bounced) {
                         if (state.block.block_type == 'nonCol'){
                             if (ballId < 9 && playerId == 0){
@@ -397,8 +390,6 @@ ready(async() => {
                     }
                     this.x = x;
                     this.y = y;
-                    // if (identity == 0 ){console.log(elapsed, this.bounced, y);}
-
 
                     // // Paddle contact
                     // function returnAngle(ballx, paddlex, angle, x, y, speed){
@@ -1327,7 +1318,7 @@ ready(async() => {
                 else {
                     messageDelay = clientTime + serverTimeDelta - serverTime;
                 }
-                allBalls.forEach(function(ball){ball.bounced=false})
+                allBalls.forEach(function(ball){ball.bounced=false;})
 
                 if (state.status === 'reading' && received.status === 'playing') {
                     // transitioning from reading to playing (i.e. beginning trial)
