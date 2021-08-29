@@ -361,6 +361,30 @@ ready(async() => {
                     this.x = x;
                     this.y = y;
                 }
+
+                // Paddle contact
+                if (this.y > py - bRad && this.y < py) {
+                    if (state.block.block_type == 'nonCol'){
+                        if (identity < 9){
+                            if (this.x > paddlePos1 - bRad && this.x < paddlePos1 + pWidth + bRad){
+                                state.balls[identity]['bounced'] = true;
+                            }
+                        } else {
+                            if (this.x > paddlePos2 - bRad && this.x < paddlePos2 + pWidth + bRad){
+                                state.balls[identity]['bounced'] = true;
+                            }
+
+                        }
+                    } else {
+                        if (this.x > paddlePos1 - bRad && this.x < paddlePos1 + pWidth + bRad){
+                            state.balls[identity]['bounced'] = true;
+                        } else {
+                            if (this.x > paddlePos2 - bRad && this.x < paddlePos2 + pWidth + bRad){
+                                state.balls[identity]['bounced'] = true;
+                            }
+                        }
+                    } 
+                }
             }
 
             movePractice(paddlePos1){
