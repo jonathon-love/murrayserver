@@ -254,7 +254,6 @@ class Game:
                 if y < top:
                     y = top + (top - y)
                     angle = -angle
-                    ball['bounced'] = False                    
 
                 ball['x'] = x
                 ball['y'] = y
@@ -273,7 +272,6 @@ class Game:
                                     ball['angle'] = -ball['angle']+offset
                                 ball['y'] = self._dim['paddleY']-self._dim['ballR']
                                 self._state['players']['0']['hits'] += 1
-                                ball['bounced'] = True
 
                     if self._state['player_id'] == "1" and ball['id'] >= 9:
                         if ball['y']+self._dim['ballR'] > self._dim['paddleY'] and ball['y'] < self._dim['paddleY']+self._dim['ballR']:
@@ -286,7 +284,6 @@ class Game:
                                     ball['angle'] = -ball['angle']+offset
                                 ball['y'] = self._dim['paddleY']-self._dim['ballR']
                                 self._state['players']['1']['hits'] += 1
-                                ball['bounced'] = True
                 else:
                     # for player in self._state['players']:
                     if ball['y']+self._dim['ballR'] > self._dim['paddleY'] and ball['y'] < self._dim['paddleY']+self._dim['ballR']:
@@ -303,7 +300,6 @@ class Game:
                                     self._state['players']['1']['hits'] += 0.5
                             else:
                                 self._state['players']['0']['hits'] += 1
-                            ball['bounced'] = True
 
                         elif ball['x'] + self._dim['ballR'] > self._state['players']['1']['pos'] and ball['x'] < self._state['players']['1']['pos'] + self._dim['pWidth'] + self._dim['ballR']:
                             impact = (ball['x'] + self._dim['ballR']/2) - (self._state['players']['1']['pos']+ (self._dim['pWidth']/2))
@@ -314,7 +310,6 @@ class Game:
                                 ball['angle'] = -ball['angle']+offset
                             ball['y'] = self._dim['paddleY']-self._dim['ballR']
                             self._state['players']['1']['hits'] += 1
-                            ball['bounced'] = True
 
         self._log.info(json.dumps(self._state))
         self._last_status = self._state['status']
@@ -358,7 +353,6 @@ class Game:
                             'angle': angles[i],
                             'speed': speed,
                             'id': int(9 - ((len(balls)/2) - i)),
-                            'bounced': False
                         }
                     else:
                         balls[i] = {
@@ -367,7 +361,6 @@ class Game:
                         'angle': angles[i],
                         'speed': speed,
                         'id': i,
-                        'bounced': False
                         }
                 else:
                     balls[i] = {
@@ -376,7 +369,6 @@ class Game:
                     'angle': angles[i],
                     'speed': speed,
                     'id': i,
-                    'bounced': False
                     }
             state['balls'] = balls
 
