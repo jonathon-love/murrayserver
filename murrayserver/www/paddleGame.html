@@ -346,6 +346,7 @@ ready(async() => {
                     this.angle = s.angle;
                     let x;
                     let y;
+                    // if we were in a good spot then determine your x position with the same formula just with temp variables
                     if (this.bounced){
                         x = this.xBounce + this.speed * Math.cos(this.aBounce) * elapsed / 1000 / 0.02;
                         y = this.yBounce + this.speed * Math.sin(this.aBounce) * elapsed / 1000 / 0.02;
@@ -387,12 +388,17 @@ ready(async() => {
                         return [angle, x, y]
                     }
                     
+                    // if a ball is going past the top of the paddle
                     if (y > py - bRad && y < py) {
                         if (state.block.block_type == 'nonCol'){
                             if (identity < 9){
+                                // if the paddle is in the right spot
                                 if (x > paddlePos1 - bRad && x < paddlePos1 + pWidth + bRad){
+                                    // record for the following frames that the player was well positioned
                                     this.bounced = true;
-                                    let posAdjusted = returnAngle(this.x, paddlePos2, this.angle, x, y, this.speed)
+                                    // calculate what the new positions and angle should be
+                                    let posAdjusted = returnAngle(this.x, paddlePos1, this.angle, x, y, this.speed)
+                                    // record these values to be used as the position for the upcoming frames
                                     this.aBounce = posAdjusted[0]
                                     this.xBounce = posAdjusted[1]
                                     this.yBounce = posAdjusted[2]
@@ -409,7 +415,7 @@ ready(async() => {
                         } else {
                             if (x > paddlePos1 - bRad && x < paddlePos1 + pWidth + bRad){
                                 this.bounced = true;
-                                let posAdjusted = returnAngle(this.x, paddlePos2, this.angle, x, y, this.speed)
+                                let posAdjusted = returnAngle(this.x, paddlePos1, this.angle, x, y, this.speed)
                                 this.aBounce = posAdjusted[0]
                                 this.xBounce = posAdjusted[1]
                                 this.yBounce = posAdjusted[2]                                
@@ -423,6 +429,7 @@ ready(async() => {
                             }
                         } 
                     }
+                    // if we were in a good spot then we should use these temp positions until the server delivers it's next msg
                     if (this.bounced){
                         x = this.xBounce
                         y = this.yBounce                        
