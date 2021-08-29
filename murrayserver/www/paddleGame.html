@@ -340,8 +340,26 @@ ready(async() => {
                     let s = state.balls[identity];
                     this.speed = s.speed;
                     this.angle = s.angle;
-                    this.x = s.x + this.speed * Math.cos(this.angle) * elapsed / 1000 / 0.02;
-                    this.y = s.y + this.speed * Math.sin(this.angle) * elapsed / 1000 / 0.02;
+                    let x = s.x + this.speed * Math.cos(this.angle) * elapsed / 1000 / 0.02;
+                    let y = s.y + this.speed * Math.sin(this.angle) * elapsed / 1000 / 0.02;
+
+                    let bounds = { left: frameLeft + bRad, top: bRad, right: frameRight - bRad, bottom: frameHeight - bRad };
+
+                    if (x > bounds.right) {
+                        x = bounds.right - (x - bounds.right);
+                    }
+                    if (x < bounds.left) {
+                        x = bounds.left + (bounds.left - x);
+                    }
+                    if (y > bounds.bottom) {
+                        y -= (bounds.bottom - bounds.top);
+                    }
+                    if (y < bounds.top) {
+                        y = bounds.top + (bounds.top - y);
+                    }
+
+                    this.x = x;
+                    this.y = y;
                 }
             }
 
@@ -349,10 +367,7 @@ ready(async() => {
                 this.speed = bSpeed - 2; // slow it down for ease of play??
                 let dx = this.speed*Math.cos(this.angle);
                 let dy = this.speed*Math.sin(this.angle);
-                if (moving){
-                    this.x += dx; this.xCoords.push(this.x);
-                    this.y += dy; this.yCoords.push(this.y);
-                }
+
                 if (this.x > frameRight-bRad || this.x < frameLeft+bRad) {
                     this.angle = Math.PI-this.angle;
                 }
@@ -843,6 +858,7 @@ ready(async() => {
                 bInBlockInstructions = false;
                 bInPractice = false;
             } else if (state.status === 'reading' && state.trialNo+1 > 1){
+                clearTimeout(timeout)
                 bInTrialBreak=true;
                 bInTrial    = false;
                 moving      = false;
@@ -1169,8 +1185,6 @@ ready(async() => {
             })
             paddle1.draw(); paddle1.move(p1Left,p1Right,speedCorrected);
             paddle2.draw(); paddle2.move(p2Left,p2Right,speedCorrected);
-
-            paddle1.coords.push(paddle1.x)
 
             scoring();
             drawScore(state.block.block_type,nCurrentBlock);

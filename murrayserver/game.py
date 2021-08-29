@@ -43,7 +43,6 @@ class Game:
 
         self._log = logging.getLogger(f'game{ game_no }')
         self._log.setLevel(logging.INFO)
-        # self._log.addHandler(handler)
 
         fileHandler = logging.FileHandler(f'game{ game_no }.txt', mode='w')
         fileHandler.setLevel(logging.INFO)
@@ -90,11 +89,11 @@ class Game:
 
 
         n_balls = [
-            1, 1, 1, 1,\
-                3, 3, 3, 3,\
-                    6, 6, 6, 6,\
-                        9, 9, 9, 9\
-                            ]
+            1, 1, 1, 1]#,\
+                #3, 3, 3, 3,\
+                 #   6, 6, 6, 6,\
+                  #      9, 9, 9, 9\
+                   #         ]
 
         shuffle(block_types)
         shuffle(n_balls)
@@ -181,10 +180,10 @@ class Game:
                 self._state['player_id'] = player_id
                 state = json.dumps(self._state)
                 delay = None
-                # delay = time() % 4
-                # if delay > 2:
-                #     delay = 4 - delay
-                # delay /= 2
+                delay = time() % 4
+                if delay > 2:
+                    delay = 4 - delay
+                delay /= 2
                 await send(state, delay)
 
 
@@ -226,22 +225,27 @@ class Game:
 
         if self._state['status'] == 'playing' and self._last_status == 'playing':
             for ball in self._state['balls']:
-                ball['x'] += ball['speed'] * math.cos(ball['angle']) * elapsed / 0.02
-                ball['y'] += ball['speed'] * math.sin(ball['angle']) * elapsed / 0.02
-                if ball['x'] <= self._dim['frameLeft']+self._dim['ballR']:
-                    ball['angle'] = math.pi -ball['angle']
-                    ball['x'] = self._dim['frameLeft']+self._dim['ballR'] + 1
-                
-                if ball['x'] >= self._dim['frameRight']-self._dim['ballR']:
-                    ball['angle'] = math.pi -ball['angle']
-                    ball['x'] = self._dim['frameRight']-self._dim['ballR'] - 1
-                
-                if ball['y'] - self._dim['ballR'] <= self._dim['frameTop']:
-                    ball['angle'] = -ball['angle']
-                    ball['y'] = self._dim['frameTop'] + self._dim['ballR'] 
 
-                if ball['y'] >= self._dim['frameBottom'] - 0.5*self._dim['ballR']:
-                    ball['y'] = self._dim['frameTop'] + self._dim['ballR']
+                x = ball['x'] + ball['speed'] * math.cos(ball['angle']) * elapsed / 0.02
+                y = ball['y'] + ball['speed'] * math.sin(ball['angle']) * elapsed / 0.02
+                angle = ball['angle']
+
+                right = self._dim['frameRight'] - self._dim['ballR']
+                left = self._dim['frameLeft'] + self._dim['ballR']
+                top = self._dim['frameTop'] + self._dim['ballR']
+                bottom = self._dim['frameBottom'] - 0.5 * self._dim['ballR']
+
+                if x > right:
+                    x = right - (x - right)
+                    angle = math.pi - angle
+                if x < left:
+                    x = left + (left - x)
+                    angle = math.pi - angle
+                if y > bottom:
+                    y -= (bottom - top)
+                if y < top:
+                    y = top + (top - y)
+                    angle = -angle
                     if self._state['block']['block_type'] == 'nonCol':
                         if ball['id'] < 9:
                             self._state['players']['0']['miss'] += 1
@@ -250,6 +254,10 @@ class Game:
                     else:
                         self._state['players']['0']['miss'] += 1
                         self._state['players']['1']['miss'] += 1
+
+                ball['x'] = x
+                ball['y'] = y
+                ball['angle'] = angle
 
                 # If a player is in the right spot at the right ?time?
                 if self._state['block']['block_type'] == 'nonCol':
