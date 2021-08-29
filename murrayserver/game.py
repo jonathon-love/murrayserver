@@ -180,10 +180,10 @@ class Game:
                 self._state['player_id'] = player_id
                 state = json.dumps(self._state)
                 delay = None
-                # delay = time() % 4
-                # if delay > 2:
-                #     delay = 4 - delay
-                # delay /= 2
+                delay = time() % 4
+                if delay > 2:
+                    delay = 4 - delay
+                delay /= 2
                 await send(state, delay)
 
 

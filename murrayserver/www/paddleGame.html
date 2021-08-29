@@ -332,6 +332,7 @@ ready(async() => {
             move(paddlePos1,paddlePos2,elapsed){
                 
                 let identity = this.identity;
+                let ballId = this.identity;
 
                 if (state.block.block_type === "nonCol"){
                     if (identity>=9){
@@ -347,8 +348,8 @@ ready(async() => {
 
                     let x = s.x + this.speed * Math.cos(this.angle) * elapsed / 1000 / 0.02;
                     let y = s.y + this.speed * Math.sin(this.angle) * elapsed / 1000 / 0.02;
-
-                    let bounds = { left: frameLeft + bRad, top: bRad, right: frameRight - bRad, bottom: frameHeight - bRad };
+                    
+                    let bounds = { left: frameLeft + bRad, top: bRad, right: frameRight - bRad, bottom: frameHeight - bRad, paddle: py};
 
                     if (x > bounds.right) {
                         x = bounds.right - (x - bounds.right);
@@ -356,13 +357,49 @@ ready(async() => {
                     if (x < bounds.left) {
                         x = bounds.left + (bounds.left - x);
                     }
-                    if (y > bounds.bottom) {
+                    if (y > bounds.bottom && !this.bounced) {
                         y -= (bounds.bottom - bounds.top);
                     }
                     if (y < bounds.top) {
                         y = bounds.top + (bounds.top - y);
                     }
+                    if (this.bounced){
+                        y = bounds.paddle - (y - bounds.paddle) - bRad;
+                    }
+
+                    let playerId = state.player_id;
+                    let otherId = playerId === '0' ? '1' : '0';
+                    let theirPos = state.players[otherId].pos;
                     
+                    if (y + bRad > bounds.paddle && !this.bounced) {
+                        if (state.block.block_type == 'nonCol'){
+                            if (ballId < 9 && playerId == 0){
+                                if (x > paddlePos1 - bRad && x < paddlePos1 + pWidth + bRad){
+                                    this.bounced = true;
+                                    y = bounds.paddle - (y - bounds.paddle) - bRad;
+                                }
+                            } else if (ballId >=9 && playerId == 1){
+                                if (x > paddlePos1 - bRad && x < paddlePos1 + pWidth + bRad){
+                                    this.bounced = true;
+                                    y = bounds.paddle - (y - bounds.paddle) - bRad;
+                                }
+                            }
+                        } else {
+                            if (x > paddlePos1 - bRad && x < paddlePos1 + pWidth + bRad){
+                                this.bounced = true;
+                                y = bounds.paddle - (y - bounds.paddle) - bRad;
+                            }
+                            if (x > paddlePos2 - bRad && x < paddlePos2 + pWidth + bRad){
+                                this.bounced = true;
+                                y = bounds.paddle - (y - bounds.paddle) - bRad;
+                            }
+                        }
+                    }
+                    this.x = x;
+                    this.y = y;
+                    // if (identity == 0 ){console.log(elapsed, this.bounced, y);}
+
+
                     // // Paddle contact
                     // function returnAngle(ballx, paddlex, angle, x, y, speed){
                     //     let impact = (ballx + bRad) - (paddlex + (0.5*pWidth));
@@ -378,50 +415,7 @@ ready(async() => {
                     //     y = y + speed * Math.sin(angle) * elapsed / 1000 / 0.02;
                     //     return [angle, x, y]
                     // }
-                    
-                    // if a ball is going past the top of the paddle
-                    // if (y > py - bRad && y < py) {
-                    //     if (state.block.block_type == 'nonCol'){
-                    //         if (identity < 9){
-                    //             // if the paddle is in the right spot
-                    //             if (x > paddlePos1 - bRad && x < paddlePos1 + pWidth + bRad){
-                    //                 // record for the following frames that the player was well positioned
-                    //                 this.bounced = true;
-                    //                 // calculate what the new positions and angle should be
-                    //                 let posAdjusted = returnAngle(this.x, paddlePos1, this.angle, x, y, this.speed)
-                    //                 // record these values to be used as the position for the upcoming frames
-                    //                 this.aBounce = posAdjusted[0]
-                    //                 this.xBounce = posAdjusted[1]
-                    //                 this.yBounce = posAdjusted[2]
-                    //             }
-                    //         } else {
-                    //             if (x > paddlePos2 - bRad && x < paddlePos2 + pWidth + bRad){
-                    //                 this.bounced = true;
-                    //                 let posAdjusted = returnAngle(this.x, paddlePos2, this.angle, x, y, this.speed)
-                    //                 this.aBounce = posAdjusted[0]
-                    //                 this.xBounce = posAdjusted[1]
-                    //                 this.yBounce = posAdjusted[2]
-                    //             }
-                    //         }
-                    //     } else {
-                    //         if (x > paddlePos1 - bRad && x < paddlePos1 + pWidth + bRad){
-                    //             this.bounced = true;
-                    //             let posAdjusted = returnAngle(this.x, paddlePos1, this.angle, x, y, this.speed)
-                    //             this.aBounce = posAdjusted[0]
-                    //             this.xBounce = posAdjusted[1]
-                    //             this.yBounce = posAdjusted[2]
-                    //         }
-                    //         if (x > paddlePos2 - bRad && x < paddlePos2 + pWidth + bRad){
-                    //             this.bounced = true;
-                    //             let posAdjusted = returnAngle(this.x, paddlePos2, this.angle, x, y, this.speed)
-                    //             this.aBounce = posAdjusted[0]
-                    //             this.xBounce = posAdjusted[1]
-                    //             this.yBounce = posAdjusted[2]
-                    //         }
-                    //     }
-                    // }
-                    this.x = x;
-                    this.y = y;
+                                        
                 }
             }
 
