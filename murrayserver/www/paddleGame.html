@@ -149,7 +149,7 @@ ready(async() => {
     <canvas id="canvas" width="800" height="600" style="width: 100%; height:100%"></canvas>
     <script>
 
-    var skipIntro = true;
+    var skipIntro = false;
 
     // Define variables
         var nBlocks             = 3;
@@ -411,36 +411,47 @@ ready(async() => {
             }
 
             movePractice(paddlePos1){
-                this.speed = bSpeed - 2; // slow it down for ease of play??
-                let dx = this.speed*Math.cos(this.angle);
-                let dy = this.speed*Math.sin(this.angle);
+                let dx = this.x + this.speed*Math.cos(this.angle);
+                let dy = this.y + this.speed*Math.sin(this.angle);
+                let angle = this.angle;
 
-                if (this.x > frameRight-bRad || this.x < frameLeft+bRad) {
-                    this.angle = Math.PI-this.angle;
+                if (dx > frameRight - bRad){
+                    dx = frameRight - (dx - frameRight) - bRad;
+                    angle = Math.PI - angle;
                 }
-                if (this.y < frameTop + bRad) {
-                    this.angle = -this.angle;
+                if (dx < frameLeft + bRad) {
+                    dx = frameLeft + (frameLeft - dx) + bRad
+                    angle = Math.PI - angle;
                 }
-                if (this.y > frameBottom) {
-                    this.y = frameTop + bRad;
+                if (dy < frameTop + bRad) {
+                    dy = frameTop + (frameTop - dy) + bRad
+                    angle = -angle;
+                }
+                if (dy > frameBottom) {
+                    dy -= frameBottom - frameTop - bRad;
+
+
                 } else {
                     miss1++;
                 }
-                if (this.y > py-bRad && this.y < py) {
-                    if (this.x > paddlePos1 - bRad && this.x < paddlePos1 + pWidth + bRad) {
-                        let impact  = (this.x+bRad) - (paddlePos1+(0.5*pWidth));
+                if (dy > py-bRad && dy < py) {
+                    if (dx > paddlePos1 - bRad && dx < paddlePos1 + pWidth + bRad) {
+                        let impact  = (dx+bRad) - (paddlePos1+(0.5*pWidth));
                         let offset  = impact/(pWidth*0.5)/2;
-                        if (-this.angle+offset <= -deg2rad(upperLim)){
-                            this.angle = -this.angle;
-                        } else if (-this.angle+offset>=-deg2rad(lowLim)){
-                            this.angle = -this.angle;
+                        if (-angle+offset <= -deg2rad(upperLim)){
+                            angle = -angle;
+                        } else if (-angle+offset>=-deg2rad(lowLim)){
+                            angle = -angle;
                         } else {
-                            this.angle = -this.angle+offset
+                            angle = -angle+offset
                         }
-                        this.y = py - bRad+1
+                        dy = py - (py-dy) - bRad
                         hits1++;
                     }
                 }
+                this.x = dx;
+                this.y = dy;
+                this.angle = angle;
             }
             draw(){
                 expContext.beginPath();
@@ -681,6 +692,7 @@ ready(async() => {
             if (bInBlockInstructions){
                 if (event.keyCode == 32 && proceed){
                     ws.send('{"status":"ready"}')
+                    intertrialWaiting()
                 }
             }
             if (bInTrialBreak){
@@ -689,6 +701,7 @@ ready(async() => {
                     scoreReset();
                     if (nCurrentTrial<state.maxTrials){
                         ws.send('{"status":"ready"}')
+                        intertrialWaiting()
                     } else if(nCurrentTrial>=state.maxTrials){
                         nCurrentBlock++;
                         if (nCurrentBlock == nBlocks){
@@ -716,6 +729,20 @@ ready(async() => {
         }
 
         // Set Instructions
+        function waitingRoom(){
+            bInWaiting = true;
+            drawCanvas();
+			expContext.fillStyle = frameColour;
+            expContext.font="30px Arial";
+			expContext.textAlign = "center";
+            expContext.fillText("Welcome to the 'Team Spirit' waiting room!",expCanvas.width/2,expCanvas.height/4-100);
+            expContext.font="16px Arial";
+            expContext.fillText("We are currently waiting for player 2 to join.",expCanvas.width/2,expCanvas.height/4-50);
+
+            expContext.fillText("During this experiment you will play an online multiplayer arcade-style game.",expCanvas.width/2,expCanvas.height/4);
+            expContext.fillText("The formal experiment explanation will automatically commence once player 2 has joined.",expCanvas.width/2,expCanvas.height/4+25);
+        }
+        
         function instructions1(){
             bInInstructions1 = true;
             drawCanvas();
@@ -758,7 +785,7 @@ ready(async() => {
         function instructions2(){
             bInInstructions2 = true;
             drawCanvas();
-            expContext.fillStyle = "white";
+            expContext.fillStyle = frameColour;
             expContext.fillText("3/4", expCanvas.width*.75,25);
             expContext.fillText("Your paddle is red whereas your fellow participants paddle is blue.",expCanvas.width/2,expCanvas.height/4-100);
             expContext.fillText("Your score is shown in the top left corner of each trial and the score",expCanvas.width/2,expCanvas.height/4-75);
@@ -870,6 +897,20 @@ ready(async() => {
             }
         }
 
+        function intertrialWaiting(){
+            drawCanvas();
+            expContext.fillStyle = frameColour;
+            expContext.textAlign = 'center';
+            expContext.font = "26px Arial";
+            expContext.fillText("WAITING",expCanvas.width/2, expCanvas.height/3 - 100);
+            expContext.font = "16px Arial";
+            expContext.fillText("Player 1: Ready",expCanvas.width/2, expCanvas.height/3);
+            expContext.fillText("Waiting for Player 2", expCanvas.width/2, expCanvas.height/3 + 25);
+            expContext.fillText("Please wait for player 2.", expCanvas.width/2, expCanvas.height/3 + 100);
+            expContext.fillText(" The trial will commence once they have indicated they are ready.", expCanvas.width/2, expCanvas.height/3 + 125);
+
+        }
+
         // Set Functions
 		function initialise() {
 			nCurrentBlock       = 0; // start at zero
@@ -931,7 +972,11 @@ ready(async() => {
                 confirmUsername1();
             }
             else if (username1 != null && username1.length == 5 || username1.length == 6) {
-                instructions1();
+                if (state.status === 'waiting'){
+                    waitingRoom();
+                } else {
+                    instructions1();
+                }
             }
         }
 
@@ -941,7 +986,11 @@ ready(async() => {
                 getUsername1();
             }
             else {
-                instructions1();
+                if (state.status === 'waiting'){
+                    waitingRoom();
+                } else {
+                    instructions1();
+                }
             }
         }
 
@@ -1176,17 +1225,21 @@ ready(async() => {
             totalElapsedTimed=(drawStartTime-startingTime);
             elapsedSinceLastLoop=(drawStartTime-lastTime);
             lastTime=drawStartTime;
+
             let frProp = pSpeed * elapsedSinceLastLoop / 60;
             let speedCorrected = pSpeed * frProp;
             let ballSpeedCorrected = bSpeed * frProp;
-
+            if (!ballSpeedCorrected){
+                ballSpeedCorrected = bSpeed;
+            }
+            
             drawCanvas();
             drawDRT(drtOnsets,trialDuration,start,moving);
             drawFrame();
             allBalls.forEach(function(ball){ // ball is the name of each element in the object, same as [for balls in balllist: ball.draw()]
                 ball.draw();
                 ball.speed = ballSpeedCorrected;
-                ball.movePractice(this.paddle1.x);
+                ball.movePractice(paddle1.x);
             })
             paddle1.draw(); paddle1.move(p1Left,p1Right, speedCorrected);
 
@@ -1196,7 +1249,6 @@ ready(async() => {
 
             rAF = requestAnimationFrame(drawPracticeTrial)
             if (trialTime <= 0){
-                console.log('end the trial');
                 endTrial()
             };
         }
@@ -1320,6 +1372,11 @@ ready(async() => {
                 }
                 allBalls.forEach(function(ball){ball.bounced=false;})
 
+                if (state.status === 'waiting' && received.status === 'reading'){
+                    instructions1();                
+                }
+
+
                 if (state.status === 'reading' && received.status === 'playing') {
                     // transitioning from reading to playing (i.e. beginning trial)
                     Object.assign(state, received);
@@ -1362,7 +1419,7 @@ ready(async() => {
             drtOnsets   = drtStimTimes(respWin,trialDuration/2);
             drtPanels   = new DRT();
             let nPracBalls  = 2;
-            bAngles     = uniqueAngles(nPracBalls,lowLim, upperLim);
+            bAngles     = uniqueAngles(nPracBalls,60, 120);
             for (let i = 0; i < nPracBalls; i++){
                 allBalls.push(new Ball(bx[i%3], sharedColour, i, bAngles[i]));
             }
