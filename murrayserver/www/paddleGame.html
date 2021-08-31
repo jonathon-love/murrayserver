@@ -1457,6 +1457,11 @@ let paddle2History = new PaddleHistory();
             paddle2.move(p2Left,p2Right,speedCorrected);
             paddle1History.add(now, paddle1.x);
 
+            let playerId = state.player_id;
+            let otherId = playerId === '0' ? '1' : '0';
+            let theirPos = state.players[otherId].pos;
+            paddle2.x = theirPos;
+
             allBalls.forEach(function(ball){
                 ball.move(this.paddle1.x, this.paddle2.x, elapsed);
                 ball.draw();
