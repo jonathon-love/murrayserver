@@ -144,6 +144,50 @@ ready(async() => {
    });
 
 
+class PaddleHistory {
+    constructor() {
+        this.retain = 5000;
+        this.history = [ ]
+    }
+
+    add(time, pos) {
+        while (this.history.length > 1
+                && (time - this.history[this.history.length - 1].time) > this.retain) {
+            this.history.pop();
+        }
+        this.history.unshift({ time, pos });
+    }
+
+    get(time, currentPos) {
+
+        if (this.history.length === 0)
+            return currentPos;
+
+        if (time > this.history[0].time)
+            return this.history[0].pos;
+
+        // should use a binary search of course, but whatevs
+        for (let i = 1; i < this.history.length; i++) {
+            if (time > this.history[i].time) {
+                let intervalStart = this.history[i-1].time;
+                let intervalEnd = this.history[i].time;
+                let posStart = this.history[i-1].pos;
+                let posEnd = this.history[i].pos;
+                let weight = (time - intervalStart) / (intervalEnd - intervalStart);
+                let pos = (posEnd - posStart) * weight + posStart;
+
+                return pos;
+            }
+        }
+
+        return this.history[this.history.length-1].pos;
+    }
+}
+
+let paddle1History = new PaddleHistory();
+let paddle2History = new PaddleHistory();
+
+
   </SCRIPT>
 
     <canvas id="canvas" width="800" height="600" style="width: 100%; height:100%"></canvas>
@@ -315,16 +359,15 @@ ready(async() => {
         // Sprite Classes
         class Ball {
             constructor(x, colour, ballId, angle) {
-            this.x      = x;
-            this.y      = by;
-            this.size   = bRad;
-            this.colour = colour;
-            this.speed  = bSpeed;
-            this.angle  = -deg2rad(angle);
-            this.identity = ballId;
-            this.xCoords = [];
-            this.yCoords = [];
-            this.bounced = false;
+                this.x      = x;
+                this.y      = by;
+                this.size   = bRad;
+                this.colour = colour;
+                this.speed  = bSpeed;
+                this.angle  = -deg2rad(angle);
+                this.identity = ballId;
+                this.xCoords = [];
+                this.yCoords = [];
             }
             move(paddlePos1,paddlePos2,elapsed){
                 
@@ -338,58 +381,190 @@ ready(async() => {
                         else if (state.block.n_balls == 6){identity = identity - 3}
                     }
                 }
-                if (state.balls && identity >= 0 && identity < 18) {
+                if (state.balls) {
                     let s = state.balls[identity];
                     this.speed = s.speed;
                     this.angle = s.angle;
 
-                    let x = s.x + this.speed * Math.cos(this.angle) * elapsed / 1000 / 0.02;
-                    let y = s.y + this.speed * Math.sin(this.angle) * elapsed / 1000 / 0.02;
-                    
-                    let bounds = { left: frameLeft + bRad, top: bRad, right: frameRight - bRad, bottom: frameHeight - bRad, paddle: py};
+                    let bounds = {
+                        left: frameLeft + bRad,
+                        top: bRad,
+                        right: frameRight - bRad,
+                        bottom: frameHeight - bRad,
+                        paddle: py - bRad,
+                    };
 
-                    if (x > bounds.right) {
-                        x = bounds.right - (x - bounds.right);
+                    function move(x, y, speed, angle, elapsed) {
+                        let xe = x + speed * Math.cos(angle) * elapsed / 1000 / 0.02;
+                        let ye = y + speed * Math.sin(angle) * elapsed / 1000 / 0.02;
+                        return { x: xe, y: ye };
                     }
-                    if (x < bounds.left) {
-                        x = bounds.left + (bounds.left - x);
+
+                    function determinePaddleLineCrossing(x, y, speed, angle, elapsed) {
+
+                        let end = move(x, y, speed, angle, elapsed);
+
+                        if (start.y > bounds.paddle || end.y < bounds.paddle)
+                            // did not pass through paddle line
+                            return;
+
+                        let prop = (bounds.paddle - y) / (end.y - y);
+                        let xAtCrossing = (end.x - x) * prop + x;
+                        elapsed = elapsed * prop;
+                        return { x: xAtCrossing, elapsed };
                     }
-                    if (y > bounds.bottom && !this.bounced) {
-                        y -= (bounds.bottom - bounds.top);
+
+                    function determineResultantAngle(crossing, angle, paddleX) {
+                        if (paddleX === undefined)
+                            return;
+                        if (crossing.x < paddleX - bRad || crossing.x > paddleX + pWidth + bRad)
+                            return;
+
+                        let impact = (crossing.x + bRad / 2) - (paddleX + pWidth / 2)
+                        let offset = impact / (pWidth / 2) / 2
+                        let newAngle = -angle + offset;
+
+                        if (newAngle <= -deg2rad(155) || newAngle >= -deg2rad(35))
+                            return -angle;
+                        else
+                            return newAngle;
                     }
-                    if (y < bounds.top) {
-                        y = bounds.top + (bounds.top - y);
+
+                    function determinePaddleCollision(x, y, speed, angle, elapsed, p1, p2) {
+
+                        let crossing = determinePaddleLineCrossing(x, y, speed, angle, elapsed);
+                        if ( ! crossing)
+                            return undefined;
+
+                        let remaining = elapsed - crossing.elapsed;
+                        let then = adjustedTime() - remaining;
+                        let paddle1x;
+                        let paddle2x;
+
+                        if (p1)
+                            paddle1x = paddle1History.get(then);
+                        if (p2)
+                            paddle2x = paddle2History.get(then);
+
+                        let angle1 = determineResultantAngle(crossing, angle, paddle1x);
+                        let angle2 = determineResultantAngle(crossing, angle, paddle2x);
+
+                        let rAngle;
+                        if (angle1 && angle2)
+                            rAngle = (angle1 + angle2) / 2;
+                        else if (angle1)
+                            rAngle = angle1;
+                        else if (angle2)
+                            rAngle = angle2;
+                        else
+                            return undefined;
+
+                        return { x: crossing.x, y: bounds.paddle, angle: rAngle, elapsed: crossing.elapsed };
                     }
-                    if (this.bounced){
-                        y = bounds.paddle - (y - bounds.paddle) - bRad;
-                    }
-                    let playerId = state.player_id;
-                    if (y + bRad > bounds.paddle && !this.bounced) {
-                        if (state.block.block_type == 'nonCol'){
-                            if (ballId < 9 && playerId == 0){
-                                if (x > paddlePos1 - bRad && x < paddlePos1 + pWidth + bRad){
-                                    this.bounced = true;
-                                    y = bounds.paddle - (y - bounds.paddle) - bRad;
-                                }
-                            } else if (ballId >=9 && playerId == 1){
-                                if (x > paddlePos1 - bRad && x < paddlePos1 + pWidth + bRad){
-                                    this.bounced = true;
-                                    y = bounds.paddle - (y - bounds.paddle) - bRad;
-                                }
-                            }
-                        } else {
-                            if (x > paddlePos1 - bRad && x < paddlePos1 + pWidth + bRad){
-                                this.bounced = true;
-                                y = bounds.paddle - (y - bounds.paddle) - bRad;
-                            }
-                            if (x > paddlePos2 - bRad && x < paddlePos2 + pWidth + bRad){
-                                this.bounced = true;
-                                y = bounds.paddle - (y - bounds.paddle) - bRad;
-                            }
+
+                    function determineLeftCollision(x, y, speed, angle, elapsed) {
+                        let end = move(x, y, speed, angle, elapsed);
+                        if (end.x < bounds.left) {
+                            let prop = (x - bounds.left) / (x - end.x);
+                            x = bounds.left;
+                            y = (end.y - y) * prop + y;
+                            elapsed = elapsed * prop;
+                            angle = deg2rad(180) - angle;
+                            return { x, y, speed, angle, elapsed };
                         }
                     }
-                    this.x = x;
-                    this.y = y;
+
+                    function determineRightCollision(x, y, speed, angle, elapsed) {
+                        let end = move(x, y, speed, angle, elapsed);
+                        if (end.x > bounds.right) {
+                            let prop = (bounds.right - x) / (end.x - x);
+                            x = bounds.right;
+                            y = (end.y - y) * prop + y;
+                            elapsed = elapsed * prop;
+                            angle = deg2rad(180) - angle;
+                            return { x, y, speed, angle, elapsed };
+                        }
+                    }
+
+                    function determineTopCollision(x, y, speed, angle, elapsed) {
+                        let end = move(x, y, speed, angle, elapsed);
+                        if (end.y < bounds.top) {
+                            let prop = (y - bounds.top) / (y - end.y);
+                            y = bounds.top;
+                            x = (end.x - x) * prop + x;
+                            elapsed = elapsed * prop;
+                            angle = -angle;
+                            return { x, y, speed, angle, elapsed };
+                        }
+                    }
+
+                    function determineBottomCollision(x, y, speed, angle, elapsed) {
+                        let end = move(x, y, speed, angle, elapsed);
+                        if (end.y > bounds.bottom) {
+                            let prop = (bounds.bottom - y) / (end.y - y);
+                            x = (end.x - x) * prop + x;
+                            y = bounds.top;
+                            elapsed = elapsed * prop;
+                            return { x, y, speed, angle, elapsed };
+                        }
+                    }
+
+
+                    let playerId = state.player_id;
+
+                    let p1 = false
+                    let p2 = false;
+
+                    if (state.block.block_type == 'nonCol') {
+                        if ((ballId < 9 && playerId == 0) || (ballId >= 9 && playerId == 1))
+                            p1 = true;
+                        else
+                            p2 = true;
+                    }
+                    else {
+                        p1 = true;
+                        p2 = true;
+                    }
+
+                    let x = s.x;
+                    let y = s.y;
+                    let speed = s.speed;
+                    let angle = s.angle;
+
+                    while (true) {
+                        let collisions = [
+                            determineLeftCollision(x, y, speed, angle, elapsed),
+                            determineRightCollision(x, y, speed, angle, elapsed),
+                            determineTopCollision(x, y, speed, angle, elapsed),
+                            determineBottomCollision(x, y, speed, angle, elapsed),
+                            determinePaddleCollision(x, y, speed, angle, elapsed, p1, p2),
+                        ];
+
+                        let earliest = collisions.find((x, index, array) => {
+                            if (x === undefined)
+                                return false;
+                            for (let i = index + 1; i < array.length; i++) {
+                                if (array[i] && x.elapsed > array[i].elapsed)
+                                    return false;
+                            }
+                            return true;
+                        });
+
+                        if (earliest) {
+                            x = earliest.x;
+                            y = earliest.y;
+                            angle = earliest.angle;
+                            elapsed = elapsed - earliest.elapsed;
+                        }
+                        else {
+                            break;
+                        }
+                    }
+
+                    let pos = move(x, y, speed, angle, elapsed)
+                    this.x = pos.x;
+                    this.y = pos.y;
+
 
                     // // Paddle contact
                     // function returnAngle(ballx, paddlex, angle, x, y, speed){
@@ -1269,21 +1444,28 @@ ready(async() => {
             let bProp   = bSpeed * (messageDelay) / 60;
             let speedCorrected = pSpeed * frProp;
             // let ballSpeedCorrected = bSpeed * bProp;
-            
-            let elapsed = adjustedTime() - (state.timestamp*1000);
+
+            let now = adjustedTime()
+            let elapsed = now - (state.timestamp*1000);
             let ballSpeedCorrected = bSpeed * (bSpeed * elapsed / 60);
             
             drawCanvas();
             drawDRT(drtOnsets,trialDuration,start,moving);
             drawFrame();
+
+            paddle1.move(p1Left,p1Right,speedCorrected);
+            paddle2.move(p2Left,p2Right,speedCorrected);
+            paddle1History.add(now, paddle1.x);
+
             allBalls.forEach(function(ball){
                 ball.move(this.paddle1.x, this.paddle2.x, elapsed);
                 ball.draw();
 
                 ball.xCoords.push([ball.x, ball.y])
             })
-            paddle1.draw(); paddle1.move(p1Left,p1Right,speedCorrected);
-            paddle2.draw(); paddle2.move(p2Left,p2Right,speedCorrected);
+
+            paddle1.draw();
+            paddle2.draw();
 
             scoring();
             drawScore(state.block.block_type,nCurrentBlock);
@@ -1370,7 +1552,6 @@ ready(async() => {
                 else {
                     messageDelay = clientTime + serverTimeDelta - serverTime;
                 }
-                allBalls.forEach(function(ball){ball.bounced=false;})
 
                 if (state.status === 'waiting' && received.status === 'reading'){
                     instructions1();                
@@ -1407,6 +1588,13 @@ ready(async() => {
                     console.log('trial end');
                     console.log('begin instructions for next block');
                     console.log(`block type ${ JSON.stringify(state.block) }`);
+                }
+
+                if (received.status === 'playing') {
+
+                    let playerId = state.player_id;
+                    let otherId = playerId === '0' ? '1' : '0';
+                    paddle2History.add(parseInt(received.timestamp*1000), received.players[otherId].pos)
                 }
 
                 Object.assign(state, received);
