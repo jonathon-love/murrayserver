@@ -1504,6 +1504,10 @@ let paddle2History = new PaddleHistory();
             drawScore(state.block.block_type,state.blockNo +1);
             trialTime = drawTimer(trialDuration, start, moving);
 
+            expContext.font = '12px serif';
+            expContext.fillStyle = 'FireBrick';
+            expContext.fillText(`${ messageDelay }`, 20, 580);
+
             rAF = requestAnimationFrame(drawTrial)
 
 
