@@ -177,7 +177,7 @@ class Game:
             send_event = self._send_update[player_id]
             send_event.set()
 
-            while True:
+            while self._ending is False:
                 await send_event.wait()
                 send_event.clear()
                 self._state['player_id'] = player_id
@@ -392,7 +392,7 @@ class Game:
             self.send()
 
             print(f'block { block_no }, awaiting players')
-            while True:
+            while self._ending is False:
                 await self.update()
 
                 print(f'player 0 { state["players"]["0"]["status"] }')
@@ -410,7 +410,7 @@ class Game:
             print(f'block { block_no }, begun!')
 
             async def play():
-                while True:
+                while self._ending is False:
                     await self.update()
                     self.send()
 
