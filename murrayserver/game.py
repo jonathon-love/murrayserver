@@ -20,11 +20,6 @@ from .stream import ProgressStream
 
 import logging
 
-handler = logging.StreamHandler(sys.stdout)
-handler.setLevel(logging.INFO)
-formatter = logging.Formatter('%(message)s')
-handler.setFormatter(formatter)
-
 
 async def run_later(coro, delay):
     await sleep(delay)
@@ -42,16 +37,6 @@ class Game:
         self._blocks = [ ]
         self._last_status = 'waiting'
         self._ending = False
-
-        self._log = logging.getLogger(f'game{ game_no }')
-        self._log.setLevel(logging.INFO)
-
-        time_string = datetime.now().isoformat(timespec='seconds').replace(':', '')
-        fileHandler = logging.FileHandler(f'game-{ time_string }-{ game_no }.txt', mode='w')
-        fileHandler.setLevel(logging.INFO)
-        formatter = logging.Formatter('%(message)s')
-        fileHandler.setFormatter(formatter)
-        self._log.addHandler(fileHandler)
 
         drtWidth = 800
         width  = drtWidth * 0.9
@@ -112,8 +97,8 @@ class Game:
             'block': self._blocks[0],
             'players': {
                 '0': {
-                    'pos': self._dim['p1Start'], 
-                    'status': 'notReady', 
+                    'pos': self._dim['p1Start'],
+                    'status': 'notReady',
                     'trialStart': 0,
                     'hits': 0,
                     'miss': 0,
@@ -322,44 +307,63 @@ class Game:
 
     async def run(self):
 
-        await self._ready.wait()
-        state = self._state
+        self._log = logging.getLogger(f'game-{ self._game_no }')
+        self._log.setLevel(logging.INFO)
 
-        print('ready!')
+        time_string = datetime.now().isoformat(timespec='seconds').replace(':', '')
+        fileHandler = logging.FileHandler(f'game-{ time_string }-{ self._game_no }.txt', mode='w')
+        fileHandler.setLevel(logging.INFO)
+        formatter = logging.Formatter('%(message)s')
+        fileHandler.setFormatter(formatter)
+        self._log.addHandler(fileHandler)
 
-        def resetVars():
-            self._state['players']['0']['hits'] = 0
-            self._state['players']['1']['hits'] = 0
-            self._state['players']['0']['miss'] = 0
-            self._state['players']['1']['miss'] = 0
-            self._state['players']['0']['rt'] = 0
-            self._state['players']['1']['rt'] = 0
-            self._state['players']['0']['fa'] = 0
-            self._state['players']['1']['fa'] = 0
+        try:
+            await self._ready.wait()
+            state = self._state
 
-        for block_no, block in enumerate(self._blocks):
-            state['status'] = 'reading'
-            state['players']['0']['status'] = 'notReady'
-            state['players']['1']['status'] = 'notReady'
-            state['block'] = block
-            state['trialNo'] = block_no%(len(self._blocks) / 3)
-            state['maxTrials'] = len(self._blocks) / 3# trials per block
+            print('ready!')
 
-            resetVars()
+            def resetVars():
+                self._state['players']['0']['hits'] = 0
+                self._state['players']['1']['hits'] = 0
+                self._state['players']['0']['miss'] = 0
+                self._state['players']['1']['miss'] = 0
+                self._state['players']['0']['rt'] = 0
+                self._state['players']['1']['rt'] = 0
+                self._state['players']['0']['fa'] = 0
+                self._state['players']['1']['fa'] = 0
 
-            balls = [None] * block['n_balls'] * 2 # n_balls represents the number of balls per player, so should be doubled.
-            angles = [0-math.radians(randint(45,135)) for angle in balls]
-            speed = 4
-            for i, _ in enumerate(balls):
-                if state['block']['block_type'] == "nonCol":
-                    if i >= len(balls)/2:
-                        balls[i] = {
+            for block_no, block in enumerate(self._blocks):
+                state['status'] = 'reading'
+                state['players']['0']['status'] = 'notReady'
+                state['players']['1']['status'] = 'notReady'
+                state['block'] = block
+                state['trialNo'] = block_no%(len(self._blocks) / 3)
+                state['maxTrials'] = len(self._blocks) / 3# trials per block
+
+                resetVars()
+
+                balls = [None] * block['n_balls'] * 2 # n_balls represents the number of balls per player, so should be doubled.
+                angles = [0-math.radians(randint(45,135)) for angle in balls]
+                speed = 4
+                for i, _ in enumerate(balls):
+                    if state['block']['block_type'] == "nonCol":
+                        if i >= len(balls)/2:
+                            balls[i] = {
+                                'x': self._dim['ballX'][i%len(self._dim['ballX'])],
+                                'y': self._dim['ballY'],
+                                'angle': angles[i],
+                                'speed': speed,
+                                'id': int(9 - ((len(balls)/2) - i)),
+                            }
+                        else:
+                            balls[i] = {
                             'x': self._dim['ballX'][i%len(self._dim['ballX'])],
                             'y': self._dim['ballY'],
                             'angle': angles[i],
                             'speed': speed,
-                            'id': int(9 - ((len(balls)/2) - i)),
-                        }
+                            'id': i,
+                            }
                     else:
                         balls[i] = {
                         'x': self._dim['ballX'][i%len(self._dim['ballX'])],
@@ -368,55 +372,49 @@ class Game:
                         'speed': speed,
                         'id': i,
                         }
-                else:
-                    balls[i] = {
-                    'x': self._dim['ballX'][i%len(self._dim['ballX'])],
-                    'y': self._dim['ballY'],
-                    'angle': angles[i],
-                    'speed': speed,
-                    'id': i,
-                    }
-            state['balls'] = balls
+                state['balls'] = balls
 
-            ## DRT
-            state['drt']['onset'] = [20 - (randint(3000,5000)/1000)] ## change trial duration as necessary
-            # determine trial presentation intervals, display times, and response windows.
-            while state['drt']['onset'][-1] > 5:
-                state['drt']['onset'].append(state['drt']['onset'][-1] - (randint(3000,5000)/1000))
+                ## DRT
+                state['drt']['onset'] = [20 - (randint(3000,5000)/1000)] ## change trial duration as necessary
+                # determine trial presentation intervals, display times, and response windows.
+                while state['drt']['onset'][-1] > 5:
+                    state['drt']['onset'].append(state['drt']['onset'][-1] - (randint(3000,5000)/1000))
 
-            state['drt']['dispStim'] = [stim-1 for stim in state['drt']['onset']]
-            state['drt']['window'] = [stim-2.5 for stim in state['drt']['onset']]
-            if state['drt']['window'][-1] <= 0:  ## remove the last stimulus time if it's too close to the end of the trial.
-                state['drt']['onset'], state['drt']['dispStim'], state['drt']['window'] = state['drt']['onset'][0:-1], state['drt']['dispStim'][0:-1], state['drt']['window'][0:-1]
+                state['drt']['dispStim'] = [stim-1 for stim in state['drt']['onset']]
+                state['drt']['window'] = [stim-2.5 for stim in state['drt']['onset']]
+                if state['drt']['window'][-1] <= 0:  ## remove the last stimulus time if it's too close to the end of the trial.
+                    state['drt']['onset'], state['drt']['dispStim'], state['drt']['window'] = state['drt']['onset'][0:-1], state['drt']['dispStim'][0:-1], state['drt']['window'][0:-1]
 
-            self.send()
+                self.send()
 
-            print(f'block { block_no }, awaiting players')
-            while self._ending is False:
-                await self.update()
-
-                print(f'player 0 { state["players"]["0"]["status"] }')
-                print(f'player 1 { state["players"]["1"]["status"] }')
-
-                if (state['players']['0']['status'] == 'ready'
-                        and state['players']['1']['status'] == 'ready'):
-                    break
-
-            state['players']['0']['pos'] = self._dim['p1Start']
-            state['players']['1']['pos'] = self._dim['p2Start']
-            state['status'] = 'playing'
-            self.send()
-
-            print(f'block { block_no }, begun!')
-
-            async def play():
+                print(f'block { block_no }, awaiting players')
                 while self._ending is False:
                     await self.update()
-                    self.send()
 
-            try:
-                await wait_for(play(), 20)
-            except TimeoutError:
-                pass
+                    print(f'player 0 { state["players"]["0"]["status"] }')
+                    print(f'player 1 { state["players"]["1"]["status"] }')
 
-            print(f'block { block_no }, complete!')
+                    if (state['players']['0']['status'] == 'ready'
+                            and state['players']['1']['status'] == 'ready'):
+                        break
+
+                state['players']['0']['pos'] = self._dim['p1Start']
+                state['players']['1']['pos'] = self._dim['p2Start']
+                state['status'] = 'playing'
+                self.send()
+
+                print(f'block { block_no }, begun!')
+
+                async def play():
+                    while self._ending is False:
+                        await self.update()
+                        self.send()
+
+                try:
+                    await wait_for(play(), 20)
+                except TimeoutError:
+                    pass
+
+                print(f'block { block_no }, complete!')
+        finally:
+            self._log.flush()
