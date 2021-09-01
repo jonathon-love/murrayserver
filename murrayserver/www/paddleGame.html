@@ -193,7 +193,7 @@ let paddle2History = new PaddleHistory();
     <canvas id="canvas" width="800" height="600" style="width: 100%; height:100%"></canvas>
     <script>
 
-    var skipIntro = false;
+    var skipIntro = true;
 
     // Define variables
         var nBlocks             = 3;
@@ -725,29 +725,29 @@ let paddle2History = new PaddleHistory();
             expContext.fillText(faceVal, x+10, y+10);
             ctx.lineWidth = 1;
         }
-        function keyInsts(p1, p2, drt1, drt2){
+        function keyInsts(p1, p2, drt1, drt2, x = expCanvas.height/2){
             // Player Keys
             if (p1){
                 expContext.fillStyle = p1Colour;
                 expContext.fillStyle = "white";
                 if (drt1 == LHdrtRespKey){
-                    drawKey(expContext,"2191",expCanvas.width*0.67-15,expCanvas.height/2+50, 40, 40, 3,true,true,true);
-                    drawKey(expContext,"Z",expCanvas.width/3-25,expCanvas.height/2+50, 40, 40, 3,true,true,false);
-                    drawKey(expContext,"C",expCanvas.width/3+25,expCanvas.height/2+50, 40, 40, 3,true,true,false);
-                    expContext.fillText("Left", expCanvas.width/3-30,expCanvas.height/2+100);
-                    expContext.fillText("Right", expCanvas.width/3+50,expCanvas.height/2+100);
-                    expContext.fillText("Response", expCanvas.width*0.67,expCanvas.height/2+100);
-                    expContext.fillText("Non-Dominant", expCanvas.width*0.67,expCanvas.height/2+25);
-                    expContext.fillText("Dominant Hand", expCanvas.width/3,expCanvas.height/2+25);
+                    drawKey(expContext,"2191",expCanvas.width*0.67-15,x+50, 40, 40, 3,true,true,true);
+                    drawKey(expContext,"Z",expCanvas.width/3-25,x+50, 40, 40, 3,true,true,false);
+                    drawKey(expContext,"C",expCanvas.width/3+25,x+50, 40, 40, 3,true,true,false);
+                    expContext.fillText("Left", expCanvas.width/3-30,x+100);
+                    expContext.fillText("Right", expCanvas.width/3+50,x+100);
+                    expContext.fillText("Response", expCanvas.width*0.67,x+100);
+                    expContext.fillText("Non-Dominant", expCanvas.width*0.67,x+25);
+                    expContext.fillText("Dominant Hand", expCanvas.width/3,x+25);
                 } else if (drt1 == RHdrtRespKey){
-                    drawKey(expContext,"Z",expCanvas.width/3-15,expCanvas.height/2+50, 40, 40, 3,true,true,false);
-                    drawKey(expContext,"2190",expCanvas.width*0.67-25,expCanvas.height/2+50, 40, 40, 3,true,true,true);
-                    drawKey(expContext,"2192",expCanvas.width*0.67+25,expCanvas.height/2+50, 40, 40, 3,true,true,true);
-                    expContext.fillText("Left", expCanvas.width*0.67-30,expCanvas.height/2+100);
-                    expContext.fillText("Right", expCanvas.width*0.67+50,expCanvas.height/2+100);
-                    expContext.fillText("Response", expCanvas.width/3,expCanvas.height/2+100);
-                    expContext.fillText("Non-Dominant", expCanvas.width/3,expCanvas.height/2+25);
-                    expContext.fillText("Dominant Hand", expCanvas.width*0.67,expCanvas.height/2+25);
+                    drawKey(expContext,"Z",expCanvas.width/3-15,x+50, 40, 40, 3,true,true,false);
+                    drawKey(expContext,"2190",expCanvas.width*0.67-25,x+50, 40, 40, 3,true,true,true);
+                    drawKey(expContext,"2192",expCanvas.width*0.67+25,x+50, 40, 40, 3,true,true,true);
+                    expContext.fillText("Left", expCanvas.width*0.67-30,x+100);
+                    expContext.fillText("Right", expCanvas.width*0.67+50,x+100);
+                    expContext.fillText("Response", expCanvas.width/3,x+100);
+                    expContext.fillText("Non-Dominant", expCanvas.width/3,x+25);
+                    expContext.fillText("Dominant Hand", expCanvas.width*0.67,x+25);
                 }
             }
         }
@@ -795,6 +795,7 @@ let paddle2History = new PaddleHistory();
                         left    = LHleft;
                         right   = LHright;
                         p1HandChosen = true;
+                        ws.send(JSON.stringify({'hand':'Left'}));
                     } else if (e.keyCode == RHdrtRespKey && !p1HandChosen){
                         hand1 = 'right';
                         p1Hand.push(RHdrtRespKey);
@@ -802,6 +803,7 @@ let paddle2History = new PaddleHistory();
                         left    = RHleft;
                         right   = RHright;
                         p1HandChosen = true;
+                        ws.send(JSON.stringify({'hand':'Right'}));
                     }
                 }
                 if (p1Hand.length == 1 && p1HandChosen){
@@ -831,7 +833,7 @@ let paddle2History = new PaddleHistory();
                     bInInstructions3 = false;
 
                     if (skipIntro){
-                        blockInst(state.block.block_type,nCurrentBlock);
+                        blockInst(state.block.block_type,state.blockNo);
                     } else {
                         practiceTrial();
                     }
@@ -878,11 +880,10 @@ let paddle2History = new PaddleHistory();
                         ws.send('{"status":"ready"}')
                         intertrialWaiting()
                     } else if(nCurrentTrial>=state.maxTrials){
-                        nCurrentBlock++;
-                        if (nCurrentBlock == nBlocks){
+                        if (state.blockNo == nBlocks){
                             expEnd();
                         } else {
-                            blockInst(state.block.block_type,nCurrentBlock);
+                            blockInst(state.block.block_type,state.blockNo +1);
                         }
                     }
                     proceed = false;
@@ -1041,7 +1042,7 @@ let paddle2History = new PaddleHistory();
         function blockInst(blockTypes,count){
             drawCanvas();
             bInBlockInstructions    = true;
-            count++;
+            // count++;
             p1CumulativeScore  = 0; // the cumulative scores for both players throughout each block
             p2CumulativeScore  = 0;
             scoreReset();
@@ -1049,22 +1050,26 @@ let paddle2History = new PaddleHistory();
             expContext.font         ="16px Arial";
             expContext.textAlign    = "center";
             if (count !== 1){
-                expContext.fillText("Please take a short 20 second break before beginning the next block.",expCanvas.width/2, expCanvas.height/4-150);
+                expContext.fillText("Please take a short 20 second break before beginning block "+count+" of "+nBlocks,expCanvas.width/2, expCanvas.height/4-75);
             }
-            expContext.fillText("You will now begin block "+count+" of "+nBlocks,expCanvas.width/2,expCanvas.height/4-100);
+            // expContext.fillText(,expCanvas.width/2,expCanvas.height/4-50);
             count--;
 
             if (state.block.block_type == "nonCol"){
-                expContext.fillText("During this block you will only be able to interact with balls that match the colour of your paddle.",expCanvas.width/2,expCanvas.height/4-50);
+                expContext.fillText("During this block you will only be able to interact with balls that match the colour of your paddle.",expCanvas.width/2,expCanvas.height/4-25);
             } else if (state.block.block_type == "col"){
-                expContext.fillText("During this block you must work together.",expCanvas.width/2,expCanvas.height/4-25);
-                expContext.fillText("Both of your hits and misses count toward the team score.",expCanvas.width/2,expCanvas.height/4);
+                expContext.fillText("During this block you must work together.",expCanvas.width/2,expCanvas.height/4);
+                expContext.fillText("Both of your hits and misses count toward the team score.",expCanvas.width/2,expCanvas.height/4+25);
             } else if (state.block.block_type == "com"){
-                expContext.fillText("During this block you must compete against each other to outscore your opponent.",expCanvas.width/2,expCanvas.height/4-50);
-                expContext.fillText("Any 'miss' is scored against you both but your 'hits' are your own.",expCanvas.width/2,expCanvas.height/4-25);
+                expContext.fillText("During this block you must compete against each other to outscore your opponent.",expCanvas.width/2,expCanvas.height/4);
+                expContext.fillText("Any 'miss' is scored against you both but your 'hits' are your own.",expCanvas.width/2,expCanvas.height/4+25);
             }
-            expContext.fillText("Score as high as you can but don't forget to",expCanvas.width/2,expCanvas.height/4+25);
-            expContext.fillText("respond quickly and accurately to the flashing light.",expCanvas.width/2,expCanvas.height/4+50);
+            expContext.fillText("Score as high as you can but don't forget to respond quickly and accurately",expCanvas.width/2,expCanvas.height/4+75);
+            expContext.fillText("to the flashing light.",expCanvas.width/2,expCanvas.height/4+100);
+
+
+            keyInsts(true,true,plyr1DRTrespKey,plyr2DRTrespKey,x = expCanvas.height/4+300);
+
             if (count == 0){
                 timeout = setTimeout(timedContinue,trialBreakTime*1000);
             } else {
@@ -1088,7 +1093,7 @@ let paddle2History = new PaddleHistory();
 
         // Set Functions
 		function initialise() {
-			nCurrentBlock       = 0; // start at zero
+			// nCurrentBlock       = state.blockNo + 1; // start at zero
 			expCanvas           = document.getElementById("canvas");
 			expContext          = expCanvas.getContext("2d");
 			expContext.fillStyle= frameColour;
@@ -1115,6 +1120,17 @@ let paddle2History = new PaddleHistory();
                 moving  = true;
                 start   = state['players'][state.player_id]['trialStart'];
                 startCount++
+                
+                if (state['players'][state.player_id]['hand'] === "Right"){
+                    left = RHleft; 
+                    right = RHright; 
+                    plyr1DRTrespKey = RHdrtRespKey;
+                } else {
+                    left = LHleft; 
+                    right = LHright; 
+                    plyr1DRTrespKey = LHdrtRespKey;
+                }
+                
                 scoreReset();
                 expTrial();
                 proceed = false;
@@ -1128,9 +1144,21 @@ let paddle2History = new PaddleHistory();
                 dispCont    = true;
                 startCount  = 0;
                 nCurrentTrial = state.trialNo;
+
+                if (state['players'][state.player_id]['hand'] === "Right"){
+                    left = RHleft; 
+                    right = RHright; 
+                    plyr1DRTrespKey = RHdrtRespKey;
+                } else {
+                    left = LHleft; 
+                    right = LHright; 
+                    plyr1DRTrespKey = LHdrtRespKey;
+                }
+
                 interTrial(score1,score2,teamScore, state.block.block_type);   
             } else if (skipIntro){
-                blockInst(state.block.block_type, nCurrentBlock);
+                ws.send(JSON.stringify({'hand':'Right'}))
+                blockInst(state.block.block_type, state.blockNo +1);
             } else {
                 getUsername1();
             }
@@ -1419,7 +1447,7 @@ let paddle2History = new PaddleHistory();
             paddle1.draw(); paddle1.move(p1Left,p1Right, speedCorrected);
 
             scoring();
-            drawScore(state.block.block_type,nCurrentBlock);
+            drawScore(state.block.block_type,state.blockNo +1);
             trialTime = drawTimer(trialDuration, start, moving);
 
             rAF = requestAnimationFrame(drawPracticeTrial)
@@ -1473,13 +1501,12 @@ let paddle2History = new PaddleHistory();
             paddle2.draw();
 
             scoring();
-            drawScore(state.block.block_type,nCurrentBlock);
+            drawScore(state.block.block_type,state.blockNo +1);
             trialTime = drawTimer(trialDuration, start, moving);
 
             rAF = requestAnimationFrame(drawTrial)
-            if (trialTime <= 0){
-                endTrial()
-            }
+
+
 
         }
         function expTrial(){
@@ -1537,74 +1564,94 @@ let paddle2History = new PaddleHistory();
         }
 
         async function readMessages() {
+            try {
+                for await (const message of messages) {
 
-            for await (const message of messages) {
+                    let received = JSON.parse(message);
 
-                let received = JSON.parse(message);
+                    let serverTime = parseInt(1000 * received.timestamp);
+                    let clientTime = Date.now();
+                    let delta = serverTime - clientTime;
 
-                let serverTime = parseInt(1000 * received.timestamp);
-                let clientTime = Date.now();
-                let delta = serverTime - clientTime;
-
-                if (serverTimeDelta === undefined) {
-                    serverTimeDelta = delta;
-                    messageDelay = 0;
-                }
-                else if (delta > serverTimeDelta) {
-                    serverTimeDelta = delta;
-                    messageDelay = 0;
-                }
-                else {
-                    messageDelay = clientTime + serverTimeDelta - serverTime;
-                }
-
-                if (state.status === 'waiting' && received.status === 'reading'){
-                    instructions1();                
-                }
-
-
-                if (state.status === 'reading' && received.status === 'playing') {
-                    // transitioning from reading to playing (i.e. beginning trial)
-                    Object.assign(state, received);
-                    console.log(state.block);
-                    clearTimeout(timeout)
-                    nCurrentTrial = state.trialNo+1;
-
-                    if (startCount == 0){
-                        moving  = true;
-                        start   = Date.now();
-                        ws.send(JSON.stringify({ 'trialStart': start}));
-                        startCount++
+                    if (serverTimeDelta === undefined) {
+                        serverTimeDelta = delta;
+                        messageDelay = 0;
                     }
-                    scoreReset();
-                    
-                    expTrial();
-                    proceed = false;
-                    bInBlockInstructions = false;
-                    bInPractice = false;
-                }
+                    else if (delta > serverTimeDelta) {
+                        serverTimeDelta = delta;
+                        messageDelay = 0;
+                    }
+                    else {
+                        messageDelay = clientTime + serverTimeDelta - serverTime;
+                    }
 
-                if (state.status === 'playing' && received.status === 'reading') {
-                    // transitioning from playing to reading (i.e. end of trial)
+                    if (state.status === 'waiting' && received.status === 'reading' && !skipIntro){
+                        instructions1();                
+                    }
+
+
+                    if (state.status === 'reading' && received.status === 'playing') {
+                        // transitioning from reading to playing (i.e. beginning trial)
+                        Object.assign(state, received);
+                        console.log(state.block);
+                        clearTimeout(timeout)
+                        nCurrentTrial = state.trialNo+1;
+
+                        if (startCount == 0){
+                            moving  = true;
+                            start   = Date.now();
+                            ws.send(JSON.stringify({ 'trialStart': start}));
+                            startCount++
+                        }
+                        scoreReset();
+                        
+                        expTrial();
+                        proceed = false;
+                        bInBlockInstructions = false;
+                        bInPractice = false;
+                    }
+
+                    if (state.status === 'playing' && received.status === 'reading') {
+                        // transitioning from playing to reading (i.e. end of trial)
+                        Object.assign(state, received);
+                        startCount = 0;
+                        moving = false;
+                        endTrial()
+                        console.log('trial end');
+                        console.log('begin instructions for next block');
+                        console.log(`block type ${ JSON.stringify(state.block) }`);
+                    }
+
+                    if (received.status === 'playing') {
+
+                        let playerId = state.player_id;
+                        let otherId = playerId === '0' ? '1' : '0';
+                        paddle2History.add(parseInt(received.timestamp*1000), received.players[otherId].pos)
+                    }
+
                     Object.assign(state, received);
-                    startCount = 0;
-                    moving = false;
-                    endTrial()
-                    console.log('trial end');
-                    console.log('begin instructions for next block');
-                    console.log(`block type ${ JSON.stringify(state.block) }`);
+                    notifyStateReady();
                 }
-
-                if (received.status === 'playing') {
-
-                    let playerId = state.player_id;
-                    let otherId = playerId === '0' ? '1' : '0';
-                    paddle2History.add(parseInt(received.timestamp*1000), received.players[otherId].pos)
-                }
-
-                Object.assign(state, received);
-                notifyStateReady();
+            } catch (e) {
+                poorConnection()
             }
+        }
+
+        function poorConnection(){
+            if (rAF){
+                cancelAnimationFrame(rAF);
+            }
+            clearFrame();
+            bInTrialBreak=true;
+            bInTrial    = false;
+            moving      = false;
+            drawCanvas()
+            expContext.fillStyle = frameColour;
+			expContext.textAlign = "center";
+            expContext.font="16px Arial";
+            expContext.fillText("Oops!",expCanvas.width/2,expCanvas.height/4-100);
+            expContext.fillText("It looks like your internet connection has dropped out.",expCanvas.width/2,expCanvas.height/4-50);
+            expContext.fillText("Please try refreshing the page when you are ready.",expCanvas.width/2,expCanvas.height/4-25);
         }
 
         function practiceTrial(){
@@ -1633,7 +1680,7 @@ let paddle2History = new PaddleHistory();
             dispCont    = true;
             startCount  = 0;
             if (bInPractice){
-                blockInst(state.block.block_type,nCurrentBlock);
+                blockInst(state.block.block_type,state.blockNo +1);
             } else if (bInTrialBreak){
                 interTrial(score1,score2,teamScore, state.block.block_type)
             }
@@ -1680,6 +1727,9 @@ let paddle2History = new PaddleHistory();
                 expContext.fillText(teams,expCanvas.width/2,frameTop+frameHeight/4+25);
                 expContext.fillText(teamCumulativeScore,expCanvas.width/2,frameTop+frameHeight/4+50);
             }
+
+            keyInsts(true,true,plyr1DRTrespKey,plyr2DRTrespKey, x = expCanvas.height/4+300);
+
             timeout = setTimeout(timedContinue,trialBreakTime*1000);
         }
         function expEnd(){

@@ -37,7 +37,6 @@ class Game:
         self._receive_update = Event()
         self._ready = Event()
         self._blocks = [ ]
-        self._last_status = 'waiting'
         self._ending = False
 
         drtWidth = 800
@@ -97,10 +96,12 @@ class Game:
             'status': 'waiting',
             'timestamp': time(),
             'block': self._blocks[0],
+            'blockNo': 0,
             'players': {
                 '0': {
-                    'pos': self._dim['p1Start'],
+                    'pos': self._dim['p1Start'], 
                     'status': 'notReady',
+                    'hand': [],
                     'trialStart': 0,
                     'hits': 0,
                     'miss': 0,
@@ -110,6 +111,7 @@ class Game:
                 '1': {
                     'pos': self._dim['p2Start'],
                     'status': 'notReady',
+                    'hand': [],
                     'trialStart': 0,
                     'hits': 0,
                     'miss': 0,
@@ -344,8 +346,9 @@ class Game:
                 state['players']['0']['status'] = 'notReady'
                 state['players']['1']['status'] = 'notReady'
                 state['block'] = block
+                state['blockNo'] = int(block_no / 12 * 3)  # change 12 to 48 when time - it just needs to be the number of trials per block
                 state['trialNo'] = block_no%(len(self._blocks) / 3)
-                state['maxTrials'] = len(self._blocks) / 3# trials per block
+                state['maxTrials'] = len(self._blocks) / 3 # trials per block
 
                 resetVars()
 
