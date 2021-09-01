@@ -33,9 +33,7 @@ class Server:
         ])
         self._runner = AppRunner(self._app)
 
-        game = Game(0)
-        self._start_game(game)
-        self._games = { '0': game }
+        self._games = { }
 
         self._current_game_no = 1;
         self._current_game = None
