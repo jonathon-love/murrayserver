@@ -9,6 +9,7 @@ from asyncio import sleep
 from asyncio import TimeoutError
 
 from collections import OrderedDict
+from datetime import datetime
 from random import randint
 from random import shuffle
 from time import time
@@ -40,11 +41,13 @@ class Game:
         self._ready = Event()
         self._blocks = [ ]
         self._last_status = 'waiting'
+        self._ending = False
 
         self._log = logging.getLogger(f'game{ game_no }')
         self._log.setLevel(logging.INFO)
 
-        fileHandler = logging.FileHandler(f'game{ game_no }.txt', mode='w')
+        time_string = datetime.now().isoformat(timespec='seconds').replace(':', '')
+        fileHandler = logging.FileHandler(f'game-{ time_string }-{ game_no }.txt', mode='w')
         fileHandler.setLevel(logging.INFO)
         formatter = logging.Formatter('%(message)s')
         fileHandler.setFormatter(formatter)
@@ -207,6 +210,9 @@ class Game:
         self._send_update.move_to_end(player_id, last=False)
 
     async def update(self):
+
+        log_state = True
+
         try:
             timeout = None
             if self._state['status'] == 'playing':
@@ -216,7 +222,7 @@ class Game:
             await wait_for(self._receive_update.wait(), timeout)
             self._receive_update.clear()
         except TimeoutError:
-            pass
+            log_state = False  # prevent logs from filling up with junk
 
         now = time()
         last_time = self._state['timestamp']
@@ -310,7 +316,8 @@ class Game:
                 ball['y'] = y
                 ball['angle'] = angle
 
-        self._log.info(json.dumps(self._state))
+        if log_state:
+            self._log.info(json.dumps(self._state))
         self._last_status = self._state['status']
 
     async def run(self):
