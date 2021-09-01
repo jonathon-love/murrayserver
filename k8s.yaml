@@ -17,6 +17,7 @@ kind: PersistentVolumeClaim
 metadata:
   name: murrayserver-pvc
 spec:
+  storageClassName: murray-storage
   accessModes:
     - ReadWriteOnce
   resources:
@@ -43,7 +44,7 @@ spec:
           image: murrayserver
           imagePullPolicy: Never
           env:
-              name: MURRAYSERVER_LOG_PATH
+            - name: MURRAYSERVER_LOG_PATH
               value: /data
           volumeMounts:
             - mountPath: "/data"
