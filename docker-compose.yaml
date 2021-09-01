@@ -1,0 +1,7 @@
+version: '3'
+services:
+  murrayserver:
+    build: .
+    image: murrayserver
+    ports:
+      - '8080:8080'

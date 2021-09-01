@@ -13,6 +13,8 @@ from datetime import datetime
 from random import randint
 from random import shuffle
 from time import time
+from os import environ
+from os import path
 import math
 import sys
 
@@ -311,7 +313,11 @@ class Game:
         self._log.setLevel(logging.INFO)
 
         time_string = datetime.now().isoformat(timespec='seconds').replace(':', '')
-        fileHandler = logging.FileHandler(f'game-{ time_string }-{ self._game_no }.txt', mode='w')
+
+        log_path = environ.get('MURRAYSERVER_LOG_PATH', '')
+        log_path = path.join(log_path, f'game-{ time_string }-{ self._game_no }.txt')
+
+        fileHandler = logging.FileHandler(log_path, mode='w')
         fileHandler.setLevel(logging.INFO)
         formatter = logging.Formatter('%(message)s')
         fileHandler.setFormatter(formatter)
