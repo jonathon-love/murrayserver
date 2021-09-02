@@ -317,11 +317,11 @@ class Game:
         log_path = environ.get('MURRAYSERVER_LOG_PATH', '')
         log_path = path.join(log_path, f'game-{ time_string }-{ self._game_no }.txt')
 
-        fileHandler = logging.FileHandler(log_path, mode='w')
-        fileHandler.setLevel(logging.INFO)
+        self._logHandler = logging.FileHandler(log_path, mode='w')
+        self._logHandler.setLevel(logging.INFO)
         formatter = logging.Formatter('%(message)s')
-        fileHandler.setFormatter(formatter)
-        self._log.addHandler(fileHandler)
+        self._logHandler.setFormatter(formatter)
+        self._log.addHandler(self._logHandler)
 
         try:
             await self._ready.wait()
@@ -430,5 +430,4 @@ class Game:
             self._ending = True
 
         finally:
-            # self._log.flush()
-            self._log.flush = sys.stdout.flush
+            self._logHandler.flush()
