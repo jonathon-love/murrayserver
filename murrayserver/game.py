@@ -64,8 +64,9 @@ class Game:
             'ballR': bRad,
         }
 
-        # block_types = [ 'nonCol', 'col', 'com' ]
-        block_types = ['nonCol', 'nonCol', 'nonCol']
+        block_types = [ 'nonCol', 'col', 'com' ]
+        # block_types = ['nonCol', 'nonCol', 'nonCol']
+        # block_types = ['nonCol']
 
         block_orders = [
            ["nonCol","col","com"],
@@ -77,12 +78,9 @@ class Game:
            ]
 
 
-        n_balls = [
-            1, 1, 1, 1]#,\
-                #3, 3, 3, 3,\
-                 #   6, 6, 6, 6,\
-                  #      9, 9, 9, 9\
-                   #         ]
+        # n_balls = [1, 1, 1, 1, 3, 3, 3, 3, 6, 6, 6, 6, 9, 9, 9, 9]
+        n_balls = [1, 1, 1, 1]
+        # n_balls = [1]
 
         shuffle(block_types)
         shuffle(n_balls)
@@ -172,10 +170,10 @@ class Game:
                 self._state['player_id'] = player_id
                 state = json.dumps(self._state)
                 delay = None
-                delay = time() % 4
-                if delay > 2:
-                    delay = 4 - delay
-                delay /= 2
+                # delay = time() % 4
+                # if delay > 2:
+                #     delay = 4 - delay
+                # delay /= 2
                 await send(state, delay)
 
 
@@ -406,6 +404,9 @@ class Game:
                     if (state['players']['0']['status'] == 'ready'
                             and state['players']['1']['status'] == 'ready'):
                         break
+                    if (state['players']['0']['status'] == 'ready'
+                            or state['players']['1']['status'] == 'ready'):
+                        self.send()
 
                 state['players']['0']['pos'] = self._dim['p1Start']
                 state['players']['1']['pos'] = self._dim['p2Start']
@@ -425,5 +426,9 @@ class Game:
                     pass
 
                 print(f'block { block_no }, complete!')
+            
+            self._ending = True
+
         finally:
-            self._log.flush()
+            # self._log.flush()
+            self._log.flush = sys.stdout.flush

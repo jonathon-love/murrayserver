@@ -868,7 +868,7 @@ let paddle2History = new PaddleHistory();
             }
             if (bInBlockInstructions){
                 if (event.keyCode == 32 && proceed){
-                    ws.send('{"status":"ready"}')
+                    ws.send(JSON.stringify({"status":"ready"}))
                     intertrialWaiting()
                 }
             }
@@ -877,7 +877,7 @@ let paddle2History = new PaddleHistory();
                     bInTrialBreak = false;
                     scoreReset();
                     if (nCurrentTrial<state.maxTrials){
-                        ws.send('{"status":"ready"}')
+                        ws.send(JSON.stringify({"status":"ready"}))
                         intertrialWaiting()
                     } else if(nCurrentTrial>=state.maxTrials){
                         if (state.blockNo == nBlocks){
@@ -1510,8 +1510,14 @@ let paddle2History = new PaddleHistory();
 
             rAF = requestAnimationFrame(drawTrial)
 
-
-
+            if (trialTime <= 0){
+                if (nCurrentTrial >= state.maxTrials){
+                    if (state.blockNo +1 == nBlocks){
+                        cancelAnimationFrame(rAF);
+                        expEnd();
+                    }
+                }
+            }
         }
         function expTrial(){
             drtOnsets = state.drt.onset
@@ -1576,7 +1582,7 @@ let paddle2History = new PaddleHistory();
                     let serverTime = parseInt(1000 * received.timestamp);
                     let clientTime = Date.now();
                     let delta = serverTime - clientTime;
-
+           
                     if (serverTimeDelta === undefined) {
                         serverTimeDelta = delta;
                         messageDelay = 0;
@@ -1625,12 +1631,15 @@ let paddle2History = new PaddleHistory();
                         console.log('begin instructions for next block');
                         console.log(`block type ${ JSON.stringify(state.block) }`);
                     }
-
+                    
+                    let playerId = state.player_id;
+                    let otherId = playerId === '0' ? '1' : '0';
                     if (received.status === 'playing') {
-
-                        let playerId = state.player_id;
-                        let otherId = playerId === '0' ? '1' : '0';
                         paddle2History.add(parseInt(received.timestamp*1000), received.players[otherId].pos)
+                    }
+                    
+                    if (state.players && state.players[playerId]['status'] === 'notReady' && state.players[otherId]['status'] === 'ready'){
+                        expContext.fillText("Player 2 is ready.", expCanvas.width/2, expCanvas.height/4+225);
                     }
 
                     Object.assign(state, received);
@@ -1745,8 +1754,8 @@ let paddle2History = new PaddleHistory();
             expContext.font="16px Arial";
             expContext.fillText("Thank you for your participation.",expCanvas.width/2,expCanvas.height/4-50);
             expContext.fillText("If you have any questions or concerns about the experiment please contact the", expCanvas.width/2, expCanvas.height/4-25);
-            expContext.filltext("researchers Murray Bennett or Ami Eidels at murray.bennett@uon.edu.au or ami.eidels@newcastle.edu.au.",expCanvas.width/2,expCanvas.height/4-25);
-            expContext.fillText("Participation credit has been automatically granted.",expCanvas.width/2,expCanvas.height/4+25);
+            expContext.fillText("researchers Murray Bennett or Ami Eidels at murray.bennett@uon.edu.au or ami.eidels@newcastle.edu.au.",expCanvas.width/2,expCanvas.height/4);
+            expContext.fillText("Participation credit has been automatically granted.",expCanvas.width/2,expCanvas.height/4+50);
         }
 /*
 		function pointsLink() {
