@@ -430,8 +430,13 @@ class Game:
                     pass
 
                 print(f'block { block_no }, complete!')
-            
+                self._logHandler.flush()
+
             self._ending = True
 
         finally:
+            self._log.removeHandler(self._logHandler)
             self._logHandler.flush()
+            self._logHandler.close()
+            del self._logHandler
+            del self._log
