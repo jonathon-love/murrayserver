@@ -1248,11 +1248,9 @@ let paddle2History = new PaddleHistory();
 
             if (drtResp1){
                 if (stimTimes[0]-tRem > rtMin && counter1){
-                    rt1.push(stimTimes[0]-tRem);
                     ws.send(JSON.stringify({'rt' : stimTimes[0] - tRem}))
                     counter1 = false;
                 } else {
-                    fa1.push(tRem);
                     ws.send(JSON.stringify({'fa': tRem}))
                 }
                 drtResp1 = false;
@@ -1269,7 +1267,6 @@ let paddle2History = new PaddleHistory();
                 onsets.push(stimTimes[0]);
                 stimTimes.shift();
                 if (counter1){ // if still true at this point then no response was made to this stimulus
-                    rt1.push(-1); // -1 == a miss
                     ws.send(JSON.stringify({'rt': -1}))
                 } 
                 else {
@@ -1488,8 +1485,6 @@ let paddle2History = new PaddleHistory();
             allBalls.forEach(function(ball){
                 ball.move(this.paddle1.x, this.paddle2.x, elapsed);
                 ball.draw();
-
-                ball.xCoords.push([ball.x, ball.y])
             })
 
             paddle1.draw();
