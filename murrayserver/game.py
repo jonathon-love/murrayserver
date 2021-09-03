@@ -74,14 +74,7 @@ class Game:
            ]
 
         block_types = block_orders[self._game_no % len(block_orders)]
-        # block_types = [ 'nonCol', 'col', 'com' ]
-        # block_types = ['nonCol', 'nonCol', 'nonCol']
-        # block_types = ['nonCol']
-
-
         n_balls = [1, 1, 1, 1, 3, 3, 3, 3, 6, 6, 6, 6, 9, 9, 9, 9]
-        # n_balls = [1, 1, 1, 1]
-        # n_balls = [1]
 
         shuffle(block_types)
         shuffle(n_balls)

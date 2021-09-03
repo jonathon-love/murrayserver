@@ -171,7 +171,7 @@ let paddle2History = new PaddleHistory();
     <canvas id="canvas" width="800" height="600" style="width: 100%; height:100%"></canvas>
     <script>
 
-    var skipIntro = true;
+    var skipIntro = false;
 
     // Define variables
         var nBlocks             = 3;
@@ -179,6 +179,7 @@ let paddle2History = new PaddleHistory();
         // workload
         var workloadLevels      = [1,3,6,9];
         var trialDuration       = 20;           // seconds
+        var practiceTrialDuration = 60;
         var dirInst             = 5;            // second intervals to display practice trial instructions
         var frameRate           = 10;
         var sharedColour        = "DarkMagenta";
@@ -239,6 +240,7 @@ let paddle2History = new PaddleHistory();
 
         // Experiment control
         var nCurrentBlock;
+        var currentBlock;
         var nCurrentTrial;
         var bInTrial                = false;
         var bInInstructions1        = false;
@@ -346,6 +348,8 @@ let paddle2History = new PaddleHistory();
                 this.identity = ballId;
                 this.xCoords = [];
                 this.yCoords = [];
+                this.hit = false;
+                this.miss = false;
             }
             move(paddlePos1,paddlePos2,elapsed){
                 
@@ -564,11 +568,14 @@ let paddle2History = new PaddleHistory();
                 }
                 if (dy > frameBottom) {
                     dy -= frameBottom - frameTop - bRad;
-
-
-                } else {
-                    miss1++;
-                }
+                    
+                    let oneTimeMiss1 = true;
+                    if (!this.miss && oneTimeMiss1){
+                        miss1++;
+                        this.miss=true;
+                    }
+                } 
+                    
                 if (dy > py-bRad && dy < py) {
                     if (dx > paddlePos1 - bRad && dx < paddlePos1 + pWidth + bRad) {
                         let impact  = (dx+bRad) - (paddlePos1+(0.5*pWidth));
@@ -581,9 +588,19 @@ let paddle2History = new PaddleHistory();
                             angle = -angle+offset
                         }
                         dy = py - (py-dy) - bRad
-                        hits1++;
+                        let oneTimeHit1 = true;                        
+                        if (!this.hit && oneTimeHit1){
+                            hits1++;
+                            this.hit=true;
+                        }
                     }
                 }
+
+                if (dy<frameBottom*0.33 && dy < frameBottom*0.67){
+                    this.hit = false;
+                    this.miss = false;
+                }
+
                 this.x = dx;
                 this.y = dy;
                 this.angle = angle;
@@ -962,13 +979,14 @@ let paddle2History = new PaddleHistory();
             expContext.fillStyle = "red";
             expContext.fillText("PRACTICE TRIAL",frameLeft+frameWidth/2,frameTop+50);
             expContext.fillStyle = "black";
+            
             if (!moving){
                 expContext.font = "20 px Arial";
                 expContext.fillStyle = "rgb(0,0,0)";
                 expContext.fillText("Each trial contains a different number of balls but",frameLeft+frameWidth/2,frameBottom-frameHeight/4-25);
                 expContext.fillText("they will always start from the bottom of the screen and fly upward.",frameLeft+frameWidth/2,frameBottom-frameHeight/4);
                 expContext.fillText("Experiment trials will begin automatically. For now, press 'space bar' to start the trial",frameLeft+frameWidth/2,frameBottom-frameHeight/4+25);
-            } else if (time > trialDuration-dirInst){
+            } else if (time > practiceTrialDuration-dirInst){
                 if (plyr1DRTrespKey == RHdrtRespKey){
                     expContext.fillText("Press left arrow to move left",frameLeft+frameWidth/2,frameBottom-frameHeight/4);
                     expContext.fillText("Press right arrow to move right",frameLeft+frameWidth/2,frameBottom-frameHeight/4+25);
@@ -976,19 +994,19 @@ let paddle2History = new PaddleHistory();
                     expContext.fillText("Press 'Z' to move left",frameLeft+frameWidth/2,frameBottom-frameHeight/4);
                     expContext.fillText("Press 'C' to move right",frameLeft+frameWidth/2,frameBottom-frameHeight/4+25);
                 }
-            } else if (time < trialDuration-dirInst && time > trialDuration-dirInst*4){
+            } else if (time < practiceTrialDuration-dirInst && time > practiceTrialDuration-dirInst*4){
                 expContext.fillText("Overall score is computed from your hits AND misses!",expCanvas.width/2,frameTop+frameHeight/5);
                 ;
                 expContext.fillText("If both paddles hit the same ball at the same time you each score half a hit-point.",expCanvas.width/2,frameTop+frameHeight/5+20);
-            } else if (time < trialDuration-dirInst && time > trialDuration-dirInst*5){
+            } else if (time < practiceTrialDuration-dirInst && time > practiceTrialDuration-dirInst*5){
                 expContext.fillText("Trials last 60 seconds.",expCanvas.width/2,frameTop+frameHeight/5);
                 expContext.fillText("Your score can be seen throughout the trial.",expCanvas.width/2,frameTop+frameHeight/5+20);
                 expContext.fillText("The maximum score for a trial is 1000.",expCanvas.width/2,frameTop+frameHeight/5+40);
 
-            } else if (time < trialDuration-dirInst*5 && time > trialDuration-dirInst*8){
+            } else if (time < practiceTrialDuration-dirInst*5 && time > practiceTrialDuration-dirInst*8){
                 expContext.fillText("The panels on the side have now been activated.",expCanvas.width/2,frameTop+frameHeight/5);
                 expContext.fillText("They will regularly flash green throughout the game.",expCanvas.width/2,frameTop+frameHeight/5+20);
-                expContext.fillText("The light stays on briefly or until both players respond.",expCanvas.width/2,frameTop+frameHeight/5+40);
+                expContext.fillText("The light stays on briefly or until you respond.",expCanvas.width/2,frameTop+frameHeight/5+40);
                 expContext.fillText("You need to respond as quickly and accurately as possible.",expCanvas.width/2,frameTop+frameHeight/5+60);
                 expContext.fillText("Light Response:", expCanvas.width/2, frameBottom-frameHeight/4-25);
                 if (plyr1DRTrespKey == RHdrtRespKey){
@@ -1264,12 +1282,15 @@ let paddle2History = new PaddleHistory();
         }
 
         function scoring(){
-            playerId = state.player_id;
-            otherId = playerId === '0' ? '1' : '0';
-            hits1 = state.players[playerId]['hits']
-            hits2 = state.players[otherId]['hits']
-            miss1 = state.players[playerId]['miss']
-            miss2 = state.players[otherId]['miss']
+            if (!bInPractice){
+                playerId = state.player_id;
+                otherId = playerId === '0' ? '1' : '0';
+                hits1 = state.players[playerId]['hits']
+                hits2 = state.players[otherId]['hits']
+                miss1 = state.players[playerId]['miss']
+                miss2 = state.players[otherId]['miss']
+            }
+            console.log(hits1,miss1)
             if (hits1 == 0){score1=0} else {score1=(Math.round((hits1/(hits1+miss1))*1000)).toFixed(0)}
             if (hits2 == 0){score2=0} else {score2=(Math.round((hits2/(hits2+miss2))*1000)).toFixed(0)}
             if(state.block.block_type=="col" || state.block.block_type=="com"){
@@ -1297,27 +1318,43 @@ let paddle2History = new PaddleHistory();
             onsets      = [];
         }
         function drawScore(blockType,currentBlock){
-            if (blockType=="col"){
-                expContext.textAlign = "left";
-                expContext.font = "16px Arial";
-                expContext.fillStyle = "rgb(0,0,0)";
-                expContext.fillText("Team Score: "+teamScore,frameLeft+10,frameTop+20);
-
-                expContext.textAlign = "right";
-                expContext.fillText("Team Score: "+teamScore,frameRight-10,frameTop+20);
+            if (bInPractice){
+                playerId = state.player_id;
+                if (playerId==='0'){
+                    expContext.textAlign = "left";
+                    expContext.font = "16px Arial";
+                    expContext.fillStyle = "rgb(0,0,0)";
+                    expContext.fillText("Your Score: "+score1,frameLeft+10,frameTop+20);
+                } else {
+                    expContext.textAlign = "right";
+                    expContext.font = "16px Arial";
+                    expContext.fillStyle = "rgb(0,0,0)";
+                    expContext.fillText("Your Score: "+score1,frameRight-10,frameTop+20);
+                }
             } else {
-                // Player 1 Score
-                expContext.textAlign = "left";
-                expContext.font = "16px Arial";
-                expContext.fillStyle = "rgb(0,0,0)";
-                expContext.fillText("Your Score: "+score1,frameLeft+10,frameTop+20);
+                if (blockType=="col"){
+                    expContext.textAlign = "left";
+                    expContext.font = "16px Arial";
+                    expContext.fillStyle = "rgb(0,0,0)";
+                    expContext.fillText("Team Score: "+teamScore,frameLeft+10,frameTop+20);
 
-                // Player 2 Score
-                expContext.textAlign = "right";
-                expContext.fillStyle = "rgb(0,0,0)";
-                expContext.fillText("Player 2 Score: "+score2,frameRight-10,frameTop+20);
+                    expContext.textAlign = "right";
+                    expContext.fillText("Team Score: "+teamScore,frameRight-10,frameTop+20);
+                } else {
+                    // Player 1 Score
+                    expContext.textAlign = "left";
+                    expContext.font = "16px Arial";
+                    expContext.fillStyle = "rgb(0,0,0)";
+                    expContext.fillText("Your Score: "+score1,frameLeft+10,frameTop+20);
+
+                    // Player 2 Score
+                    expContext.textAlign = "right";
+                    expContext.fillStyle = "rgb(0,0,0)";
+                    expContext.fillText("Player 2 Score: "+score2,frameRight-10,frameTop+20);
+                }
             }
         }
+
         function drawTimer(duration, start, trialBegin = false){
             let timeRemaining;
             let startTime = Date.now();
@@ -1395,7 +1432,7 @@ let paddle2History = new PaddleHistory();
             }
             
             drawCanvas();
-            drawDRT(drtOnsets,trialDuration,start,moving);
+            drawDRT(drtOnsets,practiceTrialDuration,start,moving);
             drawFrame();
             allBalls.forEach(function(ball){ // ball is the name of each element in the object, same as [for balls in balllist: ball.draw()]
                 ball.draw();
@@ -1406,7 +1443,7 @@ let paddle2History = new PaddleHistory();
 
             scoring();
             drawScore(state.block.block_type,state.blockNo +1);
-            trialTime = drawTimer(trialDuration, start, moving);
+            trialTime = drawTimer(practiceTrialDuration, start, moving);
 
             rAF = requestAnimationFrame(drawPracticeTrial)
             if (trialTime <= 0){
@@ -1484,6 +1521,7 @@ let paddle2History = new PaddleHistory();
             p2Balls     =[];
             allBalls    =[];
             justOncePlease = true; // For the calculation of cumulative scores
+            currentBlock = state.block.block_type;
             
             playerId = state.player_id;
             otherId = playerId === '0' ? '1' : '0';
@@ -1638,7 +1676,8 @@ let paddle2History = new PaddleHistory();
 
         function practiceTrial(){
             bInPractice = true;
-            drtOnsets   = drtStimTimes(respWin,trialDuration/2);
+            drtOnsets   = drtStimTimes(respWin,60/2);
+            console.log(drtOnsets)
             drtPanels   = new DRT();
             let nPracBalls  = 2;
             bAngles     = uniqueAngles(nPracBalls,60, 120);
@@ -1664,7 +1703,7 @@ let paddle2History = new PaddleHistory();
             if (bInPractice){
                 blockInst(state.block.block_type,state.blockNo +1);
             } else if (bInTrialBreak){
-                interTrial(score1,score2,teamScore, state.block.block_type)
+                interTrial(score1,score2,teamScore, currentBlock)
             }
         }
 
