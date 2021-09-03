@@ -156,9 +156,12 @@ class Game:
 
         async def read():
             async for msg in ws:
-                data = json.loads(msg.data)
-                self._state['players'][player_id].update(data)
-                self._receive_update.set()
+                if msg.data == 'ping':
+                    await ws.send_str('pong')
+                else:
+                    data = json.loads(msg.data)
+                    self._state['players'][player_id].update(data)
+                    self._receive_update.set()
 
         async def write():
             send_event = self._send_update[player_id]
