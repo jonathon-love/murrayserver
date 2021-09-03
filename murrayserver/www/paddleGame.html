@@ -1,7 +1,5 @@
 <HTML>
     <HEAD>
-        <script src="/study_assets/paddleGame/libs/jquery-3.3.1.min.js"></script>
-        <script src="/assets/javascripts/jatos.js"></script>
     </HEAD>
     <BODY>
 
@@ -97,28 +95,6 @@ function adjustedTime() {
 }
 
 ready(async() => {
-
-    let condOrderID;
-
-    if (window.location.hostname === 'localhost') {
-        condOrderID = 0;
-    }
-    else {
-
-        jatos.onLoad(function() {
-           //var username1 = jatos.studySessionData.username;
-           if (jatos.urlQueryParameters.hasOwnProperty("id")) {
-               //var username = "0"
-               username = jatos.urlQueryParameters.id;
-               jatos.studySessionData["SonaID"] = username1;
-           }
-           else {
-               username1 = null;
-               jatos.studySessionData["SonaID"] = username1;
-               condOrderID = parseInt(jatos.studyResultId)%6;
-            }
-        });
-    }
 
        let protocol = (window.location.protocol === 'http:' ? 'ws:' : 'wss:')
        let path = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
@@ -566,24 +542,6 @@ let paddle2History = new PaddleHistory();
                     let pos = move(x, y, speed, angle, elapsed)
                     this.x = pos.x;
                     this.y = pos.y;
-
-
-                    // // Paddle contact
-                    // function returnAngle(ballx, paddlex, angle, x, y, speed){
-                    //     let impact = (ballx + bRad) - (paddlex + (0.5*pWidth));
-                    //     let offset = impact / (pWidth*0.5)/2;
-                    //     if (-angle+offset <= -deg2rad(155)){
-                    //         angle = -angle;
-                    //     } else if (-angle+offset>=-deg2rad(35)){
-                    //         angle = -angle;
-                    //     } else {
-                    //         angle = -angle+offset
-                    //     }
-                    //     x = x + speed * Math.cos(angle) * elapsed / 1000 / 0.02;
-                    //     y = y + speed * Math.sin(angle) * elapsed / 1000 / 0.02;
-                    //     return [angle, x, y]
-                    // }
-                                        
                 }
             }
 
@@ -1133,7 +1091,6 @@ let paddle2History = new PaddleHistory();
                     plyr1DRTrespKey = LHdrtRespKey;
                 }
                 
-                scoreReset();
                 expTrial();
                 proceed = false;
                 bInBlockInstructions = false;
@@ -1167,7 +1124,6 @@ let paddle2History = new PaddleHistory();
         }
         //Addin
         function getUsername1() {
-            //var username = jatos.studySessionData.SonaID;
             if (username1 == null) {
                 username1 = prompt("Participant 1, please enter your 5 or 6 digit SONA ID");
                 getUsername1();
@@ -1769,17 +1725,13 @@ let paddle2History = new PaddleHistory();
             expContext.fillText("If you have any questions or concerns about the experiment please contact the", expCanvas.width/2, expCanvas.height/4-25);
             expContext.fillText("researchers Murray Bennett or Ami Eidels at murray.bennett@uon.edu.au or ami.eidels@newcastle.edu.au.",expCanvas.width/2,expCanvas.height/4);
             expContext.fillText("Participation credit has been automatically granted.",expCanvas.width/2,expCanvas.height/4+50);
+
+            // poinstLink()
         }
 /*
 		function pointsLink() {
-            // Link participant 1 points
+            // Link participant points
         	var url = "https://newcastle.sona-systems.com/services/SonaAPI.svc/WebstudyCredit?experiment_id=1059&credit_token=ef8c1a701a954d229c4e02cd70842ad5&survey_code=" + username1;
-        	var xhttp = new XMLHttpRequest();
-        	xhttp.open("GET", url, true);
-			xhttp.send();
-
-            // link participant 2 points
-            var url = "https://newcastle.sona-systems.com/services/SonaAPI.svc/WebstudyCredit?experiment_id=1059&credit_token=ef8c1a701a954d229c4e02cd70842ad5&survey_code=" + username2;
         	var xhttp = new XMLHttpRequest();
         	xhttp.open("GET", url, true);
 			xhttp.send();
