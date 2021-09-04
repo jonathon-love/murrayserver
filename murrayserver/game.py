@@ -427,6 +427,9 @@ class Game:
 
             self._ending = True
 
+        except BaseException as e:
+            self._log.exception(e)
+            raise e
         finally:
             self._log.removeHandler(self._logHandler)
             self._logHandler.flush()
