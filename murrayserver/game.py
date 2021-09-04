@@ -341,7 +341,7 @@ class Game:
                 state['players']['0']['status'] = 'notReady'
                 state['players']['1']['status'] = 'notReady'
                 state['block'] = block
-                state['blockNo'] = int(block_no / 12 * 3)  # change 12 to 48 when time - it just needs to be the number of trials per block
+                state['blockNo'] = int(block_no / 48 * 3)  # change 12 to 48 when time - it just needs to be the number of trials per block
                 state['trialNo'] = block_no%(len(self._blocks) / 3)
                 state['maxTrials'] = len(self._blocks) / 3 # trials per block
 
