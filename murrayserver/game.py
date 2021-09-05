@@ -76,7 +76,6 @@ class Game:
         block_types = block_orders[self._game_no % len(block_orders)]
         n_balls = [1, 1, 1, 1, 3, 3, 3, 3, 6, 6, 6, 6, 9, 9, 9, 9]
 
-        shuffle(block_types)
         shuffle(n_balls)
 
         for block_type in block_types:
@@ -384,10 +383,10 @@ class Game:
                 while state['drt']['onset'][-1] > 5:
                     state['drt']['onset'].append(state['drt']['onset'][-1] - (randint(3000,5000)/1000))
 
-                state['drt']['dispStim'] = [stim-1 for stim in state['drt']['onset']]
+                state['drt']['dispTime'] = [stim-1 for stim in state['drt']['onset']]
                 state['drt']['window'] = [stim-2.5 for stim in state['drt']['onset']]
                 if state['drt']['window'][-1] <= 0:  ## remove the last stimulus time if it's too close to the end of the trial.
-                    state['drt']['onset'], state['drt']['dispStim'], state['drt']['window'] = state['drt']['onset'][0:-1], state['drt']['dispStim'][0:-1], state['drt']['window'][0:-1]
+                    state['drt']['onset'], state['drt']['dispTime'], state['drt']['window'] = state['drt']['onset'][0:-1], state['drt']['dispTime'][0:-1], state['drt']['window'][0:-1]
 
                 self.send()
 
@@ -418,11 +417,20 @@ class Game:
                         self.send()
 
                 try:
-                    await wait_for(play(), 20)
+                    await wait_for(play(), 20) # set to trial duration
                 except TimeoutError:
                     pass
-
+                
+                state['status'] = 'ending'
                 print(f'block { block_no }, complete!')
+                while state['status'] == 'ending':
+                    if block_no == len(self._blocks)-1:
+                        break
+                    await self.update()
+                    self.send()
+                    if (state['players']['0']['status'] == 'ended'
+                            and state['players']['1']['status'] == 'ended'):
+                        break
                 self._logHandler.flush()
 
             self._ending = True

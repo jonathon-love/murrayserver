@@ -171,7 +171,7 @@ let paddle2History = new PaddleHistory();
     <canvas id="canvas" width="800" height="600" style="width: 100%; height:100%"></canvas>
     <script>
 
-    var skipIntro = false;
+    var skipIntro = true;
 
     // Define variables
         var nBlocks             = 3;
@@ -876,7 +876,6 @@ let paddle2History = new PaddleHistory();
             // DRT Response
             if (e.keyCode == plyr1DRTrespKey) {
                 drtResp1 = false;
-                ws.send(JSON.stringify({ 'drtResp': false }));
             } 
 
         }
@@ -1036,11 +1035,11 @@ let paddle2History = new PaddleHistory();
             if (state.block.block_type == "nonCol"){
                 expContext.fillText("During this block you will only be able to interact with balls that match the colour of your paddle.",expCanvas.width/2,expCanvas.height/4-25);
             } else if (state.block.block_type == "col"){
-                expContext.fillText("During this block you must work together.",expCanvas.width/2,expCanvas.height/4);
+                expContext.fillText("During this block you must work together!",expCanvas.width/2,expCanvas.height/4);
                 expContext.fillText("Both of your hits and misses count toward the team score.",expCanvas.width/2,expCanvas.height/4+25);
             } else if (state.block.block_type == "com"){
-                expContext.fillText("During this block you must compete against each other to outscore your opponent.",expCanvas.width/2,expCanvas.height/4);
-                expContext.fillText("Any 'miss' is scored against you both but your 'hits' are your own.",expCanvas.width/2,expCanvas.height/4+25);
+                expContext.fillText("During this block you must try to outscore your opponent.",expCanvas.width/2,expCanvas.height/4);
+                expContext.fillText("Misses are counted equally so try to hit as many as you can!",expCanvas.width/2,expCanvas.height/4+25);
             }
             expContext.fillText("Score as high as you can but don't forget to respond quickly and accurately",expCanvas.width/2,expCanvas.height/4+75);
             expContext.fillText("to the flashing light.",expCanvas.width/2,expCanvas.height/4+100);
@@ -1503,8 +1502,12 @@ let paddle2History = new PaddleHistory();
                 if (nCurrentTrial >= state.maxTrials){
                     if (state.blockNo +1 == nBlocks){
                         cancelAnimationFrame(rAF);
+                        ws.send(JSON.stringify({"status":"ended"}));
                         expEnd();
                     }
+                } else {
+                    ws.send(JSON.stringify({"status":"ended"}));
+                    endTrial();
                 }
             }
         }
@@ -1622,7 +1625,7 @@ let paddle2History = new PaddleHistory();
                         bInPractice = false;
                     }
 
-                    if (state.status === 'playing' && received.status === 'reading') {
+                    if (state.status === 'playing' && received.status == 'ending') {
                         // transitioning from playing to reading (i.e. end of trial)
                         Object.assign(state, received);
                         startCount = 0;
@@ -1639,7 +1642,7 @@ let paddle2History = new PaddleHistory();
                         paddle2History.add(parseInt(received.timestamp*1000), received.players[otherId].pos)
                     }
                     
-                    if (state.players && state.players[playerId]['status'] === 'notReady' && state.players[otherId]['status'] === 'ready'){
+                    if (state.players && (state.players[playerId]['status'] === 'notReady' || state.players[playerId]['status']==='ended') && state.players[otherId]['status'] === 'ready'){
                         expContext.fillText("Player 2 is ready.", expCanvas.width/2, expCanvas.height/4+225);
                     }
 
@@ -1654,18 +1657,25 @@ let paddle2History = new PaddleHistory();
         function poorConnection(){
             if (rAF){
                 cancelAnimationFrame(rAF);
+                if(nCurrentTrial>=state.maxTrials){
+                    if (state.blockNo == nBlocks){
+                        expEnd();
+                    }
+                } else {
+                    clearFrame();
+                    bInTrialBreak=true;
+                    bInTrial    = false;
+                    moving      = false;
+                    drawCanvas()
+                    expContext.fillStyle = frameColour;
+                    expContext.textAlign = "center";
+                    expContext.font="16px Arial";
+                    expContext.fillText("Oops!",expCanvas.width/2,expCanvas.height/4-100);
+                    expContext.fillText("It looks like your internet connection has dropped out.",expCanvas.width/2,expCanvas.height/4-50);
+                    expContext.fillText("Please try refreshing the page when you are ready.",expCanvas.width/2,expCanvas.height/4-25);        
+                }
             }
-            clearFrame();
-            bInTrialBreak=true;
-            bInTrial    = false;
-            moving      = false;
-            drawCanvas()
-            expContext.fillStyle = frameColour;
-			expContext.textAlign = "center";
-            expContext.font="16px Arial";
-            expContext.fillText("Oops!",expCanvas.width/2,expCanvas.height/4-100);
-            expContext.fillText("It looks like your internet connection has dropped out.",expCanvas.width/2,expCanvas.height/4-50);
-            expContext.fillText("Please try refreshing the page when you are ready.",expCanvas.width/2,expCanvas.height/4-25);
+            
         }
 
         function practiceTrial(){
@@ -1688,6 +1698,7 @@ let paddle2History = new PaddleHistory();
         function endTrial(){
             cancelAnimationFrame(rAF);
             clearFrame();
+            ws.send(JSON.stringify({"status":"ended"}));
             bInTrialBreak=true;
             bInTrial    = false;
             moving      = false;
@@ -1696,6 +1707,8 @@ let paddle2History = new PaddleHistory();
             if (bInPractice){
                 blockInst(state.block.block_type,state.blockNo +1);
                 teamCumulativeScore = 0;
+                p1CumulativeScore = 0;
+                p2CumulativeScore = 0;
             } else if (bInTrialBreak){
                 interTrial(score1,score2,teamScore, currentBlock)
             }
