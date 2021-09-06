@@ -168,7 +168,8 @@ let paddle2History = new PaddleHistory();
 
   </SCRIPT>
 
-    <canvas id="canvas" width="800" height="600" style="width: 100%; height:100%"></canvas>
+    <canvas id="canvas" width="800" height="600" style="position:absolute; width: 100%; height:100%; z-index:1"></canvas>
+    <canvas id="fireworks" width="800" height="600" style="position:absolute; width: 100%; height:100%; z-index:2"></canvas>
     <script>
 
     var skipIntro = false;
@@ -257,6 +258,7 @@ let paddle2History = new PaddleHistory();
         var bInTrialBreak           = false;
         var justOncePlease          = true;
         var dispCont                = true;
+        var dispFireworks           = false;
 
         var username1;
         var username2;
@@ -920,7 +922,6 @@ let paddle2History = new PaddleHistory();
                         '5': [3,7,10,12,14,17,19,20,21,25,26,31,35,36,37,39,42],
                     };
             for (let r = 1; r <= gridRows; r++){
-                console.log(gridVals[r])
                 let colour = bitColours[r-1];
                 let gridCounter = 1;
                 for (let c = 1; c <= gridLength; c++) {
@@ -936,6 +937,126 @@ let paddle2History = new PaddleHistory();
             expContext.fillRect(x,y,width,height);
             expContext.fillStyle = colour;
             expContext.fillRect(x-1,y-1,width-1,height-1)
+        }
+
+        // It is important to reward goal achievement
+        let fireworks = [];
+        let pxSize = 10;
+        class Spark {
+
+            constructor(x, y, angle, maxRadius){
+                this.x = x;
+                this.y = y;
+                this.angle = angle;
+                this.maxRadius = maxRadius;
+                this.radius = 0;
+                this.xOld = x;
+                this.yOld = y;
+                this.opacityModifier = 0.5 + Math.random() * 0.5;
+            }
+            update(){
+                const radiusIncrease = Math.sqrt(this.maxRadius) * Math.pow((this.maxRadius - this.radius),3) / Math.pow(this.maxRadius,3);
+                this.radius += radiusIncrease;
+                this.y += 0.5;
+            }
+            draw(ctx, colour, baseAlpha){
+                const dx = Math.cos(this.angle) * this.radius;
+                const dy = Math.sin(this.angle) * this.radius;
+                ctx.globalAlpha = baseAlpha * this.opacityModifier;
+                
+                ctx.fillStyle = colour;
+                ctx.fillRect(p(this.x + dx), p(this.y + dy), pxSize, pxSize);
+
+                this.xOld = p(this.x+dx-1);
+                this.yOld = p(this.y+dy-1);
+            }
+        }
+        class Firework {
+            constructor(x, y, altitude, colour, size) {
+                this.x = x;
+                this.y = y;
+                this.altitude = altitude;
+                this.sparks = [];
+                this.colour = colour;
+                this.size = size;
+                this.explodedAt = null;           
+                this.opacity = 1;
+            }
+            _createSparks () {
+                const numSparks = this.size / Math.pow(pxSize, 1/3);
+                for (let i = 0; i < numSparks; i++){
+                    const angle = Math.random() * 2 * Math.PI;
+                    const maxRadius = (1-Math.pow(Math.random(),2)) * this.size;
+                    this.sparks.push(new Spark(this.x, this.altitude, angle, maxRadius));
+                }
+                this.explodedAt = new Date();
+            }
+            update(){
+                if (this.y<=this.altitude) {
+                    if (this.explodedAt) {
+                        this.sparks.forEach((s)=>s.update());
+
+                        const timeSinceBoomBoom = new Date() - this.explodedAt;
+                        const expansionDuration = 2000;
+
+                        if (timeSinceBoomBoom >= expansionDuration){
+                            const timeSinceComplete = timeSinceBoomBoom-expansionDuration;
+                            const fade = 1000;
+                            if (timeSinceComplete <= fade){
+                                this.opacity = 1 - timeSinceComplete / fade;
+                            } else {
+                                this.opacity = 0;
+                            }
+                        }
+                    } else {
+                        this._createSparks();
+                    }
+                } else {
+                    this.y -= 5;
+                }
+                return this.opacity;
+            }
+
+            draw (ctx){
+                if (this.explodedAt){
+                    ctx.fillStyle = this.colour;
+                    this.sparks.forEach((s)=>s.draw(ctx, this.colour, this.opacity));
+                } else {
+                    // ctx.fillStyle = fontColour;
+                    // ctx.fillRect(p(this.x), p(this.y), pxSize, pxSize)
+                    ctx.beginPath();
+                    ctx.arc(p(this.x), p(this.y), bRad, 0, Math.PI*2);
+                    ctx.fillStyle = this.colour;
+                    ctx.fill();
+                    ctx.stroke();
+                }
+            }
+        }
+
+        function getColour() {
+                const fireworkColours = ["#1abc9c","#2ecc71","#3498db","#9b59b6","#f1c40f","#e67e22","#e74c3c","#ecf0f1"];
+                return fireworkColours[Math.floor(Math.random()*fireworkColours.length)];
+            }
+        function p(x){
+            return pxSize * Math.round(x / pxSize);
+        }
+        function drawFireWorks(){
+            if (dispFireworks){
+                fwCtx.clearRect(0,0,expCanvas.width, expCanvas.height)
+
+                if (Math.random() < 0.01){
+                    const x = frameWidth * 0.25 + Math.random() * frameWidth * 0.5;
+                    const y = frameBottom;
+                    const altitude = frameHeight * 0.25 + Math.random() * frameHeight * 0.5;
+                    const minDimension = Math.min(frameHeight,frameWidth);
+                    const size = Math.max(minDimension * 0.1, Math.random()*minDimension*0.5);
+
+                    fireworks.push(new Firework(x,y, altitude, getColour(), size));
+                }
+                fireworks = fireworks.filter((f)=> f.update());
+                fireworks.forEach((f)=> f.draw(fwCtx));
+                celebrAF = requestAnimationFrame(drawFireWorks);
+            }
         }
 
         // Set Instructions
@@ -1091,6 +1212,8 @@ let paddle2History = new PaddleHistory();
             expContext.textAlign    = "center";
             if (count !== 1){
                 expContext.fillText("Please take a short 20 second break before beginning block "+count+" of "+nBlocks,expCanvas.width/2, expCanvas.height/4-75);
+                dispFireworks = false;
+                fwCtx.clearRect(0,0,expCanvas.width, expCanvas.height)
             }
             // expContext.fillText(,expCanvas.width/2,expCanvas.height/4-50);
             count--;
@@ -1152,6 +1275,8 @@ let paddle2History = new PaddleHistory();
             bx                  = [frameRight-(frameWidth/2-bRad*4), frameRight-frameWidth/2, frameRight-(frameWidth/2+bRad*4)];
             by                  = py-bRad;
             disableScroll();
+            fwCanvas = document.getElementById("fireworks");
+            fwCtx = fwCanvas.getContext("2d");
 
             if (state.status === 'playing') {
                 console.log(state.block);
@@ -1789,6 +1914,8 @@ let paddle2History = new PaddleHistory();
             expContext.font="16px Arial";
             expContext.textAlign = "center";
             expContext.fillText("Trial "+nCurrentTrial+" of "+state.maxTrials +" completed.",expCanvas.width/2,expCanvas.height/5);
+            dispFireworks = nCurrentTrial == state.maxTrials
+            celebrAF = requestAnimationFrame(drawFireWorks)
             // This notation is whack. Essentially - prepend a string with + to evaluate as a number
             p1teamScore = Math.round((+p1s/(+p1s + +p2s))*+teams);
             p2teamScore = parseInt(teams-p1teamScore); // you can't use addition with parseInt
@@ -1825,6 +1952,8 @@ let paddle2History = new PaddleHistory();
             timeout = setTimeout(timedContinue,trialBreakTime*1000);
         }
         function expEnd(){
+            dispFireworks = true;
+            celebrAF = requestAnimationFrame(drawFireWorks);
             drawCanvas(frameColour);
             entryPageStyling();
             expContext.fillStyle = fontColour;
@@ -1836,6 +1965,8 @@ let paddle2History = new PaddleHistory();
             expContext.fillText("If you have any questions or concerns about the experiment please contact the", expCanvas.width/2, expCanvas.height/4-25);
             expContext.fillText("researchers Murray Bennett or Ami Eidels at murray.bennett@uon.edu.au or ami.eidels@newcastle.edu.au.",expCanvas.width/2,expCanvas.height/4);
             expContext.fillText("Participation credit has been automatically granted.",expCanvas.width/2,expCanvas.height/4+50);
+
+            expContext.fillText("You may close the browser window at any time.",expCanvas.width/2,expCanvas.height/4+75);
 
             // poinstLink()
         }
