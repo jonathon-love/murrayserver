@@ -171,7 +171,7 @@ let paddle2History = new PaddleHistory();
     <canvas id="canvas" width="800" height="600" style="width: 100%; height:100%"></canvas>
     <script>
 
-    var skipIntro = true;
+    var skipIntro = false;
 
     // Define variables
         var nBlocks             = 3;
@@ -182,11 +182,12 @@ let paddle2History = new PaddleHistory();
         var practiceTrialDuration = 60;
         var dirInst             = 5;            // second intervals to display practice trial instructions
         var frameRate           = 10;
-        var sharedColour        = "DarkMagenta";
+        var sharedColour        = "#963d97";
         var p1Colour            = "FireBrick";
         var p2Colour            = "RoyalBlue";
         var pColours            = [p1Colour, p2Colour];
         var frameColour         = "ivory";
+        var fontColour          = "black"
 
         // GameFrame
         var drtWidth            = 800;
@@ -554,11 +555,11 @@ let paddle2History = new PaddleHistory();
                 let dy = this.y + this.speed*Math.sin(this.angle);
                 let angle = this.angle;
 
-                if (dx > frameRight - bRad){
+                if (dx >= frameRight - bRad){
                     dx = frameRight - (dx - frameRight) - bRad;
                     angle = Math.PI - angle;
                 }
-                if (dx < frameLeft + bRad) {
+                if (dx <= frameLeft + bRad) {
                     dx = frameLeft + (frameLeft - dx) + bRad
                     angle = Math.PI - angle;
                 }
@@ -659,7 +660,7 @@ let paddle2History = new PaddleHistory();
         }
 
         function roundedRect(ctx,x,y,width,height,radius,fill,stroke){
-            ctx.strokeStyle = "white";
+            ctx.strokeStyle = "black";
             ctx.beginPath();
             ctx.moveTo(x+radius,y);
             ctx.arcTo(x+width,y,x+width,y+radius,radius);
@@ -675,14 +676,14 @@ let paddle2History = new PaddleHistory();
             ctx.strokeStyle = "black";
         }
         function drawKeyDepth(x, y) {
-            expContext.strokeStyle = "white";
+            expContext.strokeStyle = "black";
             expContext.beginPath();
             expContext.moveTo(x - 10, y - 10);
             expContext.lineTo(x + 30, y + 30);
             expContext.moveTo(x + 29, y - 9);
             expContext.lineTo(x - 10, y + 29);
             expContext.stroke();
-            expContext.strokeStyle = "black";
+            expContext.strokeStyle = fontColour;
         }
         function drawKey(ctx, faceVal, x, y, width, height, radius, fill, stroke, specialChar){
             // Perimeter / Base
@@ -691,22 +692,23 @@ let paddle2History = new PaddleHistory();
             // Key top
             expContext.lineWidth = 3;
             drawKeyDepth(x,y);
-            expContext.fillStyle = "black";
+            expContext.fillStyle = fontColour;fontColour
             roundedRect(ctx,x-5,y-6,width-10,height-10, radius-1, true, stroke);
             // Key Content
-            expContext.fillStyle = "white";
+            expContext.fillStyle = frameColour;
             if (specialChar){ // used for the directional arrows
                 var uni = '"\\u' + faceVal+'"';
                 var faceVal = eval(uni);
             }
             expContext.fillText(faceVal, x+10, y+10);
             ctx.lineWidth = 1;
+            expContext.fillStyle=fontColour;
         }
         function keyInsts(p1, p2, drt1, drt2, x = expCanvas.height/2){
             // Player Keys
             if (p1){
                 expContext.fillStyle = p1Colour;
-                expContext.fillStyle = "white";
+                expContext.fillStyle = "black";
                 if (drt1 == LHdrtRespKey){
                     drawKey(expContext,"2191",expCanvas.width*0.67-15,x+50, 40, 40, 3,true,true,true);
                     drawKey(expContext,"Z",expCanvas.width/3-25,x+50, 40, 40, 3,true,true,false);
@@ -880,11 +882,68 @@ let paddle2History = new PaddleHistory();
 
         }
 
+        // Intro pages styling (highly important...)
+        function entryPageStyling(){
+            drawPanel(25,25,20,'#62bb47');
+            drawPanel(45,45,20,'#fcb827')
+            drawPanel(65,65,20,'#f6821f')
+            drawPanel(85,85,20,'#e03a3e')
+            drawPanel(105,105,20,'#963d97')
+            drawPanel(125,125,20,'#009ddc')
+
+        }
+        function drawPanel(xCross,yCross, width, fillColour){
+            // xCross is where on the top of the screen it crosses the screen, yCross is the same but for the left of screen
+            expContext.fillStyle = fillColour;
+            expContext.beginPath();
+            expContext.moveTo(xCross, frameTop);
+            expContext.lineTo(xCross+width, frameTop);
+            expContext.lineTo(0, yCross+width);
+            expContext.lineTo(0, yCross);
+            expContext.fill();
+        }
+
+        // inter trial malarkey
+        function drawTrialEnd(){
+            //TRIAL OVER
+            let x = expCanvas.width/2 - 110;
+            let y = 50;
+            let bitColours = ['#6500ab', '#f20794', '#d60003', '#f1983a', '#fcf351'];
+            let sz = 5;
+            let gridLength = 42;
+            let gridRows = 5;
+            let gridVals = {
+                        '1': [1,2,3,4,5,7,8,9,12,15,16,19,25,26,29,33,35,36,37,39,40,41],
+                        '2': [3,7,10,12,14,17,19,24,27,29,33,35,39,42],
+                        '3': [3,7,8,9,12,14,15,16,17,19,24,27,29,33,35,36,39,40,41],
+                        '4': [3,7,9,12,14,17,19,24,27,30,32,35,39,41],
+                        '5': [3,7,10,12,14,17,19,20,21,25,26,31,35,36,37,39,42],
+                    };
+            for (let r = 1; r <= gridRows; r++){
+                console.log(gridVals[r])
+                let colour = bitColours[r-1];
+                let gridCounter = 1;
+                for (let c = 1; c <= gridLength; c++) {
+                    if (gridVals[r].includes(gridCounter)){
+                        drawBit(x+(sz*gridCounter),y+(r*sz),sz,sz,colour);
+                    }
+                    gridCounter++;        
+                }
+            } 
+        }
+        function drawBit(x,y,width,height,colour){
+            expContext.fillStyle = fontColour;
+            expContext.fillRect(x,y,width,height);
+            expContext.fillStyle = colour;
+            expContext.fillRect(x-1,y-1,width-1,height-1)
+        }
+
         // Set Instructions
         function waitingRoom(){
             bInWaiting = true;
-            drawCanvas();
-			expContext.fillStyle = frameColour;
+            drawCanvas(frameColour);
+            entryPageStyling();
+			expContext.fillStyle = fontColour;
             expContext.font="30px Arial";
 			expContext.textAlign = "center";
             expContext.fillText("Welcome to the 'Team Spirit' waiting room!",expCanvas.width/2,expCanvas.height/4-100);
@@ -897,8 +956,9 @@ let paddle2History = new PaddleHistory();
         
         function instructions1(){
             bInInstructions1 = true;
-            drawCanvas();
-			expContext.fillStyle = frameColour;
+            drawCanvas(frameColour);
+            entryPageStyling();
+			expContext.fillStyle = fontColour;
             expContext.font="30px Arial";
 			expContext.textAlign = "center";
             expContext.fillText("Welcome to Team Spirit!",expCanvas.width/2,expCanvas.height/4-100);
@@ -920,8 +980,9 @@ let paddle2History = new PaddleHistory();
         // Perhaps include another page here that explains to them the nature of the multiplayer game. For example:
         function instructionsOnline(){
             bInInstructionsOnline = true;
-            drawCanvas();
-			expContext.fillStyle = frameColour;
+            drawCanvas(frameColour);
+            entryPageStyling();
+			expContext.fillStyle = fontColour;
             expContext.font="16px Arial";
             expContext.fillText("This experiment is unique in that you will be playing with and against another participant.",expCanvas.width/2,expCanvas.height/4-50);
             expContext.fillText("2/4", expCanvas.width*.75,25);
@@ -936,8 +997,9 @@ let paddle2History = new PaddleHistory();
         }
         function instructions2(){
             bInInstructions2 = true;
-            drawCanvas();
-            expContext.fillStyle = frameColour;
+            drawCanvas(frameColour);
+            entryPageStyling();
+            expContext.fillStyle = fontColour;
             expContext.fillText("3/4", expCanvas.width*.75,25);
             expContext.fillText("Your paddle is red whereas your fellow participants paddle is blue.",expCanvas.width/2,expCanvas.height/4-100);
             expContext.fillText("Your score is shown in the top left corner of each trial and the score",expCanvas.width/2,expCanvas.height/4-75);
@@ -954,9 +1016,10 @@ let paddle2History = new PaddleHistory();
         }
         function instructions3(){
             bInInstructions3 = true;
-            drawCanvas();
-            expContext.fillRect(0, 0, expCanvas.width, expCanvas.height);
-			expContext.fillStyle = frameColour;
+            drawCanvas(frameColour);
+            entryPageStyling();
+            // expContext.fillRect(0, 0, expCanvas.width, expCanvas.height);
+			expContext.fillStyle = fontColour;
 			expContext.font="16px Arial";
 			expContext.textAlign = "center";
             expContext.fillText("4/4", expCanvas.width*.75,25);
@@ -1017,13 +1080,13 @@ let paddle2History = new PaddleHistory();
         }
 
         function blockInst(blockTypes,count){
-            drawCanvas();
+            drawCanvas(frameColour);
             bInBlockInstructions    = true;
             // count++;
             p1CumulativeScore  = 0; // the cumulative scores for both players throughout each block
             p2CumulativeScore  = 0;
             scoreReset();
-			expContext.fillStyle    = frameColour;
+			expContext.fillStyle    = fontColour;
             expContext.font         ="16px Arial";
             expContext.textAlign    = "center";
             if (count !== 1){
@@ -1055,8 +1118,8 @@ let paddle2History = new PaddleHistory();
         }
 
         function intertrialWaiting(){
-            drawCanvas();
-            expContext.fillStyle = frameColour;
+            drawCanvas(frameColour);
+            expContext.fillStyle = fontColour;
             expContext.textAlign = 'center';
             expContext.font = "26px Arial";
             expContext.fillText("WAITING",expCanvas.width/2, expCanvas.height/3 - 100);
@@ -1219,8 +1282,8 @@ let paddle2History = new PaddleHistory();
             proceed = true;
             }
         }
-        function drawCanvas(){
-            expContext.fillStyle = "rgb(0,0,0)";
+        function drawCanvas(colour){
+            expContext.fillStyle = colour;
 			expContext.fillRect(0, 0, expCanvas.width, expCanvas.height);
         }
         function clearCanvas(){
@@ -1318,19 +1381,19 @@ let paddle2History = new PaddleHistory();
                 if (playerId==='0'){
                     expContext.textAlign = "left";
                     expContext.font = "16px Arial";
-                    expContext.fillStyle = "rgb(0,0,0)";
+                    expContext.fillStyle = fontColour;
                     expContext.fillText("Your Score: "+score1,frameLeft+10,frameTop+20);
                 } else {
                     expContext.textAlign = "right";
                     expContext.font = "16px Arial";
-                    expContext.fillStyle = "rgb(0,0,0)";
+                    expContext.fillStyle = fontColour;
                     expContext.fillText("Your Score: "+score1,frameRight-10,frameTop+20);
                 }
             } else {
                 if (blockType=="col"){
                     expContext.textAlign = "left";
                     expContext.font = "16px Arial";
-                    expContext.fillStyle = "rgb(0,0,0)";
+                    expContext.fillStyle = fontColour;
                     expContext.fillText("Team Score: "+teamScore,frameLeft+10,frameTop+20);
 
                     expContext.textAlign = "right";
@@ -1339,12 +1402,12 @@ let paddle2History = new PaddleHistory();
                     // Player 1 Score
                     expContext.textAlign = "left";
                     expContext.font = "16px Arial";
-                    expContext.fillStyle = "rgb(0,0,0)";
+                    expContext.fillStyle = fontColour;
                     expContext.fillText("Your Score: "+score1,frameLeft+10,frameTop+20);
 
                     // Player 2 Score
                     expContext.textAlign = "right";
-                    expContext.fillStyle = "rgb(0,0,0)";
+                    expContext.fillStyle = fontColour;
                     expContext.fillText("Player 2 Score: "+score2,frameRight-10,frameTop+20);
                 }
             }
@@ -1360,7 +1423,7 @@ let paddle2History = new PaddleHistory();
             }
             let dispTime = timeRemaining.toFixed(2);
             expContext.font = "16px Arial";
-            expContext.fillStyle = "rgb(0,0,0)";
+            expContext.fillStyle = fontColour;
             expContext.textAlign = "center";
             expContext.fillText(dispTime+'s',frameLeft+frameWidth/2,frameTop+20);
 
@@ -1426,7 +1489,7 @@ let paddle2History = new PaddleHistory();
                 ballSpeedCorrected = bSpeed;
             }
             
-            drawCanvas();
+            drawCanvas(fontColour);
             drawDRT(drtOnsets,practiceTrialDuration,start,moving);
             drawFrame();
             allBalls.forEach(function(ball){ // ball is the name of each element in the object, same as [for balls in balllist: ball.draw()]
@@ -1467,7 +1530,7 @@ let paddle2History = new PaddleHistory();
             let elapsed = now - (state.timestamp*1000);
             let ballSpeedCorrected = bSpeed * (bSpeed * elapsed / 60);
             
-            drawCanvas();
+            drawCanvas(fontColour);
             drawDRT(drtOnsets,trialDuration,start,moving);
             drawFrame();
 
@@ -1642,7 +1705,7 @@ let paddle2History = new PaddleHistory();
                         paddle2History.add(parseInt(received.timestamp*1000), received.players[otherId].pos)
                     }
                     
-                    if (state.players && (state.players[playerId]['status'] === 'notReady' || state.players[playerId]['status']==='ended') && state.players[otherId]['status'] === 'ready'){
+                    if (state.players && state.players[playerId]['status'] === 'notReady' && state.players[otherId]['status'] === 'ready'){
                         expContext.fillText("Player 2 is ready.", expCanvas.width/2, expCanvas.height/4+225);
                     }
 
@@ -1666,8 +1729,8 @@ let paddle2History = new PaddleHistory();
                     bInTrialBreak=true;
                     bInTrial    = false;
                     moving      = false;
-                    drawCanvas()
-                    expContext.fillStyle = frameColour;
+                    drawCanvas(frameColour)
+                    expContext.fillStyle = fontColour;
                     expContext.textAlign = "center";
                     expContext.font="16px Arial";
                     expContext.fillText("Oops!",expCanvas.width/2,expCanvas.height/4-100);
@@ -1720,8 +1783,9 @@ let paddle2History = new PaddleHistory();
         var p2MissEvents;
 
         function interTrial(p1s, p2s, teams, blockType){
-            drawCanvas();
-			expContext.fillStyle = frameColour;
+            drawCanvas(frameColour);
+            drawTrialEnd()
+			expContext.fillStyle = fontColour;
             expContext.font="16px Arial";
             expContext.textAlign = "center";
             expContext.fillText("Trial "+nCurrentTrial+" of "+state.maxTrials +" completed.",expCanvas.width/2,expCanvas.height/5);
@@ -1761,8 +1825,9 @@ let paddle2History = new PaddleHistory();
             timeout = setTimeout(timedContinue,trialBreakTime*1000);
         }
         function expEnd(){
-            drawCanvas();
-            expContext.fillStyle = frameColour;
+            drawCanvas(frameColour);
+            entryPageStyling();
+            expContext.fillStyle = fontColour;
             expContext.font="30px Arial";
             expContext.textAlign = "center";
             expContext.fillText("The experiment is complete!",expCanvas.width/2,expCanvas.height/4-100);
