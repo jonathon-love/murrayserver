@@ -38,6 +38,8 @@ class Game:
         self._ready = Event()
         self._blocks = [ ]
         self._ending = False
+        self._joinTime = [ ]
+        self._timedoutPartner = False
 
         drtWidth = 800
         width  = drtWidth * 0.9
@@ -74,7 +76,7 @@ class Game:
            ]
 
         block_types = block_orders[self._game_no % len(block_orders)]
-        n_balls = [1, 1, 1, 1, 3, 3, 3, 3, 6, 6, 6, 6, 9, 9, 9, 9]
+        n_balls = [1, 1, 1, 3, 3, 3, 6, 6, 6, 9, 9, 9]
 
         shuffle(n_balls)
 
@@ -98,6 +100,7 @@ class Game:
                     'miss': 0,
                     'rt': 0,
                     'fa': 0,
+                    'score': 0,
                     },
                 '1': {
                     'pos': self._dim['p2Start'],
@@ -108,6 +111,7 @@ class Game:
                     'miss': 0,
                     'rt': 0,
                     'fa': 0,
+                    'score': 0
                     },
             },
             'balls': [ ],
@@ -149,12 +153,18 @@ class Game:
 
         async def read():
             async for msg in ws:
+                if self._state['status'] == 'waiting':
+                    waitingTime = (20)-(time()-self._joinTime) ## manage total wait time (10minutes * 60seconds)
+                    if waitingTime <= 0:
+                        self._timedoutPartner = True
+                    await ws.send_str('wait:' + str(waitingTime))
+
                 if msg.data == 'ping':
                     await ws.send_str('pong')
                 else:
                     data = json.loads(msg.data)
                     self._state['players'][player_id].update(data)
-                    self._receive_update.set()
+                    self._receive_update.set()                
 
         async def write():
             send_event = self._send_update[player_id]
@@ -257,6 +267,7 @@ class Game:
                                     angle = -angle + offset
                                 y = self._dim['paddleY'] - (self._dim['paddleY'] - y) - self._dim['ballR']
                                 self._state['players']['0']['hits'] += 1
+                                self._state['players']['0']['score'] += 1
 
                     if self._state['player_id'] == "1" and ball['id'] >= 9:
                         if y + self._dim['ballR'] > self._dim['paddleY'] and y < self._dim['paddleY']+self._dim['ballR']:
@@ -269,6 +280,7 @@ class Game:
                                     angle = -angle + offset
                                 y = self._dim['paddleY'] - (self._dim['paddleY'] - y) - self._dim['ballR']
                                 self._state['players']['1']['hits'] += 1
+                                self._state['players']['1']['score'] += 1
                 else:
                     if y + self._dim['ballR'] > self._dim['paddleY'] and y < self._dim['paddleY']+self._dim['ballR']:
                         if x + self._dim['ballR'] > self._state['players']['0']['pos'] and x < self._state['players']['0']['pos'] + self._dim['pWidth'] + self._dim['ballR']:
@@ -282,8 +294,11 @@ class Game:
                             if x + self._dim['ballR'] > self._state['players']['1']['pos'] and x < self._state['players']['1']['pos'] + self._dim['pWidth'] + self._dim['ballR']:
                                     self._state['players']['0']['hits'] += 0.5
                                     self._state['players']['1']['hits'] += 0.5
+                                    self._state['players']['0']['score'] += 0.5
+                                    self._state['players']['1']['score'] += 0.5
                             else:
                                 self._state['players']['0']['hits'] += 1
+                                self._state['players']['0']['score'] += 1
 
                         elif x + self._dim['ballR'] > self._state['players']['1']['pos'] and x < self._state['players']['1']['pos'] + self._dim['pWidth'] + self._dim['ballR']:
                             impact = (x + self._dim['ballR']/2) - (self._state['players']['1']['pos']+ (self._dim['pWidth']/2))
@@ -294,6 +309,7 @@ class Game:
                                 angle = -angle + offset
                             y = self._dim['paddleY'] - (self._dim['paddleY'] - y) - self._dim['ballR']
                             self._state['players']['1']['hits'] += 1
+                            self._state['players']['1']['score'] += 1
 
                 ball['x'] = x
                 ball['y'] = y
@@ -334,6 +350,8 @@ class Game:
                 self._state['players']['1']['rt'] = 0
                 self._state['players']['0']['fa'] = 0
                 self._state['players']['1']['fa'] = 0
+                self._state['players']['0']['score'] = 0
+                self._state['players']['1']['score'] = 0
 
             for block_no, block in enumerate(self._blocks):
                 state['status'] = 'reading'
@@ -393,7 +411,6 @@ class Game:
                 print(f'block { block_no }, awaiting players')
                 while self._ending is False:
                     await self.update()
-
                     print(f'player 0 { state["players"]["0"]["status"] }')
                     print(f'player 1 { state["players"]["1"]["status"] }')
 
@@ -417,7 +434,7 @@ class Game:
                         self.send()
 
                 try:
-                    await wait_for(play(), 20) # set to trial duration
+                    await wait_for(play(), 15) # set to trial duration
                 except TimeoutError:
                     pass
                 

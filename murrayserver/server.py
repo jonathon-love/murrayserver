@@ -18,7 +18,7 @@ from functools import partial
 import mimetypes
 
 from os import path
-
+from time import time
 from .game import Game
 
 
@@ -44,6 +44,15 @@ class Server:
             self._current_game = Game(self._current_game_no)
             self._start_game(self._current_game)
             self._games[str(self._current_game_no)] = self._current_game
+            self._current_game._joinTime = time()
+
+        if self._current_game._timedoutPartner:
+            self._current_game_no += 1
+            self._current_game = Game(self._current_game_no)
+            self._current_game._joinTime = time()
+            self._start_game(self._current_game)
+            self._games[str(self._current_game_no)] = self._current_game
+        
         game_id = self._current_game_no
         player_id = self._current_game.add_player()
         if self._current_game.ready():

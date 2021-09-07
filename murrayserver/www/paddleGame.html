@@ -179,8 +179,8 @@ let paddle2History = new PaddleHistory();
 
         // workload
         var workloadLevels      = [1,3,6,9];
-        var trialDuration       = 20;           // seconds
-        var practiceTrialDuration = 60;
+        var trialDuration       = 15;   // 45 seconds
+        var practiceTrialDuration = 15; // 45
         var dirInst             = 5;            // second intervals to display practice trial instructions
         var frameRate           = 10;
         var sharedColour        = "#963d97";
@@ -212,6 +212,7 @@ let paddle2History = new PaddleHistory();
         let drtResp1            = false;
         let drtOnsets;
         var onsets              = [];   // used to save the onset times for each trial
+        var drtScore            = 0;
 
         var LHdrtRespKey        = "38"
         var RHdrtRespKey        = "90"
@@ -233,6 +234,10 @@ let paddle2History = new PaddleHistory();
         var fa1 = [];
         var fa2 = [];
         var missCode = -1;
+        var waitingRoomStart;
+        var totalWait = 20 //60 * 10 // seconds * minutes
+        var timeWaited;
+        var drawWaitingRoomScientist;
         
         var startingTime;
         var lastTime;
@@ -880,8 +885,7 @@ let paddle2History = new PaddleHistory();
             // DRT Response
             if (e.keyCode == plyr1DRTrespKey) {
                 drtResp1 = false;
-            } 
-
+            }
         }
 
         // Intro pages styling (highly important...)
@@ -1059,26 +1063,220 @@ let paddle2History = new PaddleHistory();
             }
         }
 
+        // instructions bordering
+        function drawBorder(x,y,width,height, sz){
+            borderCols = ['#ab1a21','#ce175a','#e4840c','#ffe838'];
+            expContext.lineWidth = sz;
+            for (let i = 0; i<borderCols.length; i++){
+                expContext.strokeStyle = borderCols[i];
+                expContext.strokeRect(x+(sz*i),y+(sz*i),width-(sz*i*2),height-(sz*i*2));
+            }
+            for (let i = 0; i<borderCols.length; i++){
+                expContext.strokeStyle = borderCols[3-i];
+                expContext.strokeRect(x+(sz*i), y+(sz*i), (sz/2)+sz*(3-i), (sz/2)+sz*(3-i));
+                expContext.strokeRect(x+(sz*i), y+(height-6)-(sz*i)+(i*2), (sz/2)+sz*(3-i), (sz/2)+sz*(3-i));
+                expContext.strokeRect(x+(width-6)-(sz*i)+(i*2), y+(sz*i), (sz/2)+sz*(3-i), (sz/2)+sz*(3-i));
+                expContext.strokeRect(x+(width-6)-(sz*i)+(i*2), y+(height-6)-(sz*i)+(i*2), (sz/2)+sz*(3-i), (sz/2)+sz*(3-i));
+            }
+        }
+        function drawWaitingRoomTimer(){
+            // draws the timer and returns the time remaining
+            if (drawWaitingRoomScientist){
+                expTimeout = waitingRoomTimer(totalWait, waitingRoomStart)
+                waiter = requestAnimationFrame(drawWaitingRoomTimer);
+                if (expTimeout <= 0){
+                    expTimeout = 0;
+                    cancelAnimationFrame(waiter);
+                    return
+                }
+                if (expTimeout%4 > 3){waitType='down';}else{waitType='up';}
+                drawWaiter(expCanvas.width/2-80,409,2,waitType);
+            } else{
+                cancelAnimationFrame(waiter);
+                fwCtx.clearRect(0,0, expCanvas.width, expCanvas.height);
+                return
+            }
+        }
+
+        function drawWaiterBG(x,y,pxSize){
+            waiterBackground = [18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 15, 18, 15, 18, 18, 18, 18, 18, 18, 18, 15, 15, 15, 18, 15, 18, 18, 18, 15, 15, 15, 15, 18, 18, 18, 18, 18, 18, 18,
+            18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 15, 18, 15, 18, 15, 18, 15, 15, 18, 18, 15, 15, 15, 18, 15, 18, 18, 15, 15, 18, 15, 18, 18, 15, 18, 15, 18, 18, 18, 18,
+            18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 15, 15, 15, 15, 15, 18, 15, 15, 15, 15, 15, 18, 18, 15, 15, 18, 15, 15, 15, 15, 15, 18, 18, 15, 18, 15, 15, 18, 18, 18, 18,
+            18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 15, 15, 15, 15, 15, 14, 15, 15, 15, 15, 14, 15, 18, 15, 15, 18, 15, 15, 15, 18, 18, 14, 15, 15, 15, 18, 15, 18, 18, 18, 15, 18,
+            18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 15, 18, 15, 18, 18, 18, 18, 14, 14, 18, 18, 18, 18, 18, 15, 15, 15, 15, 15, 15, 18, 15, 15, 18, 15, 15, 15, 15,
+            18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 15, 18, 15, 18, 18, 18, 14, 18, 18, 15, 15, 18, 14, 18, 15, 15, 15, 15, 15, 18, 15, 18, 15, 15, 18,
+            18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 15, 15, 15, 18, 18, 15, 15, 18, 14, 15, 15, 15, 14, 15, 18, 18, 15, 15, 15, 15, 15, 18, 15, 15, 14, 18,
+            5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 15, 15, 15, 5, 5, 15, 15, 15, 15, 5, 14, 5, 15, 15, 15, 15, 15, 15, 15, 5, 15, 4, 15, 15, 14, 15, 18,
+            5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 15, 15, 15, 14, 15, 15, 5, 15, 5, 15, 15, 5, 15, 5, 5, 15, 5, 15, 15, 14, 15, 15, 15, 4, 18, 15, 15, 18,
+            5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 15, 15, 14, 15, 5, 15, 15, 5, 5, 5, 15, 15, 5, 5, 5, 14, 15, 5, 15, 15, 4, 15, 18, 15, 18,
+            5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 15, 15, 15, 5, 15, 14, 14, 14, 5, 5, 14, 14, 14, 5, 14, 14, 5, 15, 4, 4, 15, 18, 15, 18, 18,
+            5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 14, 14, 14, 14, 5, 5, 5, 14, 14, 5, 5, 5, 4, 4, 4, 18, 18, 18, 18,
+            4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 14, 14, 14, 4, 14, 14, 4, 4, 4, 4, 4, 4, 4, 18, 18, 18, 18,
+            3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 13, 14, 14, 14, 14, 3, 3, 1, 1, 1, 18, 18, 18, 18, 18, 18,
+            3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 13, 14, 14, 14, 14, 3, 3, 1, 1, 1, 18, 18, 18, 18, 18, 18,
+            3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 13, 14, 14, 14, 3, 3, 1, 1, 1, 18, 18, 18, 18, 18, 18,
+            3, 7, 7, 7, 7, 7, 7, 7, 3, 3, 3, 3, 3, 3, 7, 7, 7, 7, 7, 7, 3, 3, 3, 3, 7, 7, 7, 7, 7, 7, 3, 3, 3, 3, 3, 13, 14, 14, 14, 3, 3, 1, 1, 1, 18, 18, 18, 18, 18, 18,
+            3, 8, 8, 8, 8, 8, 8, 8, 3, 3, 3, 3, 3, 3, 8, 8, 8, 8, 8, 8, 3, 3, 3, 3, 8, 8, 8, 8, 8, 8, 3, 3, 3, 3, 3, 13, 13, 14, 14, 3, 3, 1, 1, 1, 18, 18, 18, 18, 18, 18,
+            3, 8, 8, 8, 8, 8, 8, 8, 3, 3, 3, 3, 3, 3, 8, 8, 8, 8, 8, 8, 3, 3, 3, 3, 8, 8, 8, 8, 8, 8, 3, 3, 3, 3, 3, 13, 14, 14, 14, 3, 3, 1, 1, 1, 18, 18, 18, 18, 18, 18,
+            3, 8, 8, 8, 8, 8, 8, 8, 3, 3, 3, 3, 3, 3, 8, 8, 8, 8, 8, 8, 3, 3, 3, 3, 8, 8, 8, 8, 8, 8, 3, 3, 3, 3, 3, 13, 14, 14, 14, 3, 3, 1, 1, 1, 18, 18, 18, 18, 18, 18,
+            3, 8, 8, 8, 8, 8, 8, 8, 3, 3, 3, 3, 3, 3, 8, 8, 8, 8, 8, 8, 3, 3, 3, 3, 8, 8, 8, 8, 8, 8, 3, 3, 3, 3, 3, 13, 14, 14, 14, 3, 3, 1, 1, 1, 18, 18, 18, 18, 18, 18,
+            3, 8, 8, 8, 8, 8, 8, 8, 3, 3, 3, 3, 3, 3, 8, 8, 8, 8, 8, 8, 3, 3, 3, 3, 8, 8, 8, 8, 8, 8, 3, 3, 3, 3, 3, 13, 14, 13, 14, 3, 3, 1, 1, 1, 18, 18, 18, 18, 18, 18,
+            3, 7, 7, 7, 7, 7, 7, 7, 3, 3, 3, 3, 3, 3, 7, 7, 7, 7, 7, 7, 3, 3, 3, 3, 7, 7, 7, 7, 7, 7, 3, 3, 3, 3, 3, 13, 13, 14, 14, 3, 3, 1, 1, 1, 18, 18, 18, 18, 18, 18,
+            3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 7, 7, 7, 7, 7, 7, 3, 3, 3, 3, 7, 7, 7, 7, 7, 7, 3, 3, 3, 3, 3, 13, 14, 14, 14, 3, 3, 1, 1, 1, 18, 18, 18, 18, 18, 18,
+            3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 7, 7, 7, 7, 7, 7, 3, 3, 3, 3, 7, 7, 7, 7, 7, 7, 3, 3, 3, 3, 3, 13, 14, 14, 14, 3, 3, 1, 1, 1, 18, 18, 18, 18, 18, 15,
+            3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 7, 7, 7, 7, 7, 7, 3, 3, 3, 3, 7, 7, 7, 7, 7, 7, 3, 3, 3, 3, 3, 13, 14, 14, 14, 3, 3, 15, 1, 15, 18, 18, 18, 18, 15, 18,
+            3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 7, 7, 7, 7, 7, 7, 3, 3, 3, 3, 7, 7, 7, 7, 7, 7, 3, 3, 3, 3, 3, 13, 13, 14, 14, 3, 3, 15, 1, 1, 15, 18, 18, 15, 15, 18,
+            3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 8, 8, 8, 8, 8, 8, 3, 3, 3, 3, 8, 8, 8, 8, 8, 8, 3, 3, 3, 3, 3, 13, 14, 14, 15, 3, 3, 1, 15, 15, 18, 15, 18, 15, 18, 18,
+            3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 8, 8, 8, 8, 8, 8, 3, 3, 3, 3, 8, 8, 8, 8, 8, 8, 3, 3, 3, 3, 3, 13, 14, 14, 14, 15, 15, 1, 1, 15, 15, 18, 15, 18, 15, 18,
+            3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 8, 8, 8, 8, 8, 8, 3, 3, 3, 3, 8, 17, 8, 8, 8, 8, 3, 3, 3, 3, 3, 13, 14, 14, 14, 3, 15, 15, 15, 15, 18, 15, 15, 15, 18, 18,
+            3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 8, 8, 8, 8, 8, 8, 3, 3, 3, 3, 8, 8, 17, 8, 8, 17, 3, 3, 3, 3, 3, 13, 14, 14, 15, 15, 15, 15, 13, 12, 11, 11, 15, 15, 15, 18,
+            3, 3, 10, 10, 10, 10, 10, 3, 3, 3, 3, 3, 3, 3, 8, 8, 8, 8, 8, 8, 3, 3, 3, 3, 17, 8, 8, 8, 17, 8, 17, 3, 3, 3, 3, 13, 14, 14, 14, 15, 3, 15, 13, 12, 11, 11, 15, 15, 18, 18,
+            3, 3, 10, 12, 12, 12, 10, 3, 3, 3, 3, 3, 3, 3, 7, 7, 7, 7, 7, 7, 17, 3, 3, 17, 7, 17, 7, 17, 7, 7, 3, 3, 3, 3, 3, 13, 14, 14, 14, 3, 15, 15, 13, 12, 11, 11, 15, 18, 18, 15,
+            3, 3, 10, 12, 12, 12, 10, 3, 3, 3, 3, 3, 3, 3, 7, 7, 7, 7, 7, 17, 3, 3, 3, 3, 7, 17, 7, 17, 7, 17, 17, 3, 3, 3, 13, 14, 14, 14, 14, 15, 15, 15, 13, 12, 12, 12, 15, 18, 15, 18,
+            3, 3, 10, 12, 12, 12, 10, 3, 3, 3, 3, 3, 3, 3, 7, 7, 7, 17, 7, 17, 3, 3, 3, 3, 7, 7, 17, 17, 7, 17, 3, 17, 3, 3, 13, 14, 14, 15, 14, 15, 3, 15, 13, 12, 11, 12, 15, 15, 15, 18,
+            3, 3, 10, 12, 12, 9, 10, 3, 3, 3, 3, 3, 3, 3, 7, 7, 17, 7, 17, 7, 3, 3, 3, 3, 7, 7, 17, 17, 17, 7, 3, 3, 3, 3, 13, 13, 14, 14, 15, 3, 15, 15, 13, 12, 11, 12, 15, 15, 16, 16,
+            3, 3, 10, 12, 12, 12, 10, 3, 3, 3, 3, 3, 3, 3, 7, 7, 7, 7, 17, 7, 17, 3, 3, 3, 7, 7, 7, 17, 17, 7, 3, 3, 3, 3, 13, 14, 14, 14, 14, 15, 3, 15, 13, 12, 11, 12, 15, 15, 15, 16,
+            3, 3, 10, 12, 12, 12, 10, 3, 3, 3, 3, 3, 3, 3, 7, 7, 7, 7, 17, 17, 3, 17, 3, 3, 7, 7, 7, 17, 7, 7, 3, 3, 3, 3, 13, 13, 14, 14, 14, 3, 15, 15, 13, 12, 11, 12, 15, 15, 16, 16,
+            9, 9, 9, 9, 9, 9, 9, 9, 9, 6, 6, 6, 6, 3, 7, 7, 7, 7, 17, 7, 3, 3, 3, 3, 7, 7, 7, 17, 7, 7, 3, 3, 3, 13, 13, 14, 14, 14, 14, 14, 3, 15, 13, 12, 12, 12, 15, 16, 16, 16,
+            9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 6, 6, 6, 6, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 14, 14, 14, 14, 14, 2, 2, 14, 14, 14, 2, 13, 12, 12, 12, 16, 16, 16, 16,
+            15, 15, 15, 15, 15, 15, 15, 15, 9, 9, 9, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 2, 2, 2, 2, 13, 12, 12, 12, 2, 16, 16, 16,
+            15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 2, 2, 2, 1, 6, 6, 6, 6, 2, 2, 2, 2, 2, 2, 2, 2, 16, 16,
+            16, 15, 16, 15, 16, 15, 16, 15, 16, 15, 16, 15, 16, 15, 16, 15, 16, 15, 16, 15, 16, 15, 16, 15, 16, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 2, 1, 6, 6, 6, 6, 1, 1, 2, 2, 2, 2, 2, 2,
+            15, 16, 15, 16, 15, 16, 15, 16, 15, 16, 15, 16, 15, 16, 15, 16, 15, 16, 15, 16, 15, 16, 15, 16, 15, 16, 15, 16, 15, 16, 15, 15, 15, 15, 15, 15, 15, 15, 2, 6, 6, 6, 6, 6, 1, 2, 2, 2, 2, 2,
+            16, 15, 16, 15, 16, 15, 16, 15, 16, 15, 16, 15, 16, 15, 16, 15, 16, 15, 16, 15, 16, 15, 16, 15, 16, 15, 16, 15, 16, 15, 16, 15, 16, 15, 15, 15, 15, 15, 15, 2, 1, 6, 6, 6, 6, 1, 1, 2, 2, 2,
+            16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 2, 1, 1, 6, 6, 6, 6, 1, 1, 2,
+            17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 1, 1, 6, 6, 6, 6, 6, 6,
+            1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+            1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+            1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
+            waiterBGColours = ["#7C4B38","#B5755B","#B3793F","#BAB733","#D0D058","#AEAAAA","#BFBFBF","#808080","#757171","#3A3838","#000000","#FFFFFF","#DDEBF7","#FCEEEF","#A9D08E","#81BA5A","#186a3b","#BDD7EE"];
+            let row = 0;
+            for (let i = 0; i<waiterBackground.length; i++){
+                expContext.fillStyle = waiterBGColours[waiterBackground[i]-1];
+                if (i % 50 == 0){
+                    row++;
+                }
+                xPos = x + (i % 50)*pxSize;
+                yPos = y + (row*pxSize);
+                expContext.fillRect(xPos,yPos,pxSize,pxSize);
+            }
+        }
+        function drawWaiter(x,y,pxSize,waitType){
+            fwCtx.clearRect(0,0,expCanvas.width, expCanvas.height)
+            // 8 squares wide, 17 high
+            waiter = {'up':[0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 5, 5, 0, 0, 0,
+            0, 0, 5, 4, 4, 0, 0, 0,
+            0, 0, 5, 4, 4, 0, 0, 0,
+            0, 0, 0, 4, 4, 0, 0, 0,
+            0, 3, 3, 3, 3, 3, 3, 0,
+            3, 0, 3, 3, 3, 3, 0, 3,
+            4, 0, 3, 3, 3, 3, 0, 4,
+            4, 0, 3, 3, 3, 3, 0, 4,
+            0, 4, 3, 3, 3, 3, 4, 0,
+            0, 0, 2, 2, 2, 2, 0, 0,
+            0, 0, 2, 2, 2, 2, 0, 0,
+            0, 0, 0, 2, 0, 2, 0, 0,
+            0, 0, 0, 2, 0, 2, 0, 0,
+            0, 0, 0, 2, 0, 2, 0, 0,
+            0, 0, 0, 2, 0, 2, 0, 0,
+            0, 0, 0, 1, 0, 1, 0, 0],
+            'down': [0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 5, 5, 0, 0, 0,
+            0, 0, 5, 4, 4, 0, 0, 0,
+            0, 0, 5, 4, 4, 0, 0, 0,
+            0, 0, 0, 4, 4, 0, 0, 0,
+            0, 3, 3, 3, 3, 3, 3, 0,
+            3, 0, 3, 3, 3, 3, 0, 3,
+            4, 0, 3, 3, 3, 3, 0, 4,
+            4, 0, 3, 3, 3, 3, 0, 4,
+            0, 4, 3, 3, 3, 3, 4, 0,
+            0, 0, 2, 2, 2, 2, 0, 0,
+            0, 0, 2, 2, 2, 2, 0, 0,
+            0, 0, 0, 2, 0, 2, 0, 0,
+            0, 0, 2, 0, 0, 0, 2, 0,
+            0, 0, 0, 2, 0, 2, 0, 0,
+            0, 0, 0, 1, 0, 1, 0, 0]}
+            waiterColours = ["#000000","#801E56", "#002060", "#F8CBAD", "#58472E"];
+            let row = 0;
+            let currentWaiter = waiter[waitType];
+            for (let i = 0; i<waiter.up.length; i++){
+                fwCtx.fillStyle = waiterColours[currentWaiter[i]-1];
+                if (i % 8 == 0){
+                    row++;
+                }
+                xPos = x + (i % 8)*pxSize;
+                yPos = y + (row*pxSize);
+                if (currentWaiter[i]==0){
+                    continue
+                }
+                // except I think I want to do this on the fireworks canvas.
+                fwCtx.fillRect(xPos,yPos,pxSize,pxSize);
+            }
+        }
+
         // Set Instructions
         function waitingRoom(){
             bInWaiting = true;
             drawCanvas(frameColour);
             entryPageStyling();
+            drawWaiterBG(expCanvas.width/2 - 125, 250, 5);            
 			expContext.fillStyle = fontColour;
             expContext.font="30px Arial";
 			expContext.textAlign = "center";
             expContext.fillText("Welcome to the 'Team Spirit' waiting room!",expCanvas.width/2,expCanvas.height/4-100);
             expContext.font="16px Arial";
             expContext.fillText("We are currently waiting for player 2 to join.",expCanvas.width/2,expCanvas.height/4-50);
+            expContext.fillText("We will wait up to 10 minutes for another player to join.", expCanvas.width/2, expCanvas.height/4);
+            expContext.fillText("If no player arrives then the study will close and you will be granted 1 SONA point.",expCanvas.width/2,expCanvas.height/4+25);
+            expContext.fillText("During this experiment you will play an online multiplayer arcade-style game.",expCanvas.width/2,expCanvas.height/4+65);
+            expContext.fillText("The formal experiment explanation will automatically commence once player 2 has joined.",expCanvas.width/2,expCanvas.height/4+90);
+            drawWaitingRoomTimer();
+            // border for the picture
+            drawBorder(expCanvas.width/2-132, 248, 263,263,2);
+            // border for timer
+            drawBorder(expCanvas.width/2-27, frameBottom-122,53,33,2);
+        }
 
-            expContext.fillText("During this experiment you will play an online multiplayer arcade-style game.",expCanvas.width/2,expCanvas.height/4);
-            expContext.fillText("The formal experiment explanation will automatically commence once player 2 has joined.",expCanvas.width/2,expCanvas.height/4+25);
+        function waitingRoomTimer(totalWaitTime, start){
+            //clear the patch you're about to draw on.
+            expContext.fillStyle = frameColour;
+            expContext.fillRect(expCanvas.width/2-20,frameBottom-115, 40, 20);
+            let timeRemaining;
+            let startTime = Date.now();
+            timeRemaining = (-(startTime-start)/1000)+totalWaitTime;
+            let dispTime;
+            if (timeWaited){
+                dispTime = timeRemaining-(totalWaitTime-timeWaited);
+            } else{
+                dispTime = timeRemaining;
+            }
+            dispTime.toFixed(2);
+            expContext.font = "16px Arial";
+            expContext.fillStyle = fontColour;
+            expContext.textAlign = "center";
+            let mins = Math.floor(dispTime/60);
+            let secs = Math.floor(dispTime%60);
+            if (dispTime<=0){
+                dispTime = 0;
+                timeRemaining = 0;
+                expContext.fillText("0:00",expCanvas.width/2,frameBottom-100);
+            } else {
+                if (secs<10){
+                    expContext.fillText(mins.toFixed(0)+":0"+secs.toFixed(0),expCanvas.width/2,frameBottom-100);
+                } else {
+                    expContext.fillText(mins.toFixed(0)+":"+secs.toFixed(0),expCanvas.width/2,frameBottom-100);
+                }
+            }
+            return timeRemaining;
         }
         
         function instructions1(){
             bInInstructions1 = true;
             drawCanvas(frameColour);
             entryPageStyling();
+            fwCtx.clearRect(0,0,expCanvas.width, expCanvas.height);
 			expContext.fillStyle = fontColour;
             expContext.font="30px Arial";
 			expContext.textAlign = "center";
@@ -1088,12 +1286,12 @@ let paddle2History = new PaddleHistory();
             expContext.fillText("1/4", expCanvas.width*.75,25);
             expContext.fillText("The game involves a set of balls flying around the screen and two paddles.",expCanvas.width/2,expCanvas.height/4);
             expContext.fillText("Your task is to move your paddle to deflect as many balls as you can within the time limit.",expCanvas.width/2,expCanvas.height/4+25);
-            expContext.fillText("You score points for each 'hit' and lose points for each 'miss'.",expCanvas.width/2,expCanvas.height/4+50);
+            expContext.fillText("You score points for each successful hit.",expCanvas.width/2,expCanvas.height/4+50);
             expContext.fillText("The time remaining and your score will be displayed throughout each trial.",expCanvas.width/2,expCanvas.height/4+75);
 
-            expContext.fillText("The game runs over 3 blocks of 16 trials, where each trial lasts 60 seconds.", expCanvas.width/2,expCanvas.height/4+125);
+            expContext.fillText("The game runs over 3 blocks of 12 trials, where each trial lasts 45 seconds.", expCanvas.width/2,expCanvas.height/4+125);
             expContext.fillText("There is a forced 20 second break between blocks but you can break for as long as you need.", expCanvas.width/2,expCanvas.height/4+150);
-            expContext.fillText("The experiment will take approximately 60 minutes and you will be reimbursed 1 SONA point per half hour.", expCanvas.width/2,expCanvas.height/4+175);
+            expContext.fillText("The experiment will take approximately 35-40 minutes and you will be reimbursed 2 SONA points.", expCanvas.width/2,expCanvas.height/4+175);
             expContext.fillText("You may exit the study at any time without penalty by closing your browser window.", expCanvas.width/2,expCanvas.height/4+200);
 
             expContext.fillText("Press 'spacebar' to continue", expCanvas.width*.75,expCanvas.height-50);
@@ -1122,16 +1320,12 @@ let paddle2History = new PaddleHistory();
             entryPageStyling();
             expContext.fillStyle = fontColour;
             expContext.fillText("3/4", expCanvas.width*.75,25);
-            expContext.fillText("Your paddle is red whereas your fellow participants paddle is blue.",expCanvas.width/2,expCanvas.height/4-100);
-            expContext.fillText("Your score is shown in the top left corner of each trial and the score",expCanvas.width/2,expCanvas.height/4-75);
-            expContext.fillText("of your fellow participant is shown in the top right corner of each trial.",expCanvas.width/2,expCanvas.height/4-50);
+            expContext.fillText("Your paddle is red whereas your fellow participants paddle is blue.",expCanvas.width/2,expCanvas.height/4-50);
             expContext.fillText("Along with controlling paddle movement you will also be required",expCanvas.width/2,expCanvas.height/4);
             expContext.fillText("to respond to a flashing green light using your non-dominant hand.",expCanvas.width/2,expCanvas.height/4+25);
             expContext.fillText("A more detailed explanation of this light is provided on the following page.",expCanvas.width/2,expCanvas.height/4+50);
             expContext.fillText("For now, please indicate if you are right-handed by pressing 'Z' or if you are left-handed press the UP arrow.",expCanvas.width/2,expCanvas.height/4+100);
 
-            expContext.fillText("Please ensure that your dominant hand controls the paddle movement keys and",expCanvas.width/2,expCanvas.height-125);
-            expContext.fillText("your non-dominant hand controls the response key.",expCanvas.width/2,expCanvas.height-100);
             expContext.fillText("Press 'spacebar' to continue", expCanvas.width*.75,expCanvas.height-50);
             expContext.fillText("Press 'b' to return", expCanvas.width*.25,expCanvas.height-50);
         }
@@ -1147,13 +1341,9 @@ let paddle2History = new PaddleHistory();
             expContext.fillText("Throughout the experiment, two panels along either side of the screen will flash green.",expCanvas.width/2,expCanvas.height/4-100);
             expContext.fillText("The light will display briefly or until both players respond but you can",expCanvas.width/2,expCanvas.height/4-50);
             expContext.fillText("still respond to the light for a brief time after it disappears.",expCanvas.width/2,expCanvas.height/4-25);
-            expContext.fillText("Please try to respond quickly and accurately to these lights.",expCanvas.width/2,expCanvas.height/4+25);
-            expContext.fillText("The response key is shown below.",expCanvas.width/2,expCanvas.height/4+50);
+            expContext.fillText("Respond quickly and accurately to the light for score bonuses!",expCanvas.width/2,expCanvas.height/4+25);
             expContext.fillText("A brief walkthrough trial will commence following this screen.",expCanvas.width/2,expCanvas.height/4+100);
 
-
-            expContext.fillText("Please ensure that your dominant hand controls the paddle movement keys and",expCanvas.width/2,expCanvas.height-125);
-            expContext.fillText("your non-dominant hand controls the response key.",expCanvas.width/2,expCanvas.height-100);
             expContext.fillText("Press 'spacebar' to continue", expCanvas.width*.75,expCanvas.height-50);
             expContext.fillText("Press 'b' to return", expCanvas.width*.25,expCanvas.height-50);
         }
@@ -1162,14 +1352,9 @@ let paddle2History = new PaddleHistory();
             expContext.fillStyle = "red";
             expContext.fillText("PRACTICE TRIAL",frameLeft+frameWidth/2,frameTop+50);
             expContext.fillStyle = "black";
-            
-            if (!moving){
-                expContext.font = "20 px Arial";
-                expContext.fillStyle = "rgb(0,0,0)";
-                expContext.fillText("Each trial contains a different number of balls but",frameLeft+frameWidth/2,frameBottom-frameHeight/4-25);
-                expContext.fillText("they will always start from the bottom of the screen and fly upward.",frameLeft+frameWidth/2,frameBottom-frameHeight/4);
-                expContext.fillText("Experiment trials will begin automatically. For now, press 'space bar' to start the trial",frameLeft+frameWidth/2,frameBottom-frameHeight/4+25);
-            } else if (time > practiceTrialDuration-dirInst){
+            expContext.font = "20 px Arial";
+            expContext.fillStyle = "rgb(0,0,0)";            
+            if (time > practiceTrialDuration-dirInst){
                 if (plyr1DRTrespKey == RHdrtRespKey){
                     expContext.fillText("Press left arrow to move left",frameLeft+frameWidth/2,frameBottom-frameHeight/4);
                     expContext.fillText("Press right arrow to move right",frameLeft+frameWidth/2,frameBottom-frameHeight/4+25);
@@ -1177,20 +1362,15 @@ let paddle2History = new PaddleHistory();
                     expContext.fillText("Press 'Z' to move left",frameLeft+frameWidth/2,frameBottom-frameHeight/4);
                     expContext.fillText("Press 'C' to move right",frameLeft+frameWidth/2,frameBottom-frameHeight/4+25);
                 }
-            } else if (time < practiceTrialDuration-dirInst && time > practiceTrialDuration-dirInst*4){
-                expContext.fillText("Overall score is computed from your hits AND misses!",expCanvas.width/2,frameTop+frameHeight/5);
-                ;
-                expContext.fillText("If both paddles hit the same ball at the same time you each score half a hit-point.",expCanvas.width/2,frameTop+frameHeight/5+20);
-            } else if (time < practiceTrialDuration-dirInst && time > practiceTrialDuration-dirInst*5){
-                expContext.fillText("Trials last 60 seconds.",expCanvas.width/2,frameTop+frameHeight/5);
-                expContext.fillText("Your score can be seen throughout the trial.",expCanvas.width/2,frameTop+frameHeight/5+20);
-                expContext.fillText("The maximum score for a trial is 1000.",expCanvas.width/2,frameTop+frameHeight/5+40);
-
-            } else if (time < practiceTrialDuration-dirInst*5 && time > practiceTrialDuration-dirInst*8){
+            } else if (time < practiceTrialDuration-dirInst && time > practiceTrialDuration-dirInst*3){
+                expContext.fillText("Scores are computed from your hits",expCanvas.width/2,frameTop+frameHeight/5);
+                expContext.fillText("and are added to your total score at the end of each trial!",expCanvas.width/2,frameTop+frameHeight/5+20);
+                expContext.fillText("Try to score as high as you can in each trial to maximise your block score!",expCanvas.width/2,frameTop+frameHeight/5+40);
+            } else if (time < practiceTrialDuration-dirInst && time > practiceTrialDuration-dirInst*6){
                 expContext.fillText("The panels on the side have now been activated.",expCanvas.width/2,frameTop+frameHeight/5);
-                expContext.fillText("They will regularly flash green throughout the game.",expCanvas.width/2,frameTop+frameHeight/5+20);
-                expContext.fillText("The light stays on briefly or until you respond.",expCanvas.width/2,frameTop+frameHeight/5+40);
-                expContext.fillText("You need to respond as quickly and accurately as possible.",expCanvas.width/2,frameTop+frameHeight/5+60);
+                expContext.fillText("They will regularly flash green throughout the game.",expCanvas.width/2,frameTop+frameHeight/5+20);               
+                expContext.fillText("Respond quickly and accurately for score bonuses!",expCanvas.width/2,frameTop+frameHeight/5+60);
+                expContext.fillText("The panel lights stay on briefly or until you respond.",expCanvas.width/2,frameTop+frameHeight/5+40);
                 expContext.fillText("Light Response:", expCanvas.width/2, frameBottom-frameHeight/4-25);
                 if (plyr1DRTrespKey == RHdrtRespKey){
                     expContext.fillText("Press 'Z'", expCanvas.width/2, frameBottom-frameHeight/4);
@@ -1202,6 +1382,8 @@ let paddle2History = new PaddleHistory();
 
         function blockInst(blockTypes,count){
             drawCanvas(frameColour);
+            fwCtx.clearRect(0,0,expCanvas.width, expCanvas.height)
+            dispFireworks = false;
             bInBlockInstructions    = true;
             // count++;
             p1CumulativeScore  = 0; // the cumulative scores for both players throughout each block
@@ -1212,21 +1394,23 @@ let paddle2History = new PaddleHistory();
             expContext.textAlign    = "center";
             if (count !== 1){
                 expContext.fillText("Please take a short 20 second break before beginning block "+count+" of "+nBlocks,expCanvas.width/2, expCanvas.height/4-75);
-                dispFireworks = false;
-                fwCtx.clearRect(0,0,expCanvas.width, expCanvas.height)
             }
             // expContext.fillText(,expCanvas.width/2,expCanvas.height/4-50);
             count--;
 
             if (state.block.block_type == "nonCol"){
                 expContext.fillText("During this block you will only be able to interact with balls that match the colour of your paddle.",expCanvas.width/2,expCanvas.height/4-25);
+                drawBorder(50,95,700,50,2)
             } else if (state.block.block_type == "col"){
                 expContext.fillText("During this block you must work together!",expCanvas.width/2,expCanvas.height/4);
                 expContext.fillText("Both of your hits and misses count toward the team score.",expCanvas.width/2,expCanvas.height/4+25);
+                drawBorder(175,120,450,75,2)
             } else if (state.block.block_type == "com"){
                 expContext.fillText("During this block you must try to outscore your opponent.",expCanvas.width/2,expCanvas.height/4);
                 expContext.fillText("Misses are counted equally so try to hit as many as you can!",expCanvas.width/2,expCanvas.height/4+25);
+                drawBorder(175,120,450,75,2)
             }
+            
             expContext.fillText("Score as high as you can but don't forget to respond quickly and accurately",expCanvas.width/2,expCanvas.height/4+75);
             expContext.fillText("to the flashing light.",expCanvas.width/2,expCanvas.height/4+100);
 
@@ -1277,6 +1461,7 @@ let paddle2History = new PaddleHistory();
             disableScroll();
             fwCanvas = document.getElementById("fireworks");
             fwCtx = fwCanvas.getContext("2d");
+            waitingRoomStart = Date.now();
 
             if (state.status === 'playing') {
                 console.log(state.block);
@@ -1339,9 +1524,11 @@ let paddle2History = new PaddleHistory();
             }
             else if (username1 != null && username1.length == 5 || username1.length == 6) {
                 if (state.status === 'waiting'){
+                    drawWaitingRoomScientist = true;
                     waitingRoom();
                 } else {
                     instructions1();
+                    drawWaitingRoomScientist = false;
                 }
             }
         }
@@ -1353,9 +1540,11 @@ let paddle2History = new PaddleHistory();
             }
             else {
                 if (state.status === 'waiting'){
+                    drawWaitingRoomScientist = true;
                     waitingRoom();
                 } else {
                     instructions1();
+                    drawWaitingRoomScientist = false;
                 }
             }
         }
@@ -1435,7 +1624,8 @@ let paddle2History = new PaddleHistory();
 
             if (drtResp1){
                 if (stimTimes[0]-tRem > rtMin && counter1){
-                    ws.send(JSON.stringify({'rt' : stimTimes[0] - tRem}))
+                    ws.send(JSON.stringify({'rt' : stimTimes[0] - tRem}));
+                    ws.send(JSON.stringify({'score' : score1 + 1}));
                     counter1 = false;
                 } else {
                     ws.send(JSON.stringify({'fa': tRem}))
@@ -1469,18 +1659,19 @@ let paddle2History = new PaddleHistory();
             if (!bInPractice){
                 playerId = state.player_id;
                 otherId = playerId === '0' ? '1' : '0';
-                hits1 = state.players[playerId]['hits']
-                hits2 = state.players[otherId]['hits']
-                miss1 = state.players[playerId]['miss']
-                miss2 = state.players[otherId]['miss']
+                score1 = state.players[playerId]['score'];
+                score2 = state.players[otherId]['score'];
+                // miss1 = state.players[playerId]['miss']
+                // miss2 = state.players[otherId]['miss']
             }
-            if (hits1 == 0){score1=0} else {score1=(Math.round((hits1/(hits1+miss1))*1000)).toFixed(0)}
-            if (hits2 == 0){score2=0} else {score2=(Math.round((hits2/(hits2+miss2))*1000)).toFixed(0)}
+            // if (hits1 == 0){score1=0} else {score1=(Math.round((hits1/(hits1+miss1))*1000)).toFixed(0)}
+            // if (hits2 == 0){score2=0} else {score2=(Math.round((hits2/(hits2+miss2))*1000)).toFixed(0)}
             if(state.block.block_type=="col" || state.block.block_type=="com"){
-                if (hits1 == 0 && hits2 == 0){
+                if (score1 == 0 && score2 == 0){
                     teamScore = 0;
                 }   else {
-                    teamScore = (Math.round(((hits1+hits2)/(hits1+hits2+miss1))*1000)).toFixed(0);
+                    // teamScore = (Math.round(((hits1+hits2)/(hits1+hits2+miss1))*1000)).toFixed(0);
+                    teamScore = score1+score2;
                 }
             }
         }
@@ -1494,11 +1685,7 @@ let paddle2History = new PaddleHistory();
             teamScore   = 0;
             p1teamScore = 0;
             p2teamScore = 0;
-            rt1         = [];
-            rt2         = [];
-            fa1         = [];
-            fa2         = [];
-            onsets      = [];
+            drtScore = 0;
         }
         function drawScore(blockType,currentBlock){
             if (bInPractice){
@@ -1768,6 +1955,15 @@ let paddle2History = new PaddleHistory();
                         roundTripTime = Date.now() - pingSent;
                         continue;
                     }
+                    if (message.substr(0,5) === 'wait:'){
+                        timeWaited = parseFloat(message.substr(5));
+                        waitingRoomStart = Date.now();
+                        if (timeWaited <= 0){
+                            condolences();
+                            break;
+                        }
+                        continue;
+                    }
 
                     let received = JSON.parse(message);
 
@@ -1788,7 +1984,8 @@ let paddle2History = new PaddleHistory();
                     }
 
                     if (state.status === 'waiting' && received.status === 'reading' && !skipIntro){
-                        instructions1();                
+                        instructions1();
+                        drawWaitingRoomScientist = false;
                     }
 
 
@@ -1914,8 +2111,20 @@ let paddle2History = new PaddleHistory();
             expContext.font="16px Arial";
             expContext.textAlign = "center";
             expContext.fillText("Trial "+nCurrentTrial+" of "+state.maxTrials +" completed.",expCanvas.width/2,expCanvas.height/5);
+
+            if (blockType == "com"){
+                competitiveQuotes= ['Compete to win!', 'You can beat them!', 'Outscore them by the end of the block!', 'You can do it!'];
+                expContext.fillText(competitiveQuotes[Math.floor(Math.random()*competitiveQuotes.length)],expCanvas.width/2, expCanvas.height/5+50);
+                drawBorder(200,140, 400, 50, 2);
+            }
+            if (blockType == "col"){
+                collaborativeQuotes= ['Combine your efforts to win!','Work together!', 'Collaborate to boost the team score!', "You can do it!"];
+                expContext.fillText(collaborativeQuotes[Math.floor(Math.random()*collaborativeQuotes.length)],expCanvas.width/2, expCanvas.height/5+50);
+                drawBorder(200,140, 400, 50, 2);
+            }
+            
             dispFireworks = nCurrentTrial == state.maxTrials
-            celebrAF = requestAnimationFrame(drawFireWorks)
+            if (dispFireworks){drawFireWorks()} else {fwCtx.clearRect(0,0,expCanvas.width, expCanvas.height)};
             // This notation is whack. Essentially - prepend a string with + to evaluate as a number
             p1teamScore = Math.round((+p1s/(+p1s + +p2s))*+teams);
             p2teamScore = parseInt(teams-p1teamScore); // you can't use addition with parseInt
@@ -1936,15 +2145,15 @@ let paddle2History = new PaddleHistory();
                 expContext.fillText(p2CumulativeScore,p2Start+pWidth/2,frameTop+frameHeight/4+175);
 
             } else { // collaborative
-                expContext.fillText("You:",p1Start+pWidth/2,frameTop+frameHeight/4+100);
-                expContext.fillText("Player 2:",p2Start+pWidth/2,frameTop+frameHeight/4+100);
-                expContext.fillText("Team: ",expCanvas.width/2,frameTop+frameHeight/4);
-                expContext.fillText("Trial Score",p1Start+pWidth/2,frameTop+frameHeight/4+25);
-                expContext.fillText("Total Score",p1Start+pWidth/2,frameTop+frameHeight/4+50);
-                expContext.fillText(p1teamScore,p1Start+pWidth/2,frameTop+frameHeight/4+125);
-                expContext.fillText(p2teamScore,p2Start+pWidth/2,frameTop+frameHeight/4+125);
-                expContext.fillText(teams,expCanvas.width/2,frameTop+frameHeight/4+25);
-                expContext.fillText(teamCumulativeScore,expCanvas.width/2,frameTop+frameHeight/4+50);
+                expContext.fillText("You:",p1Start+pWidth/2,frameTop+frameHeight/4+150);
+                expContext.fillText("Player 2:",p2Start+pWidth/2,frameTop+frameHeight/4+150);
+                expContext.fillText("Team: ",expCanvas.width/2,frameTop+frameHeight/4+75);
+                expContext.fillText("Trial Score",p1Start+pWidth/2,frameTop+frameHeight/4+100);
+                expContext.fillText("Total Score",p1Start+pWidth/2,frameTop+frameHeight/4+125);
+                expContext.fillText(p1teamScore,p1Start+pWidth/2,frameTop+frameHeight/4+175);
+                expContext.fillText(p2teamScore,p2Start+pWidth/2,frameTop+frameHeight/4+175);
+                expContext.fillText(teams,expCanvas.width/2,frameTop+frameHeight/4+100);
+                expContext.fillText(teamCumulativeScore,expCanvas.width/2,frameTop+frameHeight/4+125);
             }
 
             keyInsts(true,true,plyr1DRTrespKey,plyr2DRTrespKey, x = expCanvas.height/4+300);
@@ -1953,7 +2162,7 @@ let paddle2History = new PaddleHistory();
         }
         function expEnd(){
             dispFireworks = true;
-            celebrAF = requestAnimationFrame(drawFireWorks);
+            drawFireWorks();
             drawCanvas(frameColour);
             entryPageStyling();
             expContext.fillStyle = fontColour;
@@ -1969,6 +2178,22 @@ let paddle2History = new PaddleHistory();
             expContext.fillText("You may close the browser window at any time.",expCanvas.width/2,expCanvas.height/4+75);
 
             // poinstLink()
+        }
+        function condolences(){
+            dispFireworks = true;
+            drawFireWorks();
+            drawCanvas(frameColour);
+            entryPageStyling();
+            expContext.fillStyle = fontColour;
+            expContext.font="30px Arial";
+            expContext.textAlign = "center";
+            expContext.fillText("Sorry!",expCanvas.width/2,expCanvas.height/4-100);
+            expContext.font="16px Arial";
+            expContext.fillText("We could not find a second player.",expCanvas.width/2,expCanvas.height/4-50);
+            expContext.fillText("Thank you for your time. You have been awarded 1 SONA participation point.",expCanvas.width/2,expCanvas.height/4);
+            expContext.fillText("If you have any questions or concerns about the experiment please contact the", expCanvas.width/2, expCanvas.height/4+25);
+            expContext.fillText("researchers Murray Bennett or Ami Eidels at murray.bennett@uon.edu.au or ami.eidels@newcastle.edu.au.",expCanvas.width/2,expCanvas.height/4+50);
+            expContext.fillText("You may close the browser window at any time.",expCanvas.width/2,expCanvas.height/4+100);
         }
 /*
 		function pointsLink() {
