@@ -396,7 +396,7 @@ class Game:
                 state['balls'] = balls
 
                 ## DRT
-                state['drt']['onset'] = [20 - (randint(3000,5000)/1000)] ## change trial duration as necessary
+                state['drt']['onset'] = [15 - (randint(3000,5000)/1000)] ## change trial duration as necessary
                 # determine trial presentation intervals, display times, and response windows.
                 while state['drt']['onset'][-1] > 5:
                     state['drt']['onset'].append(state['drt']['onset'][-1] - (randint(3000,5000)/1000))
