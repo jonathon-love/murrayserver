@@ -1151,6 +1151,7 @@ let paddle2History = new PaddleHistory();
             1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
             waiterBGColours = ["#7C4B38","#B5755B","#B3793F","#BAB733","#D0D058","#AEAAAA","#BFBFBF","#808080","#757171","#3A3838","#000000","#FFFFFF","#DDEBF7","#FCEEEF","#A9D08E","#81BA5A","#186a3b","#BDD7EE"];
             let row = 0;
+            
             for (let i = 0; i<waiterBackground.length; i++){
                 expContext.fillStyle = waiterBGColours[waiterBackground[i]-1];
                 if (i % 50 == 0){
@@ -1158,6 +1159,18 @@ let paddle2History = new PaddleHistory();
                 }
                 xPos = x + (i % 50)*pxSize;
                 yPos = y + (row*pxSize);
+                if (waiterBackground[i]==3){
+                    let grd = expContext.createLinearGradient(xPos,yPos,xPos+pxSize,yPos+pxSize);
+                    grd.addColorStop(0,"#7C4B38");
+                    grd.addColorStop(0.75, "#B3793F");
+                    expContext.fillStyle = grd;
+                }
+                if (waiterBackground[i]==5){
+                    let grd = expContext.createLinearGradient(xPos,yPos, xPos, yPos+pxSize);
+                    grd.addColorStop(0,"#BAB733");
+                    grd.addColorStop(0.1, "#D0D058");
+                    expContext.fillStyle = grd;
+                }
                 expContext.fillRect(xPos,yPos,pxSize,pxSize);
             }
         }
