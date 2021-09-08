@@ -159,8 +159,8 @@ class Game:
                         self._state['players'][player_id].update(data)
                         self._receive_update.set()
             finally:
-                await ws.close()
-                self._joined[player_id] = False
+                if not self._ready.is_set():
+                    self._joined[player_id] = False
 
         async def write():
             send_event = self._send_update[player_id]

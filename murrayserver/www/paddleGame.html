@@ -1084,11 +1084,11 @@ let paddle2History = new PaddleHistory();
             if (drawWaitingRoomScientist){
                 expTimeout = waitingRoomTimer(totalWait, waitingRoomStart)
                 waiter = requestAnimationFrame(drawWaitingRoomTimer);
-                if (expTimeout <= 0){
-                    expTimeout = 0;
-                    cancelAnimationFrame(waiter);
-                    return
-                }
+                // if (expTimeout <= 0){
+                //     expTimeout = 0;
+                //     cancelAnimationFrame(waiter);
+                //     return
+                // }
                 if (expTimeout%4 > 3){waitType='down';}else{waitType='up';}
                 drawWaiter(expCanvas.width/2-80,409,2,waitType);
             } else{
@@ -1099,17 +1099,17 @@ let paddle2History = new PaddleHistory();
         }
 
         function drawWaiterBG(x,y,pxSize){
-            waiterBackground = [18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 15, 18, 15, 18, 18, 18, 18, 18, 18, 18, 15, 15, 15, 18, 15, 18, 18, 18, 15, 15, 15, 15, 18, 18, 18, 18, 18, 18, 18,
-            18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 15, 18, 15, 18, 15, 18, 15, 15, 18, 18, 15, 15, 15, 18, 15, 18, 18, 15, 15, 18, 15, 18, 18, 15, 18, 15, 18, 18, 18, 18,
-            18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 15, 15, 15, 15, 15, 18, 15, 15, 15, 15, 15, 18, 18, 15, 15, 18, 15, 15, 15, 15, 15, 18, 18, 15, 18, 15, 15, 18, 18, 18, 18,
-            18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 15, 15, 15, 15, 15, 14, 15, 15, 15, 15, 14, 15, 18, 15, 15, 18, 15, 15, 15, 18, 18, 14, 15, 15, 15, 18, 15, 18, 18, 18, 15, 18,
-            18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 15, 18, 15, 18, 18, 18, 18, 14, 14, 18, 18, 18, 18, 18, 15, 15, 15, 15, 15, 15, 18, 15, 15, 18, 15, 15, 15, 15,
-            18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 15, 18, 15, 18, 18, 18, 14, 18, 18, 15, 15, 18, 14, 18, 15, 15, 15, 15, 15, 18, 15, 18, 15, 15, 18,
-            18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 15, 15, 15, 18, 18, 15, 15, 18, 14, 15, 15, 15, 14, 15, 18, 18, 15, 15, 15, 15, 15, 18, 15, 15, 14, 18,
-            5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 15, 15, 15, 5, 5, 15, 15, 15, 15, 5, 14, 5, 15, 15, 15, 15, 15, 15, 15, 5, 15, 4, 15, 15, 14, 15, 18,
-            5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 15, 15, 15, 14, 15, 15, 5, 15, 5, 15, 15, 5, 15, 5, 5, 15, 5, 15, 15, 14, 15, 15, 15, 4, 18, 15, 15, 18,
-            5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 15, 15, 14, 15, 5, 15, 15, 5, 5, 5, 15, 15, 5, 5, 5, 14, 15, 5, 15, 15, 4, 15, 18, 15, 18,
-            5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 15, 15, 15, 5, 15, 14, 14, 14, 5, 5, 14, 14, 14, 5, 14, 14, 5, 15, 4, 4, 15, 18, 15, 18, 18,
+            waiterBackground = [18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 16, 18, 16, 18, 18, 18, 18, 18, 18, 18, 16, 16, 16, 18, 16, 18, 18, 18, 16, 16, 16, 16, 18, 18, 18, 18, 18, 18, 18,
+            18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 16, 18, 16, 18, 16, 18, 16, 16, 18, 18, 16, 16, 16, 18, 16, 18, 18, 16, 16, 18, 16, 18, 18, 16, 18, 16, 18, 18, 18, 18,
+            18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 16, 16, 16, 16, 16, 18, 16, 16, 16, 16, 16, 18, 18, 16, 16, 18, 16, 16, 16, 16, 16, 18, 18, 16, 18, 16, 16, 18, 18, 18, 18,
+            18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 16, 16, 16, 16, 16, 14, 16, 16, 16, 16, 14, 16, 18, 16, 16, 18, 16, 16, 16, 18, 18, 14, 16, 16, 16, 18, 16, 18, 18, 18, 16, 18,
+            18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 16, 18, 16, 18, 18, 18, 18, 14, 14, 18, 18, 18, 18, 18, 16, 16, 16, 16, 16, 16, 18, 16, 16, 18, 16, 16, 16, 16,
+            18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 16, 18, 16, 18, 18, 18, 14, 18, 18, 16, 16, 18, 14, 18, 16, 16, 16, 16, 16, 18, 16, 18, 16, 16, 18,
+            18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 16, 16, 16, 18, 18, 16, 16, 18, 14, 16, 16, 16, 14, 16, 18, 18, 16, 16, 16, 16, 16, 18, 16, 16, 14, 18,
+            5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 16, 16, 16, 5, 5, 16, 16, 16, 16, 5, 14, 5, 16, 16, 16, 16, 16, 16, 16, 5, 16, 4, 16, 16, 14, 16, 18,
+            5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 16, 16, 16, 14, 16, 16, 5, 16, 5, 16, 16, 5, 16, 5, 5, 16, 5, 16, 16, 14, 16, 16, 16, 4, 18, 16, 16, 18,
+            5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 16, 16, 14, 16, 5, 16, 16, 5, 5, 5, 16, 16, 5, 5, 5, 14, 16, 5, 16, 16, 4, 16, 18, 16, 18,
+            5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 16, 16, 16, 5, 16, 14, 14, 14, 5, 5, 14, 14, 14, 5, 14, 14, 5, 16, 4, 4, 16, 18, 16, 18, 18,
             5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 14, 14, 14, 14, 5, 5, 5, 14, 14, 5, 5, 5, 4, 4, 4, 18, 18, 18, 18,
             4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 14, 14, 14, 4, 14, 14, 4, 4, 4, 4, 4, 4, 4, 18, 18, 18, 18,
             3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 13, 14, 14, 14, 14, 3, 3, 1, 1, 1, 18, 18, 18, 18, 18, 18,
@@ -1227,48 +1227,49 @@ let paddle2History = new PaddleHistory();
 			expContext.textAlign = "center";
             expContext.fillText("Welcome to the 'Team Spirit' waiting room!",expCanvas.width/2,expCanvas.height/4-100);
             expContext.font="16px Arial";
-            expContext.fillText("We are currently waiting for player 2 to join.",expCanvas.width/2,expCanvas.height/4-50);
-            expContext.fillText("We will wait up to 10 minutes for another player to join.", expCanvas.width/2, expCanvas.height/4);
-            expContext.fillText("If no player arrives then the study will close and you will be granted 1 SONA point.",expCanvas.width/2,expCanvas.height/4+25);
-            expContext.fillText("During this experiment you will play an online multiplayer arcade-style game.",expCanvas.width/2,expCanvas.height/4+65);
-            expContext.fillText("The formal experiment explanation will automatically commence once player 2 has joined.",expCanvas.width/2,expCanvas.height/4+90);
+            expContext.fillText("During this experiment you will play an online multiplayer arcade-style game.",expCanvas.width/2,expCanvas.height/4-50);
+            expContext.fillText("We are currently waiting for player 2 to join.",expCanvas.width/2,expCanvas.height/4-25);
+            expContext.fillText("The experiment instructions will automatically begin once they connect.", expCanvas.width/2, expCanvas.height/4+25);
+            expContext.fillText("If you do not wish to wait, please close the browser window to exit without penalty.",expCanvas.width/2,expCanvas.height/4+50);
+            
+            // expContext.fillText("The formal experiment explanation will automatically commence once player 2 has joined.",expCanvas.width/2,expCanvas.height/4+90);
             drawWaitingRoomTimer();
             // border for the picture
             drawBorder(expCanvas.width/2-132, 248, 263,263,2);
             // border for timer
-            drawBorder(expCanvas.width/2-27, frameBottom-122,53,33,2);
+            // drawBorder(expCanvas.width/2-27, frameBottom-122,53,33,2);
         }
 
         function waitingRoomTimer(totalWaitTime, start){
             //clear the patch you're about to draw on.
-            expContext.fillStyle = frameColour;
-            expContext.fillRect(expCanvas.width/2-20,frameBottom-115, 40, 20);
+            // expContext.fillStyle = frameColour;
+            // expContext.fillRect(expCanvas.width/2-20,frameBottom-115, 40, 20);
             let timeRemaining;
             let startTime = Date.now();
-            timeRemaining = (-(startTime-start)/1000)+totalWaitTime;
-            let dispTime;
-            if (timeWaited){
-                dispTime = timeRemaining-(totalWaitTime-timeWaited);
-            } else{
-                dispTime = timeRemaining;
-            }
-            dispTime.toFixed(2);
-            expContext.font = "16px Arial";
-            expContext.fillStyle = fontColour;
-            expContext.textAlign = "center";
-            let mins = Math.floor(dispTime/60);
-            let secs = Math.floor(dispTime%60);
-            if (dispTime<=0){
-                dispTime = 0;
-                timeRemaining = 0;
-                expContext.fillText("0:00",expCanvas.width/2,frameBottom-100);
-            } else {
-                if (secs<10){
-                    expContext.fillText(mins.toFixed(0)+":0"+secs.toFixed(0),expCanvas.width/2,frameBottom-100);
-                } else {
-                    expContext.fillText(mins.toFixed(0)+":"+secs.toFixed(0),expCanvas.width/2,frameBottom-100);
-                }
-            }
+            timeRemaining = (startTime-start)/1000;//+totalWaitTime;
+            let dispTime = timeRemaining.toFixed(0);
+            // if (timeWaited){
+            //     dispTime = timeRemaining-(totalWaitTime-timeWaited);
+            // } else{
+            //     dispTime = timeRemaining;
+            // }
+            // dispTime.toFixed(2);
+            // expContext.font = "16px Arial";
+            // expContext.fillStyle = fontColour;
+            // expContext.textAlign = "center";
+            // let mins = Math.floor(dispTime/60);
+            // let secs = Math.floor(dispTime%60);
+            // if (dispTime<=0){
+            //     dispTime = 0;
+            //     timeRemaining = 0;
+            //     expContext.fillText("0:00",expCanvas.width/2,frameBottom-100);
+            // } else {
+            //     if (secs<10){
+            //         expContext.fillText(mins.toFixed(0)+":0"+secs.toFixed(0),expCanvas.width/2,frameBottom-100);
+            //     } else {
+            //         expContext.fillText(mins.toFixed(0)+":"+secs.toFixed(0),expCanvas.width/2,frameBottom-100);
+            //     }
+            // }
             return timeRemaining;
         }
         
@@ -1955,15 +1956,15 @@ let paddle2History = new PaddleHistory();
                         roundTripTime = Date.now() - pingSent;
                         continue;
                     }
-                    if (message.substr(0,5) === 'wait:'){
-                        timeWaited = parseFloat(message.substr(5));
-                        waitingRoomStart = Date.now();
-                        if (timeWaited <= 0){
-                            condolences();
-                            break;
-                        }
-                        continue;
-                    }
+                    // if (message.substr(0,5) === 'wait:'){
+                    //     timeWaited = parseFloat(message.substr(5));
+                    //     waitingRoomStart = Date.now();
+                    //     if (timeWaited <= 0){
+                    //         condolences();
+                    //         break;
+                    //     }
+                    //     continue;
+                    // }
 
                     let received = JSON.parse(message);
 
