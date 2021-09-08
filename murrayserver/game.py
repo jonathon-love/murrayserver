@@ -36,8 +36,9 @@ class Game:
         self._send_update = OrderedDict({ '0': Event(), '1': Event() })
         self._receive_update = Event()
         self._ready = Event()
+        self._ended = Event()
         self._blocks = [ ]
-        self._ending = False
+
 
         drtWidth = 800
         width  = drtWidth * 0.9
@@ -161,11 +162,15 @@ class Game:
             finally:
                 if not self._ready.is_set():
                     self._joined[player_id] = False
+                if self._state['status'] == 'ending'
+                    self._joined[player_id] = False
+                    if self._joined[0] is False and self._joined[1] is False:
+                        self._ended = True
 
         async def write():
             send_event = self._send_update[player_id]
             send_event.set()
-            while self._ending is False:
+            while self._ended is False:
                 await send_event.wait()
                 send_event.clear()
                 self._state['player_id'] = player_id
@@ -404,7 +409,7 @@ class Game:
                 self.send()
 
                 print(f'block { block_no }, awaiting players')
-                while self._ending is False:
+                while True:
                     await self.update()
                     print(f'player 0 { state["players"]["0"]["status"] }')
                     print(f'player 1 { state["players"]["1"]["status"] }')
@@ -424,7 +429,7 @@ class Game:
                 print(f'block { block_no }, begun!')
 
                 async def play():
-                    while self._ending is False:
+                    while True:
                         await self.update()
                         self.send()
 
@@ -433,19 +438,14 @@ class Game:
                 except TimeoutError:
                     pass
                 
-                state['status'] = 'ending'
                 print(f'block { block_no }, complete!')
-                while state['status'] == 'ending':
-                    if block_no == len(self._blocks)-1:
-                        break
-                    await self.update()
-                    self.send()
-                    if (state['players']['0']['status'] == 'ended'
-                            and state['players']['1']['status'] == 'ended'):
-                        break
                 self._logHandler.flush()
 
-            self._ending = True
+            state['status'] = 'ending'
+            
+            while not self._ended:
+                await self.update()
+                self.send()
 
         except BaseException as e:
             self._log.exception(e)
