@@ -38,8 +38,6 @@ class Game:
         self._ready = Event()
         self._blocks = [ ]
         self._ending = False
-        self._joinTime = [ ]
-        self._timedoutPartner = False
 
         drtWidth = 800
         width  = drtWidth * 0.9
@@ -152,24 +150,21 @@ class Game:
                 await ws.send_str(obj)
 
         async def read():
-            async for msg in ws:
-                if self._state['status'] == 'waiting':
-                    waitingTime = (20)-(time()-self._joinTime) ## manage total wait time (10minutes * 60seconds)
-                    if waitingTime <= 0:
-                        self._timedoutPartner = True
-                    await ws.send_str('wait:' + str(waitingTime))
-
-                if msg.data == 'ping':
-                    await ws.send_str('pong')
-                else:
-                    data = json.loads(msg.data)
-                    self._state['players'][player_id].update(data)
-                    self._receive_update.set()                
+            try:
+                async for msg in ws:
+                    if msg.data == 'ping':
+                        await ws.send_str('pong')
+                    else:
+                        data = json.loads(msg.data)
+                        self._state['players'][player_id].update(data)
+                        self._receive_update.set()
+            finally:
+                await ws.close()
+                self._joined[player_id] = False
 
         async def write():
             send_event = self._send_update[player_id]
             send_event.set()
-
             while self._ending is False:
                 await send_event.wait()
                 send_event.clear()
