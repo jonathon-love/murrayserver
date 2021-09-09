@@ -36,9 +36,8 @@ class Game:
         self._send_update = OrderedDict({ '0': Event(), '1': Event() })
         self._receive_update = Event()
         self._ready = Event()
-        self._ended = Event()
+        self._ended = False
         self._blocks = [ ]
-
 
         drtWidth = 800
         width  = drtWidth * 0.9
@@ -162,7 +161,7 @@ class Game:
             finally:
                 if not self._ready.is_set():
                     self._joined[player_id] = False
-                if self._state['status'] == 'ending'
+                if self._state['status'] == 'ending':
                     self._joined[player_id] = False
                     if self._joined[0] is False and self._joined[1] is False:
                         self._ended = True
@@ -358,7 +357,7 @@ class Game:
                 state['players']['0']['status'] = 'notReady'
                 state['players']['1']['status'] = 'notReady'
                 state['block'] = block
-                state['blockNo'] = int(block_no / 48 * 3)  # change 12 to 48 when time - it just needs to be the number of trials per block
+                state['blockNo'] = int(block_no / 36 * 3)  # change 12 to 36 when time - it just needs to be the number of trials per block
                 state['trialNo'] = block_no%(len(self._blocks) / 3)
                 state['maxTrials'] = len(self._blocks) / 3 # trials per block
 
@@ -434,7 +433,7 @@ class Game:
                         self.send()
 
                 try:
-                    await wait_for(play(), 15) # set to trial duration
+                    await wait_for(play(), 10) # set to trial duration
                 except TimeoutError:
                     pass
                 
@@ -442,7 +441,6 @@ class Game:
                 self._logHandler.flush()
 
             state['status'] = 'ending'
-            
             while not self._ended:
                 await self.update()
                 self.send()
