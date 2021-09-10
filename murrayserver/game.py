@@ -87,6 +87,7 @@ class Game:
             'player_id': None,
             'status': 'waiting',
             'timestamp': time(),
+            'trialTime': [],
             'block': self._blocks[0],
             'blockNo': 0,
             'players': {
@@ -438,6 +439,7 @@ class Game:
                     while monotonic() - start_time < 7:
                         await self.update()
                         self.send()
+                        self._state['trialTime'] = monotonic() - start_time
 
                 print(f'{ self._game_no } beginning game loop')
 
