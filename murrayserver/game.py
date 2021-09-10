@@ -13,6 +13,7 @@ from datetime import datetime
 from random import randint
 from random import shuffle
 from time import time
+from time import monotonic
 from os import environ
 from os import path
 import math
@@ -431,15 +432,21 @@ class Game:
 
                 print(f'{ self._game_no } block { block_no }, begun!')
 
+                start_time = monotonic()
+
                 async def play():
-                    while True:
+                    while monotonic() - start_time < 12:
                         await self.update()
                         self.send()
+
+                print(f'{ self._game_no } beginning game loop')
 
                 try:
                     await wait_for(play(), 10) # set to trial duration
                 except TimeoutError:
-                    pass
+                    print(f'{ self._game_no } game timed out')
+                else:
+                    print(f'{ self._game_no } game did not timeout')
 
                 print(f'{ self._game_no } block { block_no }, complete!')
                 self._logHandler.flush()
