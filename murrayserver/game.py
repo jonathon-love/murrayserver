@@ -115,7 +115,7 @@ class Game:
             },
             'balls': [ ],
             'drt': {
-                'onset': [], ## change trial duration as necessary
+                'onset': [], 
                 'dispTime': [],
                 'window': [],
                 },
@@ -177,10 +177,10 @@ class Game:
                 self._state['player_id'] = player_id
                 state = json.dumps(self._state)
                 delay = None
-                # delay = time() % 4
-                # if delay > 2:
-                #     delay = 4 - delay
-                # delay /= 2
+                delay = time() % 4
+                if delay > 2:
+                    delay = 4 - delay
+                delay /= 2
                 await send(state, delay)
 
 
@@ -435,14 +435,14 @@ class Game:
                 start_time = monotonic()
 
                 async def play():
-                    while monotonic() - start_time < 12:
+                    while monotonic() - start_time < 7:
                         await self.update()
                         self.send()
 
                 print(f'{ self._game_no } beginning game loop')
 
                 try:
-                    await wait_for(play(), 10) # set to trial duration
+                    await wait_for(play(), 5) # set to trial duration
                 except TimeoutError:
                     print(f'{ self._game_no } game timed out')
                 else:
