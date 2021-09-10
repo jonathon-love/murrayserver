@@ -397,7 +397,7 @@ class Game:
                 self._state['balls'] = balls
 
                 ## DRT
-                self._state['drt']['onset'] = [15 - (randint(3000,5000)/1000)] ## change trial duration as necessary
+                self._state['drt']['onset'] = [20 - (randint(3000,5000)/1000)] ## change trial duration as necessary
                 # determine trial presentation intervals, display times, and response windows.
                 while self._state['drt']['onset'][-1] > 5:
                     self._state['drt']['onset'].append(self._state['drt']['onset'][-1] - (randint(3000,5000)/1000))
@@ -412,17 +412,19 @@ class Game:
                 self._log.info(json.dumps(self._state))
 
                 print(f'{ self._game_no } block { block_no }, awaiting players')
+                
                 while True:
                     await self.update()
-                    print(f'{ self._game_no } player 0 { self._state["players"]["0"]["status"] }')
-                    print(f'{ self._game_no } player 1 { self._state["players"]["1"]["status"] }')
+                    self.send()
+                    # print(f'{ self._game_no } player 0 { self._state["players"]["0"]["status"] }')
+                    # print(f'{ self._game_no } player 1 { self._state["players"]["1"]["status"] }')
 
                     if (self._state['players']['0']['status'] == 'ready'
                             and self._state['players']['1']['status'] == 'ready'):
                         break
-                    if (self._state['players']['0']['status'] == 'ready'
-                            or self._state['players']['1']['status'] == 'ready'):
-                        self.send()
+                    # if (self._state['players']['0']['status'] == 'ready'
+                    #         or self._state['players']['1']['status'] == 'ready'):
+                    #     self.send()
 
                 self._state['players']['0']['pos'] = self._dim['p1Start']
                 self._state['players']['1']['pos'] = self._dim['p2Start']
@@ -436,7 +438,7 @@ class Game:
                 start_time = monotonic()
 
                 async def play():
-                    while monotonic() - start_time < 7:
+                    while monotonic() - start_time < 22:
                         await self.update()
                         self.send()
                         self._state['trialTime'] = monotonic() - start_time
@@ -444,7 +446,7 @@ class Game:
                 print(f'{ self._game_no } beginning game loop')
 
                 try:
-                    await wait_for(play(), 5) # set to trial duration
+                    await wait_for(play(), 20) # set to trial duration
                 except TimeoutError:
                     print(f'{ self._game_no } game timed out')
                 else:

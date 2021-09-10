@@ -172,15 +172,15 @@ let paddle2History = new PaddleHistory();
     <canvas id="fireworks" width="800" height="600" style="position:absolute; width: 100%; height:100%; z-index:2"></canvas>
     <script>
 
-    var skipIntro = true;
+    var skipIntro = false;
 
     // Define variables
         var nBlocks             = 3;
 
         // workload
         var workloadLevels      = [1,3,6,9];
-        var trialDuration       = 5;   // 45 seconds
-        var practiceTrialDuration = 5; // 45
+        var trialDuration       = 20;   // 45 seconds
+        var practiceTrialDuration = 20; // 45
         var dirInst             = 5;            // second intervals to display practice trial instructions
         var frameRate           = 10;
         var sharedColour        = "#963d97";
@@ -1235,7 +1235,7 @@ let paddle2History = new PaddleHistory();
             bInWaiting = true;
             drawCanvas(frameColour);
             entryPageStyling();
-            drawWaiterBG(expCanvas.width/2 - 125, 250, 5);            
+            drawWaiterBG(expCanvas.width/2 - 125, 250, 5);
 			expContext.fillStyle = fontColour;
             expContext.font="30px Arial";
 			expContext.textAlign = "center";
@@ -1482,7 +1482,6 @@ let paddle2History = new PaddleHistory();
             waitingRoomStart = Date.now();
 
             if (state.status === 'playing') {
-                console.log(state.block);
                 clearTimeout(timeout)
                 nCurrentTrial = state.trialNo+1;
                 moving  = true;
@@ -1536,11 +1535,13 @@ let paddle2History = new PaddleHistory();
                 username1 = prompt("Participant 1, please enter your 5 or 6 digit SONA ID");
                 getUsername1();
             }
-            else if (username1.length!= 5 && username1.length!=6) {
-                username1 = prompt("Participant 1, please enter your 5 or 6 digit SONA ID");
+            else if (username1.length < 5 && username1.length > 6){
+                username1 = prompt("Please enter your 5 or 6 digit SONA ID");
                 confirmUsername1();
+                
             }
             else if (username1 != null && username1.length == 5 || username1.length == 6) {
+                ws.send(JSON.stringify({"SONA":username1}));
                 if (state.status === 'waiting'){
                     drawWaitingRoomScientist = true;
                     waitingRoom();
@@ -1552,11 +1553,12 @@ let paddle2History = new PaddleHistory();
         }
 
         function confirmUsername1() {
-            if (username1.length != 5) {
-                alert("Please ensure participant 1 username is 5 or 6 numerical characters long");
+            if (username1.length < 5 && username1.length > 6){
+                alert("Please ensure your SONA ID is 5 or 6 numerical characters long");
                 getUsername1();
             }
             else {
+                ws.send(JSON.stringify({"SONA":username1}));
                 if (state.status === 'waiting'){
                     drawWaitingRoomScientist = true;
                     waitingRoom();
@@ -2011,7 +2013,6 @@ let paddle2History = new PaddleHistory();
                     if (state.status === 'reading' && received.status === 'playing') {
                         // transitioning from reading to playing (i.e. beginning trial)
                         Object.assign(state, received);
-                        console.log(state.block);
                         clearTimeout(timeout)
                         nCurrentTrial = state.trialNo+1;
 
@@ -2029,15 +2030,12 @@ let paddle2History = new PaddleHistory();
                         bInPractice = false;
                     }
 
-                    if (state.status === 'playing' && received.status === 'reading') {
+                    if (state.status === 'playing' && (received.status === 'reading' || received.status==='ending')) {
                         // transitioning from playing to reading (i.e. end of trial)
                         Object.assign(state, received);
                         startCount = 0;
                         moving = false;
                         endTrial()
-                        console.log('trial end');
-                        console.log('begin instructions for next block');
-                        console.log(`block type ${ JSON.stringify(state.block) }`);
                     }
                     
                     let playerId = state.player_id;
@@ -2062,7 +2060,7 @@ let paddle2History = new PaddleHistory();
             if (rAF){
                 cancelAnimationFrame(rAF);
                 if(nCurrentTrial>=state.maxTrials){
-                    if (state.blockNo == nBlocks){
+                    if (state.blockNo+1 == nBlocks){
                         expEnd();
                     }
                 } else {
@@ -2221,14 +2219,13 @@ let paddle2History = new PaddleHistory();
             expContext.fillText("researchers Murray Bennett or Ami Eidels at murray.bennett@uon.edu.au or ami.eidels@newcastle.edu.au.",expCanvas.width/2,expCanvas.height/4+50);
             expContext.fillText("You may close the browser window at any time.",expCanvas.width/2,expCanvas.height/4+100);
         }
-/*
-		function pointsLink() {
+		// function pointsLink() {
             // Link participant points
-        	var url = "https://newcastle.sona-systems.com/services/SonaAPI.svc/WebstudyCredit?experiment_id=1059&credit_token=ef8c1a701a954d229c4e02cd70842ad5&survey_code=" + username1;
-        	var xhttp = new XMLHttpRequest();
-        	xhttp.open("GET", url, true);
-			xhttp.send();
-        }*/
+            // var url = "https://newcastle.sona-systems.com/services/SonaAPI.svc/WebstudyCredit?experiment_id=1059&credit_token=ef8c1a701a954d229c4e02cd70842ad5&survey_code=" + username1;
+        	// var xhttp = new XMLHttpRequest();
+        	// xhttp.open("GET", url, true);
+			// xhttp.send();
+        // }
     </script>
   </BODY>
 </HTML>
