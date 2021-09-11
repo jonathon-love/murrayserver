@@ -214,7 +214,7 @@ class Game:
             if self._state['status'] == 'playing':
                 timeout = 0.02
             else:
-                timeout = 3
+                timeout = .5
             await wait_for(self._receive_update.wait(), timeout)
             self._receive_update.clear()
         except TimeoutError:
