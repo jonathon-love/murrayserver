@@ -18,7 +18,7 @@ from os import environ
 from os import path
 import math
 import sys
-
+v
 from .stream import ProgressStream
 
 import logging
@@ -28,6 +28,7 @@ async def run_later(coro, delay):
     await sleep(delay)
     return await coro
 
+trial_duration = 15
 
 class Game:
     def __init__(self, game_no):
@@ -178,10 +179,10 @@ class Game:
                 self._state['player_id'] = player_id
                 state = json.dumps(self._state)
                 delay = None
-                delay = time() % 4
-                if delay > 2:
-                    delay = 4 - delay
-                delay /= 2
+                # delay = time() % 4
+                # if delay > 2:
+                #     delay = 4 - delay
+                # delay /= 2
                 await send(state, delay)
 
 
@@ -397,7 +398,7 @@ class Game:
                 self._state['balls'] = balls
 
                 ## DRT
-                self._state['drt']['onset'] = [20 - (randint(3000,5000)/1000)] ## change trial duration as necessary
+                self._state['drt']['onset'] = [trial_duration - (randint(3000,5000)/1000)] ## change trial duration as necessary
                 # determine trial presentation intervals, display times, and response windows.
                 while self._state['drt']['onset'][-1] > 5:
                     self._state['drt']['onset'].append(self._state['drt']['onset'][-1] - (randint(3000,5000)/1000))
@@ -438,7 +439,7 @@ class Game:
                 start_time = monotonic()
 
                 async def play():
-                    while monotonic() - start_time < 22:
+                    while monotonic() - start_time < trial_duration+2:
                         await self.update()
                         self.send()
                         self._state['trialTime'] = monotonic() - start_time
@@ -446,7 +447,7 @@ class Game:
                 print(f'{ self._game_no } beginning game loop')
 
                 try:
-                    await wait_for(play(), 20) # set to trial duration
+                    await wait_for(play(), trial_duration) # set to trial duration
                 except TimeoutError:
                     print(f'{ self._game_no } game timed out')
                 else:

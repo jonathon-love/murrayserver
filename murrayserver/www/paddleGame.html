@@ -179,8 +179,8 @@ let paddle2History = new PaddleHistory();
 
         // workload
         var workloadLevels      = [1,3,6,9];
-        var trialDuration       = 20;   // 45 seconds
-        var practiceTrialDuration = 20; // 45
+        var trialDuration       = 15   // 45 seconds
+        var practiceTrialDuration = 15; // 45
         var dirInst             = 5;            // second intervals to display practice trial instructions
         var frameRate           = 10;
         var sharedColour        = "#963d97";
@@ -1553,7 +1553,7 @@ let paddle2History = new PaddleHistory();
         }
 
         function confirmUsername1() {
-            if (username1.length < 5 && username1.length > 6){
+            if (username1.length < 5 && username1.length > 6) {
                 alert("Please ensure your SONA ID is 5 or 6 numerical characters long");
                 getUsername1();
             }
@@ -1647,6 +1647,9 @@ let paddle2History = new PaddleHistory();
                     ws.send(JSON.stringify({'rt' : stimTimes[0] - tRem}));
                     ws.send(JSON.stringify({'score' : score1 + 1}));
                     counter1 = false;
+                    if (bInPractice){
+                        hits1++;
+                    }
                 } else {
                     ws.send(JSON.stringify({'fa': tRem}))
                 }
@@ -1676,7 +1679,9 @@ let paddle2History = new PaddleHistory();
         }
 
         function scoring(){
-            if (!bInPractice){
+            if (bInPractice){
+                score1 = hits1;
+            } else {
                 playerId = state.player_id;
                 otherId = playerId === '0' ? '1' : '0';
                 score1 = state.players[playerId]['score'];
@@ -1753,6 +1758,7 @@ let paddle2History = new PaddleHistory();
             } else {
                 timeRemaining = duration;
             }
+            if (timeRemaining <= 0){timeRemaining = 0;}
             let dispTime = timeRemaining.toFixed(2);
             expContext.font = "16px Arial";
             expContext.fillStyle = fontColour;
@@ -2084,7 +2090,7 @@ let paddle2History = new PaddleHistory();
             bInPractice = true;
             drtOnsets   = drtStimTimes(respWin,60/2);
             drtPanels   = new DRT();
-            let nPracBalls  = 2;
+            let nPracBalls  = 1;
             bAngles     = uniqueAngles(nPracBalls,60, 120);
             for (let i = 0; i < nPracBalls; i++){
                 allBalls.push(new Ball(bx[i%3], sharedColour, i, bAngles[i]));
@@ -2134,7 +2140,7 @@ let paddle2History = new PaddleHistory();
                 if (nCurrentTrial == state.maxTrials){
                     expContext.fillText("Well Done!",expCanvas.width/2, expCanvas.height/5+50);
                 } else {
-                    expContext.fillText(competitiveQuotes[Math.floor(Math.random()*competitiveQuotes.length)],expCanvas.width/2, expCanvas.height/5+50);
+                    expContext.fillText(competitiveQuotes[state.trialNo%competitiveQuotes.length],expCanvas.width/2, expCanvas.height/5+50);
                 }
                 drawBorder(200,140, 400, 50, 2);
             }
@@ -2142,7 +2148,7 @@ let paddle2History = new PaddleHistory();
                 if (nCurrentTrial == state.maxTrials){
                     expContext.fillText("Great Job!",expCanvas.width/2, expCanvas.height/5+50);
                 } else {
-                    expContext.fillText(collaborativeQuotes[Math.floor(Math.random()*collaborativeQuotes.length)],expCanvas.width/2, expCanvas.height/5+50);
+                    expContext.fillText(collaborativeQuotes[state.trialNo%collaborativeQuotes.length],expCanvas.width/2, expCanvas.height/5+50);
                 }
                 drawBorder(200,140, 400, 50, 2);
             }
