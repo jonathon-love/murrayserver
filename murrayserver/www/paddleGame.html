@@ -865,8 +865,8 @@ let paddle2History = new PaddleHistory();
                     if (nCurrentTrial<state.maxTrials){
                         ws.send(JSON.stringify({"status":"ready"}))
                         intertrialWaiting()
-                    } else if(nCurrentTrial>=state.maxTrials){
-                        if (state.blockNo+1 == nBlocks){
+                    } else {
+                        if (state.trialNo+1>=state.maxTrials){ // it only reaches the max at the end of the exp, otherwise it resets to zero for the next block
                             expEnd();
                         } else {
                             blockInst(state.block.block_type,state.blockNo);
@@ -1644,12 +1644,13 @@ let paddle2History = new PaddleHistory();
 
             if (drtResp1){
                 if (stimTimes[0]-tRem > rtMin && counter1){
-                    ws.send(JSON.stringify({'rt' : stimTimes[0] - tRem}));
-                    ws.send(JSON.stringify({'score' : score1 + 1}));
-                    counter1 = false;
                     if (bInPractice){
                         hits1++;
+                    } else {
+                        ws.send(JSON.stringify({'rt' : stimTimes[0] - tRem}));
+                        ws.send(JSON.stringify({'score' : score1 + 1}));
                     }
+                    counter1 = false;
                 } else {
                     ws.send(JSON.stringify({'fa': tRem}))
                 }
