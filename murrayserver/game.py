@@ -18,7 +18,6 @@ from os import environ
 from os import path
 import math
 import sys
-v
 from .stream import ProgressStream
 
 import logging
