@@ -864,6 +864,7 @@ let paddle2History = new PaddleHistory();
                     scoreReset();
                     if (nCurrentTrial<state.maxTrials){
                         ws.send(JSON.stringify({"status":"ready"}))
+                        console.log("You can start now")
                         intertrialWaiting()
                     } else {
                         if (state.trialNo+1>=state.maxTrials){ // it only reaches the max at the end of the exp, otherwise it resets to zero for the next block
@@ -1323,7 +1324,7 @@ let paddle2History = new PaddleHistory();
             expContext.fillText("You are both currently reading through the instructions at your own pace but when the experiment",expCanvas.width/2,expCanvas.height/4); 
             expContext.fillText("begins you will both be required to indicate that you are ready before the next trial begins.",expCanvas.width/2,expCanvas.height/4+25);
             expContext.fillText("We understand that these tasks can become tedious however, as a courtesy to",expCanvas.width/2,expCanvas.height/4+75);
-            expContext.fillText("the potential time constraints of your fellow participant, it important that", expCanvas.width/2,expCanvas.height/4+100);
+            expContext.fillText("the potential time constraints of your fellow participant, it is important that", expCanvas.width/2,expCanvas.height/4+100);
             expContext.fillText("you remain engaged with and progress through the inter-trial and inter-block breaks.",expCanvas.width/2,expCanvas.height/4+125);
 
             expContext.fillText("Press 'spacebar' to continue", expCanvas.width*.75,expCanvas.height-50);
@@ -1354,7 +1355,7 @@ let paddle2History = new PaddleHistory();
 			expContext.textAlign = "center";
             expContext.fillText("4/4", expCanvas.width*.75,25);
             expContext.fillText("Throughout the experiment, two panels along either side of the screen will flash green.",expCanvas.width/2,expCanvas.height/4-100);
-            expContext.fillText("The light will display briefly or until both players respond but you can",expCanvas.width/2,expCanvas.height/4-50);
+            expContext.fillText("The light will display briefly or until you respond however you can",expCanvas.width/2,expCanvas.height/4-50);
             expContext.fillText("still respond to the light for a brief time after it disappears.",expCanvas.width/2,expCanvas.height/4-25);
             expContext.fillText("Respond quickly and accurately to the light for score bonuses!",expCanvas.width/2,expCanvas.height/4+25);
             expContext.fillText("A brief walkthrough trial will commence following this screen.",expCanvas.width/2,expCanvas.height/4+100);
@@ -1899,20 +1900,6 @@ let paddle2History = new PaddleHistory();
             expContext.fillText(`${ messageDelay }, ${ roundTripTime }`, 20, 580);
 
             rAF = requestAnimationFrame(drawTrial)
-
-            // if (trialTime <= 0){
-                // if (nCurrentTrial >= state.maxTrials){
-                //     if (state.blockNo +1 == nBlocks){
-                //         cancelAnimationFrame(rAF);
-                //         // ws.send(JSON.stringify({"status":"ended"}));
-                //         expEnd();
-                //     }
-                // } else {
-                    // ws.send(JSON.stringify({"status":"ended"}));
-                // cancelAnimationFrame(rAF);
-                // endTrial();
-                // }
-            // }
         }
         function expTrial(){
             drtOnsets = state.drt.onset
@@ -1983,15 +1970,6 @@ let paddle2History = new PaddleHistory();
                         roundTripTime = Date.now() - pingSent;
                         continue;
                     }
-                    // if (message.substr(0,5) === 'wait:'){
-                    //     timeWaited = parseFloat(message.substr(5));
-                    //     waitingRoomStart = Date.now();
-                    //     if (timeWaited <= 0){
-                    //         condolences();
-                    //         break;
-                    //     }
-                    //     continue;
-                    // }
 
                     let received = JSON.parse(message);
 
@@ -2011,7 +1989,7 @@ let paddle2History = new PaddleHistory();
                         messageDelay = clientTime + serverTimeDelta - serverTime;
                     }
 
-                    if (state.status === 'waiting' && received.status === 'reading' && !skipIntro){
+                    if (state.status === 'waiting' && received.status === 'reading'){
                         instructions1();
                         drawWaitingRoomScientist = false;
                     }
@@ -2019,6 +1997,7 @@ let paddle2History = new PaddleHistory();
 
                     if (state.status === 'reading' && received.status === 'playing') {
                         // transitioning from reading to playing (i.e. beginning trial)
+                        console.log('trial begin')
                         Object.assign(state, received);
                         clearTimeout(timeout)
                         nCurrentTrial = state.trialNo+1;
@@ -2035,10 +2014,12 @@ let paddle2History = new PaddleHistory();
                         proceed = false;
                         bInBlockInstructions = false;
                         bInPractice = false;
+                        bInTrial = true;
                     }
 
-                    if (state.status === 'playing' && (received.status === 'reading' || received.status==='ending')) {
+                    if (state.status === 'playing' && (received.status === 'reading' || received.status==='ending') && bInTrial) {
                         // transitioning from playing to reading (i.e. end of trial)
+                        console.log('trial end')
                         Object.assign(state, received);
                         startCount = 0;
                         moving = false;
@@ -2107,12 +2088,14 @@ let paddle2History = new PaddleHistory();
         function endTrial(){
             cancelAnimationFrame(rAF);
             clearFrame();
-            // ws.send(JSON.stringify({"status":"ended"}));
             bInTrialBreak=true;
             bInTrial    = false;
             moving      = false;
             dispCont    = true;
             startCount  = 0;
+            p1Right = false;
+            p1Left  = false;
+            drtResp1 = false;
             if (bInPractice){
                 blockInst(state.block.block_type,state.blockNo);
                 teamCumulativeScore = 0;
