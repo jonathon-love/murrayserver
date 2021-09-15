@@ -182,7 +182,8 @@ let paddle2History = new PaddleHistory();
         var trialDuration       = 15   // 45 seconds
         var practiceTrialDuration = 15; // 45
         var dirInst             = 5;            // second intervals to display practice trial instructions
-        var frameRate           = 10;
+        var blockBreakTime = 1; // 20
+        var trialBreakTime = 1; // 5
         var sharedColour        = "#963d97";
         var p1Colour            = "FireBrick";
         var p2Colour            = "RoyalBlue";
@@ -241,7 +242,6 @@ let paddle2History = new PaddleHistory();
         
         var startingTime;
         var lastTime;
-        var totalElapsedTimed;
         var elapsedSinceLastLoop;
         var calc = pSpeed/1000;
 
@@ -257,8 +257,6 @@ let paddle2History = new PaddleHistory();
 		var bInEndOfBlock           = false;
 		var bInBlockInstructions    = false;
         var bInPractice             = false;
-        var blockBreakTime          = 1; // 20
-        var trialBreakTime          = 1; // 5
         var proceed                 = false;
         var bInTrialBreak           = false;
         var justOncePlease          = true;
@@ -634,13 +632,13 @@ let paddle2History = new PaddleHistory();
 
                 if (mvLeft){
                     this.x -= speed;
-                    if (this.x < frameLeft) {
+                    if (this.x <= frameLeft) {
                         this.x = frameLeft;
                     }
                 }
                 if (mvRight){
                     this.x  += speed;
-                    if (this.x + pWidth > frameRight){
+                    if (this.x + pWidth >= frameRight){
                         this.x = frameRight - pWidth;
                     }
                 }
@@ -741,16 +739,16 @@ let paddle2History = new PaddleHistory();
         // Handling input
         document.addEventListener("keydown",keyDownHandler, false);
         document.addEventListener("keyup", keyUpHandler, false);
+        document.addEventListener("blur", lostFocus);
         function keyDownHandler(e) {
             if (e.keyCode == right) {
                 p1Right = true;
             } else if (e.keyCode == left) {
                 p1Left = true;
             }
-
             if (e.keyCode == plyr1DRTrespKey) {
                 drtResp1 = true;
-            } 
+            }
 
             if (event.keyCode === 9){// Disable Tab key function
                 event.preventDefault();
@@ -864,7 +862,6 @@ let paddle2History = new PaddleHistory();
                     scoreReset();
                     if (nCurrentTrial<state.maxTrials){
                         ws.send(JSON.stringify({"status":"ready"}))
-                        console.log("You can start now")
                         intertrialWaiting()
                     } else {
                         if (state.trialNo+1>=state.maxTrials){ // it only reaches the max at the end of the exp, otherwise it resets to zero for the next block
@@ -888,6 +885,12 @@ let paddle2History = new PaddleHistory();
             if (e.keyCode == plyr1DRTrespKey) {
                 drtResp1 = false;
             }
+        }
+
+        function lostFocus(){
+            p1Right = false;
+            p1Left  = false;
+            drtResp1 = false;
         }
 
         // Intro pages styling (highly important...)
@@ -1302,11 +1305,10 @@ let paddle2History = new PaddleHistory();
             expContext.fillText("1/4", expCanvas.width*.75,25);
             expContext.fillText("The game involves a set of balls flying around the screen and two paddles.",expCanvas.width/2,expCanvas.height/4);
             expContext.fillText("Your task is to move your paddle to deflect as many balls as you can within the time limit.",expCanvas.width/2,expCanvas.height/4+25);
-            expContext.fillText("You score points for each successful hit.",expCanvas.width/2,expCanvas.height/4+50);
-            expContext.fillText("The time remaining and your score will be displayed throughout each trial.",expCanvas.width/2,expCanvas.height/4+75);
+            expContext.fillText("Please ensure that your browser window is maximised.",expCanvas.width/2,expCanvas.height/4+50);
 
             expContext.fillText("The game runs over 3 blocks of 12 trials, where each trial lasts 45 seconds.", expCanvas.width/2,expCanvas.height/4+125);
-            expContext.fillText("There is a forced 20 second break between blocks but you can break for as long as you need.", expCanvas.width/2,expCanvas.height/4+150);
+            expContext.fillText("There is a forced 20 second break between blocks.", expCanvas.width/2,expCanvas.height/4+150);
             expContext.fillText("The experiment will take approximately 35-40 minutes and you will be reimbursed 2 SONA points.", expCanvas.width/2,expCanvas.height/4+175);
             expContext.fillText("You may exit the study at any time without penalty by closing your browser window.", expCanvas.width/2,expCanvas.height/4+200);
 
@@ -1418,15 +1420,15 @@ let paddle2History = new PaddleHistory();
             // count--;
 
             if (state.block.block_type == "nonCol"){
-                expContext.fillText("During this block you will only be able to interact with balls that match the colour of your paddle.",expCanvas.width/2,expCanvas.height/4-25);
+                expContext.fillText("During this block you will only be able to hit the red balls.",expCanvas.width/2,expCanvas.height/4-25);
                 drawBorder(50,95,700,50,2)
             } else if (state.block.block_type == "col"){
                 expContext.fillText("During this block you must work together!",expCanvas.width/2,expCanvas.height/4);
-                expContext.fillText("Both of your hits and misses count toward the team score.",expCanvas.width/2,expCanvas.height/4+25);
+                expContext.fillText("Both of your hits count toward the team score.",expCanvas.width/2,expCanvas.height/4+25);
                 drawBorder(175,120,450,75,2)
             } else if (state.block.block_type == "com"){
                 expContext.fillText("During this block you must try to outscore your opponent.",expCanvas.width/2,expCanvas.height/4);
-                expContext.fillText("Misses are counted equally so try to hit as many as you can!",expCanvas.width/2,expCanvas.height/4+25);
+                expContext.fillText("Try to hit as many as you can!",expCanvas.width/2,expCanvas.height/4+25);
                 drawBorder(175,120,450,75,2)
             }
             
@@ -1617,6 +1619,7 @@ let paddle2History = new PaddleHistory();
             proceed = true;
             }
         }
+
         function drawCanvas(colour){
             expContext.fillStyle = colour;
 			expContext.fillRect(0, 0, expCanvas.width, expCanvas.height);
@@ -1818,7 +1821,7 @@ let paddle2History = new PaddleHistory();
             }
             if(!startingTime){startingTime=drawStartTime;}
             if(!lastTime){lastTime=drawStartTime;}
-            totalElapsedTimed=(drawStartTime-startingTime);
+            // totalElapsedTimed=(drawStartTime-startingTime);
             elapsedSinceLastLoop=(drawStartTime-lastTime);
             lastTime=drawStartTime;
 
@@ -1856,16 +1859,25 @@ let paddle2History = new PaddleHistory();
             if (!drawStartTime){
                 drawStartTime = drawStartTime;
             }
-            if(!startingTime){startingTime=drawStartTime;}
-            if(!lastTime){lastTime=drawStartTime;}
-            totalElapsedTimed=(drawStartTime-startingTime);
-            elapsedSinceLastLoop=(drawStartTime-lastTime);
-            lastTime=drawStartTime;
+            if(!startingTime){
+                startingTime=drawStartTime;
+            }
+            if(!lastTime){
+                lastTime=drawStartTime;
+                elapsedSinceLastLoop = 0;
+            } else {
+                elapsedSinceLastLoop = drawStartTime - lastTime;
+            }
+            
+            lastTime = drawStartTime;
+            
+            if (isNaN(elapsedSinceLastLoop)){
+                elapsedSinceLastLoop = 0;
+            }
+
             let frProp = pSpeed * elapsedSinceLastLoop / 60;
             let bProp   = bSpeed * (messageDelay) / 60;
             let speedCorrected = pSpeed * frProp;
-            // let ballSpeedCorrected = bSpeed * bProp;
-
             let now = adjustedTime()
             let elapsed = now - (state.timestamp*1000);
             let ballSpeedCorrected = bSpeed * (bSpeed * elapsed / 60);
@@ -1945,7 +1957,6 @@ let paddle2History = new PaddleHistory();
             }
 
             while (true) {
-
                 if (state.status === 'playing' && paddle1) {
                     ws.send(JSON.stringify({ 'pos': paddle1.x, serverTimeDelta, messageDelay, roundTripTime }));
                     await sleep(50);
@@ -1988,7 +1999,6 @@ let paddle2History = new PaddleHistory();
                     else {
                         messageDelay = clientTime + serverTimeDelta - serverTime;
                     }
-
                     if (state.status === 'waiting' && received.status === 'reading'){
                         instructions1();
                         drawWaitingRoomScientist = false;
@@ -1997,7 +2007,6 @@ let paddle2History = new PaddleHistory();
 
                     if (state.status === 'reading' && received.status === 'playing') {
                         // transitioning from reading to playing (i.e. beginning trial)
-                        console.log('trial begin')
                         Object.assign(state, received);
                         clearTimeout(timeout)
                         nCurrentTrial = state.trialNo+1;
@@ -2019,7 +2028,6 @@ let paddle2History = new PaddleHistory();
 
                     if (state.status === 'playing' && (received.status === 'reading' || received.status==='ending') && bInTrial) {
                         // transitioning from playing to reading (i.e. end of trial)
-                        console.log('trial end')
                         Object.assign(state, received);
                         startCount = 0;
                         moving = false;
@@ -2140,8 +2148,8 @@ let paddle2History = new PaddleHistory();
             dispFireworks = nCurrentTrial == state.maxTrials
             if (dispFireworks){drawFireWorks()} else {fwCtx.clearRect(0,0,expCanvas.width, expCanvas.height)};
             // This notation is whack. Essentially - prepend a string with + to evaluate as a number
-            p1teamScore = Math.round((+p1s/(+p1s + +p2s))*+teams);
-            p2teamScore = parseInt(teams-p1teamScore); // you can't use addition with parseInt
+            p1teamScore = p1s; //Math.round((+p1s/(+p1s + +p2s))*+teams);
+            p2teamScore = p2s; //parseInt(teams-p1teamScore); // you can't use addition with parseInt
             if (justOncePlease){
                 p1CumulativeScore += parseInt(p1s);
                 p2CumulativeScore += parseInt(p2s);

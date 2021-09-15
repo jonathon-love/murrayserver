@@ -57,7 +57,7 @@ class Game:
             'frameBottom': height,
             'paddleY': height - pHeight*3,
             'p1Start': drtWidth*0.33 - (pWidth/2),
-            'p2Start': drtWidth*0.67 + (pWidth/2),
+            'p2Start': drtWidth*0.67,
             'ballX': [drtWidth/2 - bRad*4, drtWidth/2, drtWidth/2 + bRad*4],
             'ballY': (height - pHeight*3) - bRad,
             'pWidth': pWidth,
@@ -205,15 +205,13 @@ class Game:
         self._send_update.move_to_end(player_id, last=False)
 
     async def update(self):
-
         log_state = True
-
         try:
             timeout = None
             if self._state['status'] == 'playing':
                 timeout = 0.02
             else:
-                timeout = .5
+                timeout = 0.5
             await wait_for(self._receive_update.wait(), timeout)
             self._receive_update.clear()
         except TimeoutError:
@@ -226,7 +224,6 @@ class Game:
 
         if self._state['status'] == 'playing' and self._last_status == 'playing':
             for ball in self._state['balls']:
-
                 x = ball['x'] + ball['speed'] * math.cos(ball['angle']) * elapsed / 0.02
                 y = ball['y'] + ball['speed'] * math.sin(ball['angle']) * elapsed / 0.02
                 angle = ball['angle']
@@ -422,9 +419,6 @@ class Game:
                     if (self._state['players']['0']['status'] == 'ready'
                             and self._state['players']['1']['status'] == 'ready'):
                         break
-                    # if (self._state['players']['0']['status'] == 'ready'
-                    #         or self._state['players']['1']['status'] == 'ready'):
-                    #     self.send()
 
                 self._state['players']['0']['pos'] = self._dim['p1Start']
                 self._state['players']['1']['pos'] = self._dim['p2Start']
