@@ -1663,7 +1663,9 @@ let paddle2History = new PaddleHistory();
                     }
                     counter1 = false;
                 } else {
-                    ws.send(JSON.stringify({'fa': tRem}))
+                    if (!bInPractice){
+                        ws.send(JSON.stringify({'fa': tRem}))
+                    }
                 }
                 drtResp1 = false;
             }
