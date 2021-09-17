@@ -27,7 +27,7 @@ async def run_later(coro, delay):
     await sleep(delay)
     return await coro
 
-trial_duration = 15
+trial_duration = 45
 
 class Game:
     def __init__(self, game_no):
