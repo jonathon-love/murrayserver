@@ -157,7 +157,7 @@ class Game:
                     if msg.data == 'ping':
                         await ws.send_str('pong')
                     else:
-                        self._log.info(f'{{ "received": { msg.data }, "player": { player_id } }}')
+                        # self._log.info(f'{{ "received": { msg.data }, "player": { player_id } }}')
                         data = json.loads(msg.data)
                         self._state['players'][player_id].update(data)
                         self._receive_update.set()
