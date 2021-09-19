@@ -767,6 +767,7 @@ let paddle2History = new PaddleHistory();
                     bInInstructions1 = false;
                     clearTimeout(timeout)
                     proceed = false;
+                    ws.send(JSON.stringify({"instructionProgress": 1}))
                     instructionsOnline()
                     
                 }
@@ -776,6 +777,7 @@ let paddle2History = new PaddleHistory();
                     bInInstructionsOnline = false;
                     clearTimeout(timeout)
                     proceed = false;
+                    ws.send(JSON.stringify({"instructionProgress": 2}))
                     instructions2();
                     
                 }
@@ -819,6 +821,7 @@ let paddle2History = new PaddleHistory();
                         event.preventDefault();
                         clearTimeout(timeout)
                         proceed = false;
+                        ws.send(JSON.stringify({"instructionProgress": 3}))
                         bInInstructions2 = false;
                         bInPaddlePractice = true;
                         // instructions3();
@@ -836,6 +839,7 @@ let paddle2History = new PaddleHistory();
                     event.preventDefault();
                     clearTimeout(timeout)
                     proceed = false;
+                    ws.send(JSON.stringify({"instructionProgress": 4}))
                     bInInstructions3 = false;
                     drtActive = true;
                     bInDRTPractice = true;
@@ -859,6 +863,7 @@ let paddle2History = new PaddleHistory();
                     event.preventDefault();
                     clearTimeout(timeout)
                     proceed = false;
+                    ws.send(JSON.stringify({"instructionProgress": 5}))
                     bInInstructions4 = false;
                     drtActive = true;
                     bInCombinedPractice = true;
@@ -871,6 +876,7 @@ let paddle2History = new PaddleHistory();
                     event.preventDefault();
                     clearTimeout(timeout)
                     proceed = false;
+                    ws.send(JSON.stringify({"instructionProgress": 6}))
                     bInInstructionsEnd = false;
                     blockInst(state.block.block_type,state.blockNo);
                     teamCumulativeScore = 0;
@@ -957,7 +963,32 @@ let paddle2History = new PaddleHistory();
             expContext.fill();
         }
 
-        // inter trial malarkey
+        function drawInstControls(){
+            // CONTROLS
+            let x = expCanvas.width/2 - 110;
+            let y = 25;
+            let bitColours = ['#6500ab', '#f20794', '#d60003', '#f1983a', '#fcf351'];
+            let sz = 5;
+            let gridLength = 42;
+            let gridRows = 5;
+            let gridVals = {
+                        '1': [2,3,4,7,8,11,15,17,18,19,20,21,24,25,29,30,33,38,39,40],
+                        '2': [1,6,9,11,12,15,19,23,26,28,31,33,37],
+                        '3': [1,6,9,11,13,15,19,23,24,25,28,31,33,38,39],
+                        '4': [1,6,9,11,14,15,19,23,25,28,31,33,40],
+                        '5': [2,3,4,7,8,11,15,19,23,26,29,30,33,34,35,37,38,39],
+                    };
+            for (let r = 1; r <= gridRows; r++){
+                let colour = bitColours[r-1];
+                let gridCounter = 1;
+                for (let c = 1; c <= gridLength; c++) {
+                    if (gridVals[r].includes(gridCounter)){
+                        drawBit(x+(sz*gridCounter),y+(r*sz),sz,sz,colour);
+                    }
+                    gridCounter++;        
+                }
+            }
+        }
         function drawTrialEnd(){
             //TRIAL OVER
             let x = expCanvas.width/2 - 110;
@@ -1345,15 +1376,15 @@ let paddle2History = new PaddleHistory();
             expContext.fillText("Welcome to Team Spirit!",expCanvas.width/2,expCanvas.height/4-100);
             expContext.font="16px Arial";
             expContext.fillText("This experiment will examine your performance during a multiplayer arcade-style game.",expCanvas.width/2,expCanvas.height/4-50);
+            expContext.fillText("Please ensure that your browser window is maximised.",expCanvas.width/2,expCanvas.height/4-30);
             expContext.fillText("1/6", expCanvas.width*.75,25);
-            expContext.fillText("The game involves a set of balls flying around the screen and two paddles.",expCanvas.width/2,expCanvas.height/4);
-            expContext.fillText("Your task is to move your paddle to deflect as many balls as you can within the time limit.",expCanvas.width/2,expCanvas.height/4+25);
-            expContext.fillText("Please ensure that your browser window is maximised.",expCanvas.width/2,expCanvas.height/4+50);
+            expContext.fillText("The game involves a set of balls flying around the screen and two paddles.",expCanvas.width/2,expCanvas.height/4+20);
+            expContext.fillText("Your task is to move your paddle to hit as many balls as you can within the time limit.",expCanvas.width/2,expCanvas.height/4+40);
 
-            expContext.fillText("The game runs over 3 blocks of 12 trials, where each trial lasts 45 seconds.", expCanvas.width/2,expCanvas.height/4+125);
-            expContext.fillText("There is a forced 20 second break between blocks.", expCanvas.width/2,expCanvas.height/4+150);
-            expContext.fillText("The experiment will take approximately 35-40 minutes and you will be reimbursed 2 SONA points.", expCanvas.width/2,expCanvas.height/4+175);
-            expContext.fillText("You may exit the study at any time without penalty by closing your browser window.", expCanvas.width/2,expCanvas.height/4+200);
+            expContext.fillText("The game runs over 3 blocks of 12 trials, where each trial lasts 45 seconds.", expCanvas.width/2,expCanvas.height/4+90);
+            expContext.fillText("There is a forced 20 second break between blocks.", expCanvas.width/2,expCanvas.height/4+110);
+            expContext.fillText("The experiment will take approximately 35-40 minutes and you will be reimbursed 2 SONA points.", expCanvas.width/2,expCanvas.height/4+130);
+            expContext.fillText("You may exit the study at any time without penalty by closing your browser window.", expCanvas.width/2,expCanvas.height/4+150);
 
             // expContext.fillText("Press 'spacebar' to continue", expCanvas.width*.75,expCanvas.height-50);
             timeout = setTimeout(instructionsContinue,instructionsPause*1000);
@@ -1365,13 +1396,14 @@ let paddle2History = new PaddleHistory();
             entryPageStyling();
 			expContext.fillStyle = fontColour;
             expContext.font="16px Arial";
+            expContext.textAlign = "center";
             expContext.fillText("This experiment is unique in that you will be playing with and against another participant.",expCanvas.width/2,expCanvas.height/4-50);
             expContext.fillText("2/6", expCanvas.width*.75,25);
-            expContext.fillText("You are both currently reading through the instructions at your own pace but when the experiment",expCanvas.width/2,expCanvas.height/4); 
-            expContext.fillText("begins you will both be required to indicate that you are ready before the next trial begins.",expCanvas.width/2,expCanvas.height/4+25);
-            expContext.fillText("We understand that these tasks can become tedious however, as a courtesy to",expCanvas.width/2,expCanvas.height/4+75);
-            expContext.fillText("time constraints of your fellow participant, it is important that", expCanvas.width/2,expCanvas.height/4+100);
-            expContext.fillText("you remain engaged with and progress through the inter-trial and inter-block breaks.",expCanvas.width/2,expCanvas.height/4+125);
+            expContext.fillText("You are both currently reading through the instructions at your own pace but when the experiment",expCanvas.width/2,expCanvas.height/4-10); 
+            expContext.fillText("begins you will both be required to indicate that you are ready before the next trial begins.",expCanvas.width/2,expCanvas.height/4+10);
+            expContext.fillText("We understand that these tasks can become tedious however, as a courtesy to",expCanvas.width/2,expCanvas.height/4+50);
+            expContext.fillText("time constraints of your fellow participant, it is important that", expCanvas.width/2,expCanvas.height/4+70);
+            expContext.fillText("you remain engaged with and progress through the inter-trial and inter-block breaks.",expCanvas.width/2,expCanvas.height/4+90);
 
             // expContext.fillText("Press 'spacebar' to continue", expCanvas.width*.75,expCanvas.height-50);
             timeout = setTimeout(instructionsContinue,instructionsPause*1000);
@@ -1381,17 +1413,20 @@ let paddle2History = new PaddleHistory();
             bInInstructions2 = true;
             drawCanvas(frameColour);
             entryPageStyling();
+            drawInstControls();
             expContext.fillStyle = fontColour;
+            expContext.textAlign = "center";
+            expContext.font="16px Arial";
             expContext.fillText("3/6", expCanvas.width*.75,25);
-            expContext.fillText("Your paddle is red whereas your fellow participants paddle is blue.",expCanvas.width/2,expCanvas.height/4-75);
-            expContext.fillText("Score points by moving your paddle left or right to hit the balls.",expCanvas.width/2,expCanvas.height/4-50);
-            expContext.fillText("Control the movement of the paddle with your dominant hand using the keyboard.",expCanvas.width/2,expCanvas.height/4-25);
+            expContext.fillText("Your paddle is red whereas your fellow participants paddle is blue.",expCanvas.width/2,expCanvas.height/4-50);
+            expContext.fillText("Score points by moving your paddle left or right to hit the balls.",expCanvas.width/2,expCanvas.height/4-30);
+            expContext.fillText("Control the movement of the paddle with your dominant hand using the keyboard.",expCanvas.width/2,expCanvas.height/4-10);
 
-            expContext.fillText("To see your controls, please indicate if you are",expCanvas.width/2,expCanvas.height/4+25);
+            expContext.fillText("To see your controls, please indicate if you are",expCanvas.width/2,expCanvas.height/4+30);
             expContext.fillText("right-handed by pressing 'Z' or if you are left-handed press the UP arrow.",expCanvas.width/2,expCanvas.height/4+50);
 
-            expContext.fillText("A short practice trial will follow this screen.",expCanvas.width/2,expCanvas.height/4+100);
-            expContext.fillText("Note: you will complete three practice trials. All are without player 2.",expCanvas.width/2,expCanvas.height/4+125);
+            expContext.fillText("A short practice trial will follow this screen.",expCanvas.width/2,expCanvas.height/4+90);
+            expContext.fillText("Note: all practice trials are run without player 2.",expCanvas.width/2,expCanvas.height/4+110);
 
             timeout = setTimeout(instructionsContinue,instructionsPause*1000);
             // expContext.fillText("Press 'spacebar' to continue", expCanvas.width*.75,expCanvas.height-50);
@@ -1401,19 +1436,20 @@ let paddle2History = new PaddleHistory();
             bInInstructions3 = true;
             drawCanvas(frameColour);
             entryPageStyling();
+            drawInstControls();
             // expContext.fillRect(0, 0, expCanvas.width, expCanvas.height);
 			expContext.fillStyle = fontColour;
 			expContext.font="16px Arial";
 			expContext.textAlign = "center";
             expContext.fillText("4/6", expCanvas.width*.75,25);
-            expContext.fillText("Along with controlling paddle movement you will also be required",expCanvas.width/2,expCanvas.height/4-100);
-            expContext.fillText("to respond to a flashing green light using your non-dominant hand.",expCanvas.width/2,expCanvas.height/4-75);
+            expContext.fillText("Along with controlling paddle movement you will also be required",expCanvas.width/2,expCanvas.height/4-60);
+            expContext.fillText("to respond to a flashing green light using your non-dominant hand.",expCanvas.width/2,expCanvas.height/4-40);
 
-            expContext.fillText("The light will display in the side-panels of the screen briefly or",expCanvas.width/2,expCanvas.height/4-25);
-            expContext.fillText("until you respond. However, you can still respond to the light for",expCanvas.width/2,expCanvas.height/4);
-            expContext.fillText("a short time after it disappears.",expCanvas.width/2,expCanvas.height/4+25);
-            expContext.fillText("Respond quickly and accurately to the light for score bonuses!",expCanvas.width/2,expCanvas.height/4+75);
-            expContext.fillText("A short practice trial with ONLY the light will follow this screen.",expCanvas.width/2,expCanvas.height/4+100);
+            expContext.fillText("The light will display in the side-panels of the screen briefly or",expCanvas.width/2,expCanvas.height/4-10);
+            expContext.fillText("until you respond. However, you can still respond to the light for",expCanvas.width/2,expCanvas.height/4+10);
+            expContext.fillText("a short time after it disappears.",expCanvas.width/2,expCanvas.height/4+30);
+            expContext.fillText("Respond quickly and accurately to the light for score bonuses!",expCanvas.width/2,expCanvas.height/4+70);
+            expContext.fillText("A short practice trial with ONLY the light will follow this screen.",expCanvas.width/2,expCanvas.height/4+90);
 
             timeout = setTimeout(instructionsContinue,instructionsPause*1000);
             // expContext.fillText("Press 'spacebar' to continue", expCanvas.width*.75,expCanvas.height-50);
@@ -1430,10 +1466,10 @@ let paddle2History = new PaddleHistory();
 			expContext.font="16px Arial";
 			expContext.textAlign = "center";
             expContext.fillText("5/6", expCanvas.width*.75,25);
-            expContext.fillText("Great job!.",expCanvas.width/2,expCanvas.height/4-100);
-            expContext.fillText("Now, lets practice a full-length trial with some more balls AND the light!",expCanvas.width/2,expCanvas.height/4-50);
+            expContext.fillText("Great job!",expCanvas.width/2,expCanvas.height/4-80);
+            expContext.fillText("Now, let's practice a full-length trial with some more balls AND the light!",expCanvas.width/2,expCanvas.height/4-40);
             
-            expContext.fillText("Remember to respond quickly and accurately to the light for score bonuses!",expCanvas.width/2,expCanvas.height/4+25);
+            expContext.fillText("Remember to respond quickly and accurately to the light for score bonuses!",expCanvas.width/2,expCanvas.height/4-20);
             // expContext.fillText("Press 'spacebar' to continue", expCanvas.width*.75,expCanvas.height-50);
             timeout = setTimeout(instructionsContinue,instructionsPause*1000);
         }
@@ -1445,8 +1481,8 @@ let paddle2History = new PaddleHistory();
 			expContext.font="16px Arial";
 			expContext.textAlign = "center";
             expContext.fillText("6/6", expCanvas.width*.75,25);
-            expContext.fillText("Well done!.",expCanvas.width/2,expCanvas.height/4-100);
-            expContext.fillText("This ends the practice trials.",expCanvas.width/2,expCanvas.height/4-50);
+            expContext.fillText("Well done!",expCanvas.width/2,expCanvas.height/4-60);
+            expContext.fillText("This ends the practice trials.",expCanvas.width/2,expCanvas.height/4-20);
             expContext.fillText("You can now join player 2 in the main game for your first set of instructions!",expCanvas.width/2,expCanvas.height/4);
             
             // expContext.fillText("Press 'spacebar' to continue", expCanvas.width*.75,expCanvas.height-50);
@@ -1566,6 +1602,15 @@ let paddle2History = new PaddleHistory();
             fwCtx = fwCanvas.getContext("2d");
             waitingRoomStart = Date.now();
 
+            if (skipIntro){
+                ws.send(JSON.stringify({'hand':'Right', 'instructionProgress' : 6}))
+                state.players[state.player_id].instructionProgress = 6;
+                state.players[state.player_id].hand = 'Right';
+                blockInst(state.block.block_type, state.blockNo);
+            } else {
+                getUsername1();
+            }
+
             if (state.status === 'playing') {
                 clearTimeout(timeout)
                 nCurrentTrial = state.trialNo+1;
@@ -1587,31 +1632,46 @@ let paddle2History = new PaddleHistory();
                 proceed = false;
                 bInBlockInstructions = false;
                 bInPractice = false;
-            } else if (state.status === 'reading' && state.trialNo+1 > 1){
-                clearTimeout(timeout)
-                bInTrialBreak=true;
-                bInTrial    = false;
-                moving      = false;
-                dispCont    = true;
-                startCount  = 0;
-                nCurrentTrial = state.trialNo;
-
-                if (state['players'][state.player_id]['hand'] === "Right"){
-                    left = RHleft; 
-                    right = RHright; 
-                    plyr1DRTrespKey = RHdrtRespKey;
-                } else {
-                    left = LHleft; 
-                    right = LHright; 
-                    plyr1DRTrespKey = LHdrtRespKey;
+            } else if (state.status === 'reading'){
+                if (state.players[state.player_id].instructionProgress >= 3){
+                    if (state['players'][state.player_id]['hand'] === "Right"){
+                        left = RHleft; 
+                        right = RHright; 
+                        plyr1DRTrespKey = RHdrtRespKey;
+                    } else {
+                        left = LHleft; 
+                        right = LHright; 
+                        plyr1DRTrespKey = LHdrtRespKey;
+                    }
                 }
-
-                interTrial(score1,score2,teamScore, state.block.block_type);   
-            } else if (skipIntro){
-                ws.send(JSON.stringify({'hand':'Right'}))
-                blockInst(state.block.block_type, state.blockNo);
-            } else {
-                getUsername1();
+                if (state.players[state.player_id].instructionProgress == 0){
+                    getUsername1();
+                } else if (state.players[state.player_id].instructionProgress == 1) {
+                    
+                    instructionsOnline()
+                } else if (state.players[state.player_id].instructionProgress == 2) {
+                    instructions2()
+                    // selecting controls - check if they have or haven't already.
+                } else if (state.players[state.player_id].instructionProgress == 3) {
+                    instructions3()
+                } else if (state.players[state.player_id].instructionProgress == 4) {
+                    instructions4()
+                } else if (state.players[state.player_id].instructionProgress == 5) {
+                    instructionsEnd()
+                } else if (state.players[state.player_id].instructionProgress >= 6){ //.trialNo+1 > 1){
+                    if (state.trialNo > 0){
+                        clearTimeout(timeout)
+                        bInTrialBreak=true;
+                        bInTrial    = false;
+                        moving      = false;
+                        dispCont    = true;
+                        startCount  = 0;
+                        nCurrentTrial = state.trialNo;
+                        interTrial(score1,score2,teamScore, state.block.block_type);
+                    } else {
+                        blockInst(state.block.block_type, state.blockNo);
+                    }
+                }
             }
         }
         //Addin
@@ -2099,7 +2159,7 @@ let paddle2History = new PaddleHistory();
                     else {
                         messageDelay = clientTime + serverTimeDelta - serverTime;
                     }
-                    if (state.status === 'waiting' && received.status === 'reading'){
+                    if (state.status === 'waiting' && received.status === 'reading' && !skipIntro){
                         instructions1();
                         drawWaitingRoomScientist = false;
                     }
@@ -2169,7 +2229,7 @@ let paddle2History = new PaddleHistory();
                     expContext.textAlign = "center";
                     expContext.font="16px Arial";
                     expContext.fillText("Oops!",expCanvas.width/2,expCanvas.height/4-100);
-                    expContext.fillText("It looks like your internet connection has dropped out.",expCanvas.width/2,expCanvas.height/4-50);
+                    expContext.fillText("It looks like your connection has dropped out.",expCanvas.width/2,expCanvas.height/4-50);
                     expContext.fillText("Please try refreshing the page when you are ready.",expCanvas.width/2,expCanvas.height/4-25);        
                 }
             }

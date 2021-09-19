@@ -93,6 +93,7 @@ class Game:
                 '0': {
                     'pos': self._dim['p1Start'],
                     'status': 'notReady',
+                    'instructionProgress': 0,
                     'hand': [],
                     'trialStart': 0,
                     'hits': 0,
@@ -104,6 +105,7 @@ class Game:
                 '1': {
                     'pos': self._dim['p2Start'],
                     'status': 'notReady',
+                    'instructionProgress': 0,
                     'hand': [],
                     'trialStart': 0,
                     'hits': 0,
@@ -135,6 +137,8 @@ class Game:
         return player_id
 
     async def join(self, player_id, ws):
+        self._player0_disconnect_start = None
+        self._player1_disconnect_start = None
 
         print(f'{ self._game_no } player { player_id } connected')
 
@@ -167,6 +171,14 @@ class Game:
                     self._joined[player_id] = False
                     if self._joined[0] is False and self._joined[1] is False:
                         self._ended = True
+                else:
+                    # player is having connection issues: 
+                    # This problem can be two things: genuine or genuine. That is, they have genuine connection problems or they've genuinely left.
+                    print(f'Ummm... did player {player_id} just leave? {self._joined[player_id]}')
+                    if player_id == '0':
+                        self._player0_disconnect_start = time()
+                    if player_id == '1':
+                        self._player1_disconnect_start = time()
 
         async def write():
             send_event = self._send_update[player_id]
@@ -220,6 +232,16 @@ class Game:
         last_time = self._state['timestamp']
         self._state['timestamp'] = now
         elapsed = now - last_time
+
+        # # connection timeout
+        # try: 
+        #     self._player0_disconnect = time() - self._player0_disconnect_start
+        # except:
+        #     pass
+        # try: 
+        #     self._player1_disconnect = time() - self._player1_disconnect_start
+        # except:
+            # pass
 
         if self._state['status'] == 'playing' and self._last_status == 'playing':
             for ball in self._state['balls']:
