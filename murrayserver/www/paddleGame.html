@@ -180,10 +180,11 @@ let paddle2History = new PaddleHistory();
         // workload
         var workloadLevels      = [1,3,6,9];
         var trialDuration       = 45   // 45 seconds
-        var practiceTrialDuration = 45; // 45
-        var dirInst             = 5;            // second intervals to display practice trial instructions
+        var practiceTrialDuration = 25;
+        var dirInst             = 10;            // second intervals to display practice trial instructions
         var blockBreakTime = 20; // 20
         var trialBreakTime = 5; // 5
+        var instructionsPause = 5; // 5
         var sharedColour        = "#963d97";
         var p1Colour            = "FireBrick";
         var p2Colour            = "RoyalBlue";
@@ -214,6 +215,8 @@ let paddle2History = new PaddleHistory();
         let drtOnsets;
         var onsets              = [];   // used to save the onset times for each trial
         var drtScore            = 0;
+        var drtActive = false;
+        var drawnKeys = false;
 
         var LHdrtRespKey        = "38"
         var RHdrtRespKey        = "90"
@@ -254,6 +257,8 @@ let paddle2History = new PaddleHistory();
         var bInInstructionsOnline   = false;
 		var bInInstructions2        = false;
         var bInInstructions3        = false;
+        var bInInstructions4        = false;
+        var bInInstructionsEnd      = false;
 		var bInEndOfBlock           = false;
 		var bInBlockInstructions    = false;
         var bInPractice             = false;
@@ -262,9 +267,11 @@ let paddle2History = new PaddleHistory();
         var justOncePlease          = true;
         var dispCont                = true;
         var dispFireworks           = false;
+        var bInPaddlePractice = false;
+        var bInDRTPractice = false;
+        var bInCombinedPractice = false;
 
         var username1;
-        var username2;
 
         // Trial Start
         let startCount          = 0;
@@ -561,15 +568,15 @@ let paddle2History = new PaddleHistory();
                 let angle = this.angle;
 
                 if (dx >= frameRight - bRad){
-                    dx = frameRight - (dx - frameRight) - bRad;
+                    dx = frameRight - bRad - (frameRight - bRad - dx);
                     angle = Math.PI - angle;
                 }
                 if (dx <= frameLeft + bRad) {
-                    dx = frameLeft + (frameLeft - dx) + bRad
+                    dx = frameLeft + bRad + (frameLeft + bRad - dx)
                     angle = Math.PI - angle;
                 }
                 if (dy < frameTop + bRad) {
-                    dy = frameTop + (frameTop - dy) + bRad
+                    dy = frameTop + bRad + (frameTop + bRad - dy)
                     angle = -angle;
                 }
                 if (dy > frameBottom) {
@@ -720,7 +727,7 @@ let paddle2History = new PaddleHistory();
                     drawKey(expContext,"C",expCanvas.width/3+25,x+50, 40, 40, 3,true,true,false);
                     expContext.fillText("Left", expCanvas.width/3-30,x+100);
                     expContext.fillText("Right", expCanvas.width/3+50,x+100);
-                    expContext.fillText("Response", expCanvas.width*0.67,x+100);
+                    expContext.fillText("Light Response", expCanvas.width*0.67,x+100);
                     expContext.fillText("Non-Dominant", expCanvas.width*0.67,x+25);
                     expContext.fillText("Dominant Hand", expCanvas.width/3,x+25);
                 } else if (drt1 == RHdrtRespKey){
@@ -729,7 +736,7 @@ let paddle2History = new PaddleHistory();
                     drawKey(expContext,"2192",expCanvas.width*0.67+25,x+50, 40, 40, 3,true,true,true);
                     expContext.fillText("Left", expCanvas.width*0.67-30,x+100);
                     expContext.fillText("Right", expCanvas.width*0.67+50,x+100);
-                    expContext.fillText("Response", expCanvas.width/3,x+100);
+                    expContext.fillText("Light Response", expCanvas.width/3,x+100);
                     expContext.fillText("Non-Dominant", expCanvas.width/3,x+25);
                     expContext.fillText("Dominant Hand", expCanvas.width*0.67,x+25);
                 }
@@ -755,21 +762,27 @@ let paddle2History = new PaddleHistory();
             }
 
             if (bInInstructions1){
-				if (event.keyCode == 32) {
+				if (event.keyCode == 32 && proceed) {
                     event.preventDefault();
                     bInInstructions1 = false;
+                    clearTimeout(timeout)
+                    proceed = false;
                     instructionsOnline()
+                    
                 }
             } else if (bInInstructionsOnline){
-                if (event.keyCode == 32){
+                if (event.keyCode == 32 && proceed){
                     event.preventDefault();
                     bInInstructionsOnline = false;
+                    clearTimeout(timeout)
+                    proceed = false;
                     instructions2();
+                    
                 }
-                if (event.keyCode == 66){ // b
-                    bInInstructionsOnline = false;
-                    instructions1();
-                }
+                // if (event.keyCode == 66){ // b
+                //     bInInstructionsOnline = false;
+                //     instructions1();
+                // }
             } else if (bInInstructions2){
                 if (p1Hand.length == 0 && !p1HandChosen){
                     if (e.keyCode == LHdrtRespKey){
@@ -790,9 +803,10 @@ let paddle2History = new PaddleHistory();
                         ws.send(JSON.stringify({'hand':'Right'}));
                     }
                 }
-                if (p1Hand.length == 1 && p1HandChosen){
+                if (p1Hand.length == 1 && p1HandChosen && !drawnKeys){
                     keyInsts(true,true,plyr1DRTrespKey,plyr2DRTrespKey);
                     p1HandChosen = true;
+                    drawnKeys = true;
                 }
 
                 if (p1Hand.length == 1){
@@ -801,38 +815,67 @@ let paddle2History = new PaddleHistory();
                         expContext.fillText("Press 'spacebar' to continue", expCanvas.width*.75,expCanvas.height-50);
                         p2HandChosen = false;
                     }
-                    if (event.keyCode == 32) {
+                    if (event.keyCode == 32 && proceed) {
                         event.preventDefault();
+                        clearTimeout(timeout)
+                        proceed = false;
                         bInInstructions2 = false;
-                        instructions3();
-                        keyInsts(true,true,plyr1DRTrespKey,plyr2DRTrespKey);
-                    }
-                } else if (event.keyCode == 66){ // b
-                    bInstructions2 = false;
-                    instructionsOnline();
-                }
-            } else if (bInInstructions3){
-                if (event.keyCode == 32) {
-                    event.preventDefault();
-                    bInInstructions3 = false;
-
-                    if (skipIntro){
-                        blockInst(state.block.block_type,state.blockNo);
-                    } else {
+                        bInPaddlePractice = true;
+                        // instructions3();
+                        drtActive = false;
                         practiceTrial();
+                        // keyInsts(true,true,plyr1DRTrespKey,plyr2DRTrespKey);
                     }
-                } else if (event.keyCode == 66){ // b
-                    bInstructions3 = false;
-                    p1HandChosen = true;
-                    p2HandChosen = true;
-                    instructions2();
-                    keyInsts(true,true,plyr1DRTrespKey,plyr2DRTrespKey);
-                    expContext.fillText("Press 'spacebar' to continue", expCanvas.width*.75,expCanvas.height-50);
-                    expContext.fillStyle = "red";
-                    expContext.font="30px Arial";
-                    expContext.fillText("Controls cannot be changed.",expCanvas.width/2,expCanvas.height-160);
-                    expContext.fillStyle = frameColour;
-                    expContext.font="16px Arial";
+                }
+                // } else if (event.keyCode == 66){ // b
+                //     bInstructions2 = false;
+                //     instructionsOnline();
+                // }
+            } else if (bInInstructions3){
+                if (event.keyCode == 32 && proceed) {
+                    event.preventDefault();
+                    clearTimeout(timeout)
+                    proceed = false;
+                    bInInstructions3 = false;
+                    drtActive = true;
+                    bInDRTPractice = true;
+                    practiceTrial();
+                // } else if (event.keyCode == 66){ // b
+                //     bInstructions3 = false;
+                //     p1HandChosen = true;
+                //     p2HandChosen = true;
+                //     instructions2();
+                //     keyInsts(true,true,plyr1DRTrespKey,plyr2DRTrespKey);
+                //     expContext.fillText("Press 'spacebar' to continue", expCanvas.width*.75,expCanvas.height-50);
+                //     expContext.fillStyle = "red";
+                //     expContext.font="30px Arial";
+                //     expContext.fillText("Controls cannot be changed.",expCanvas.width/2,expCanvas.height-160);
+                //     expContext.fillStyle = frameColour;
+                //     expContext.font="16px Arial";
+                }
+            }
+            else if (bInInstructions4){
+                if (event.keyCode == 32 && proceed) {
+                    event.preventDefault();
+                    clearTimeout(timeout)
+                    proceed = false;
+                    bInInstructions4 = false;
+                    drtActive = true;
+                    bInCombinedPractice = true;
+                    practiceTrialDuration = trialDuration;
+                    practiceTrial();
+                }
+            }
+            else if (bInInstructionsEnd){
+                if (event.keyCode == 32 && proceed){
+                    event.preventDefault();
+                    clearTimeout(timeout)
+                    proceed = false;
+                    bInInstructionsEnd = false;
+                    blockInst(state.block.block_type,state.blockNo);
+                    teamCumulativeScore = 0;
+                    p1CumulativeScore = 0;
+                    p2CumulativeScore = 0;
                 }
             }
             if (bInTrial){
@@ -1302,7 +1345,7 @@ let paddle2History = new PaddleHistory();
             expContext.fillText("Welcome to Team Spirit!",expCanvas.width/2,expCanvas.height/4-100);
             expContext.font="16px Arial";
             expContext.fillText("This experiment will examine your performance during a multiplayer arcade-style game.",expCanvas.width/2,expCanvas.height/4-50);
-            expContext.fillText("1/4", expCanvas.width*.75,25);
+            expContext.fillText("1/6", expCanvas.width*.75,25);
             expContext.fillText("The game involves a set of balls flying around the screen and two paddles.",expCanvas.width/2,expCanvas.height/4);
             expContext.fillText("Your task is to move your paddle to deflect as many balls as you can within the time limit.",expCanvas.width/2,expCanvas.height/4+25);
             expContext.fillText("Please ensure that your browser window is maximised.",expCanvas.width/2,expCanvas.height/4+50);
@@ -1312,7 +1355,8 @@ let paddle2History = new PaddleHistory();
             expContext.fillText("The experiment will take approximately 35-40 minutes and you will be reimbursed 2 SONA points.", expCanvas.width/2,expCanvas.height/4+175);
             expContext.fillText("You may exit the study at any time without penalty by closing your browser window.", expCanvas.width/2,expCanvas.height/4+200);
 
-            expContext.fillText("Press 'spacebar' to continue", expCanvas.width*.75,expCanvas.height-50);
+            // expContext.fillText("Press 'spacebar' to continue", expCanvas.width*.75,expCanvas.height-50);
+            timeout = setTimeout(instructionsContinue,instructionsPause*1000);
         }
         // Perhaps include another page here that explains to them the nature of the multiplayer game. For example:
         function instructionsOnline(){
@@ -1322,30 +1366,36 @@ let paddle2History = new PaddleHistory();
 			expContext.fillStyle = fontColour;
             expContext.font="16px Arial";
             expContext.fillText("This experiment is unique in that you will be playing with and against another participant.",expCanvas.width/2,expCanvas.height/4-50);
-            expContext.fillText("2/4", expCanvas.width*.75,25);
+            expContext.fillText("2/6", expCanvas.width*.75,25);
             expContext.fillText("You are both currently reading through the instructions at your own pace but when the experiment",expCanvas.width/2,expCanvas.height/4); 
             expContext.fillText("begins you will both be required to indicate that you are ready before the next trial begins.",expCanvas.width/2,expCanvas.height/4+25);
             expContext.fillText("We understand that these tasks can become tedious however, as a courtesy to",expCanvas.width/2,expCanvas.height/4+75);
-            expContext.fillText("the potential time constraints of your fellow participant, it is important that", expCanvas.width/2,expCanvas.height/4+100);
+            expContext.fillText("time constraints of your fellow participant, it is important that", expCanvas.width/2,expCanvas.height/4+100);
             expContext.fillText("you remain engaged with and progress through the inter-trial and inter-block breaks.",expCanvas.width/2,expCanvas.height/4+125);
 
-            expContext.fillText("Press 'spacebar' to continue", expCanvas.width*.75,expCanvas.height-50);
-            expContext.fillText("Press 'b' to return", expCanvas.width*.25,expCanvas.height-50);
+            // expContext.fillText("Press 'spacebar' to continue", expCanvas.width*.75,expCanvas.height-50);
+            timeout = setTimeout(instructionsContinue,instructionsPause*1000);
+            // expContext.fillText("Press 'b' to return", expCanvas.width*.25,expCanvas.height-50);
         }
         function instructions2(){
             bInInstructions2 = true;
             drawCanvas(frameColour);
             entryPageStyling();
             expContext.fillStyle = fontColour;
-            expContext.fillText("3/4", expCanvas.width*.75,25);
-            expContext.fillText("Your paddle is red whereas your fellow participants paddle is blue.",expCanvas.width/2,expCanvas.height/4-50);
-            expContext.fillText("Along with controlling paddle movement you will also be required",expCanvas.width/2,expCanvas.height/4);
-            expContext.fillText("to respond to a flashing green light using your non-dominant hand.",expCanvas.width/2,expCanvas.height/4+25);
-            expContext.fillText("A more detailed explanation of this light is provided on the following page.",expCanvas.width/2,expCanvas.height/4+50);
-            expContext.fillText("For now, please indicate if you are right-handed by pressing 'Z' or if you are left-handed press the UP arrow.",expCanvas.width/2,expCanvas.height/4+100);
+            expContext.fillText("3/6", expCanvas.width*.75,25);
+            expContext.fillText("Your paddle is red whereas your fellow participants paddle is blue.",expCanvas.width/2,expCanvas.height/4-75);
+            expContext.fillText("Score points by moving your paddle left or right to hit the balls.",expCanvas.width/2,expCanvas.height/4-50);
+            expContext.fillText("Control the movement of the paddle with your dominant hand using the keyboard.",expCanvas.width/2,expCanvas.height/4-25);
 
-            expContext.fillText("Press 'spacebar' to continue", expCanvas.width*.75,expCanvas.height-50);
-            expContext.fillText("Press 'b' to return", expCanvas.width*.25,expCanvas.height-50);
+            expContext.fillText("To see your controls, please indicate if you are",expCanvas.width/2,expCanvas.height/4+25);
+            expContext.fillText("right-handed by pressing 'Z' or if you are left-handed press the UP arrow.",expCanvas.width/2,expCanvas.height/4+50);
+
+            expContext.fillText("A short practice trial will follow this screen.",expCanvas.width/2,expCanvas.height/4+100);
+            expContext.fillText("Note: you will complete three practice trials. All are without player 2.",expCanvas.width/2,expCanvas.height/4+125);
+
+            timeout = setTimeout(instructionsContinue,instructionsPause*1000);
+            // expContext.fillText("Press 'spacebar' to continue", expCanvas.width*.75,expCanvas.height-50);
+            // expContext.fillText("Press 'b' to return", expCanvas.width*.25,expCanvas.height-50);
         }
         function instructions3(){
             bInInstructions3 = true;
@@ -1355,15 +1405,52 @@ let paddle2History = new PaddleHistory();
 			expContext.fillStyle = fontColour;
 			expContext.font="16px Arial";
 			expContext.textAlign = "center";
-            expContext.fillText("4/4", expCanvas.width*.75,25);
-            expContext.fillText("Throughout the experiment, two panels along either side of the screen will flash green.",expCanvas.width/2,expCanvas.height/4-100);
-            expContext.fillText("The light will display briefly or until you respond however you can",expCanvas.width/2,expCanvas.height/4-50);
-            expContext.fillText("still respond to the light for a brief time after it disappears.",expCanvas.width/2,expCanvas.height/4-25);
-            expContext.fillText("Respond quickly and accurately to the light for score bonuses!",expCanvas.width/2,expCanvas.height/4+25);
-            expContext.fillText("A brief walkthrough trial will commence following this screen.",expCanvas.width/2,expCanvas.height/4+100);
+            expContext.fillText("4/6", expCanvas.width*.75,25);
+            expContext.fillText("Along with controlling paddle movement you will also be required",expCanvas.width/2,expCanvas.height/4-100);
+            expContext.fillText("to respond to a flashing green light using your non-dominant hand.",expCanvas.width/2,expCanvas.height/4-75);
 
-            expContext.fillText("Press 'spacebar' to continue", expCanvas.width*.75,expCanvas.height-50);
-            expContext.fillText("Press 'b' to return", expCanvas.width*.25,expCanvas.height-50);
+            expContext.fillText("The light will display in the side-panels of the screen briefly or",expCanvas.width/2,expCanvas.height/4-25);
+            expContext.fillText("until you respond. However, you can still respond to the light for",expCanvas.width/2,expCanvas.height/4);
+            expContext.fillText("a short time after it disappears.",expCanvas.width/2,expCanvas.height/4+25);
+            expContext.fillText("Respond quickly and accurately to the light for score bonuses!",expCanvas.width/2,expCanvas.height/4+75);
+            expContext.fillText("A short practice trial with ONLY the light will follow this screen.",expCanvas.width/2,expCanvas.height/4+100);
+
+            timeout = setTimeout(instructionsContinue,instructionsPause*1000);
+            // expContext.fillText("Press 'spacebar' to continue", expCanvas.width*.75,expCanvas.height-50);
+            // expContext.fillText("Press 'b' to return", expCanvas.width*.25,expCanvas.height-50);
+
+            keyInsts(true,true,plyr1DRTrespKey,plyr2DRTrespKey);
+        }
+
+        function instructions4(){
+            bInInstructions4 = true;
+            drawCanvas(frameColour);
+            entryPageStyling();
+			expContext.fillStyle = fontColour;
+			expContext.font="16px Arial";
+			expContext.textAlign = "center";
+            expContext.fillText("5/6", expCanvas.width*.75,25);
+            expContext.fillText("Great job!.",expCanvas.width/2,expCanvas.height/4-100);
+            expContext.fillText("Now, lets practice a full-length trial with some more balls AND the light!",expCanvas.width/2,expCanvas.height/4-50);
+            
+            expContext.fillText("Remember to respond quickly and accurately to the light for score bonuses!",expCanvas.width/2,expCanvas.height/4+25);
+            // expContext.fillText("Press 'spacebar' to continue", expCanvas.width*.75,expCanvas.height-50);
+            timeout = setTimeout(instructionsContinue,instructionsPause*1000);
+        }
+        function instructionsEnd(){
+            bInInstructionsEnd = true;
+            drawCanvas(frameColour);
+            entryPageStyling();
+			expContext.fillStyle = fontColour;
+			expContext.font="16px Arial";
+			expContext.textAlign = "center";
+            expContext.fillText("6/6", expCanvas.width*.75,25);
+            expContext.fillText("Well done!.",expCanvas.width/2,expCanvas.height/4-100);
+            expContext.fillText("This ends the practice trials.",expCanvas.width/2,expCanvas.height/4-50);
+            expContext.fillText("You can now join player 2 in the main game for your first set of instructions!",expCanvas.width/2,expCanvas.height/4);
+            
+            // expContext.fillText("Press 'spacebar' to continue", expCanvas.width*.75,expCanvas.height-50);
+            timeout = setTimeout(instructionsContinue,instructionsPause*1000);
         }
 
         function drawPracInst(time){
@@ -1371,29 +1458,24 @@ let paddle2History = new PaddleHistory();
             expContext.fillText("PRACTICE TRIAL",frameLeft+frameWidth/2,frameTop+50);
             expContext.fillStyle = "black";
             expContext.font = "20 px Arial";
-            expContext.fillStyle = "rgb(0,0,0)";            
+            expContext.fillStyle = "rgb(0,0,0)";
+                 
             if (time > practiceTrialDuration-dirInst){
-                if (plyr1DRTrespKey == RHdrtRespKey){
-                    expContext.fillText("Press left arrow to move left",frameLeft+frameWidth/2,frameBottom-frameHeight/4);
-                    expContext.fillText("Press right arrow to move right",frameLeft+frameWidth/2,frameBottom-frameHeight/4+25);
-                } else {
-                    expContext.fillText("Press 'Z' to move left",frameLeft+frameWidth/2,frameBottom-frameHeight/4);
-                    expContext.fillText("Press 'C' to move right",frameLeft+frameWidth/2,frameBottom-frameHeight/4+25);
-                }
-            } else if (time < practiceTrialDuration-dirInst && time > practiceTrialDuration-dirInst*3){
-                expContext.fillText("Scores are computed from your hits",expCanvas.width/2,frameTop+frameHeight/5);
-                expContext.fillText("and are added to your total score at the end of each trial!",expCanvas.width/2,frameTop+frameHeight/5+20);
-                expContext.fillText("Try to score as high as you can in each trial to maximise your block score!",expCanvas.width/2,frameTop+frameHeight/5+40);
-            } else if (time < practiceTrialDuration-dirInst && time > practiceTrialDuration-dirInst*6){
-                expContext.fillText("The panels on the side have now been activated.",expCanvas.width/2,frameTop+frameHeight/5);
-                expContext.fillText("They will regularly flash green throughout the game.",expCanvas.width/2,frameTop+frameHeight/5+20);               
-                expContext.fillText("Respond quickly and accurately for score bonuses!",expCanvas.width/2,frameTop+frameHeight/5+60);
-                expContext.fillText("The panel lights stay on briefly or until you respond.",expCanvas.width/2,frameTop+frameHeight/5+40);
-                expContext.fillText("Light Response:", expCanvas.width/2, frameBottom-frameHeight/4-25);
-                if (plyr1DRTrespKey == RHdrtRespKey){
-                    expContext.fillText("Press 'Z'", expCanvas.width/2, frameBottom-frameHeight/4);
-                } else {
-                    expContext.fillText("Press 'UP' arrow", expCanvas.width/2, frameBottom-frameHeight/4);
+                if (bInPaddlePractice){
+                    if (plyr1DRTrespKey == RHdrtRespKey){
+                        expContext.fillText("Left arrow to move left",frameLeft+frameWidth/2,frameBottom-frameHeight/4);
+                        expContext.fillText("Right arrow to move right",frameLeft+frameWidth/2,frameBottom-frameHeight/4+25);
+                    } else {
+                        expContext.fillText("'Z' to move left",frameLeft+frameWidth/2,frameBottom-frameHeight/4);
+                        expContext.fillText("'C' to move right",frameLeft+frameWidth/2,frameBottom-frameHeight/4+25);
+                    }
+                } else if (bInDRTPractice){
+                    expContext.fillText("Light Response:", expCanvas.width/2, frameBottom-frameHeight/4-25);
+                    if (plyr1DRTrespKey == RHdrtRespKey){
+                        expContext.fillText("Press 'Z'", expCanvas.width/2, frameBottom-frameHeight/4);
+                    } else {
+                        expContext.fillText("Press 'UP' arrow", expCanvas.width/2, frameBottom-frameHeight/4);
+                    }
                 }
             }
         }
@@ -1622,8 +1704,14 @@ let paddle2History = new PaddleHistory();
         }
         function timedContinue() {
             if (dispCont){
-            expContext.fillText("Press 'spacebar' to continue.", expCanvas.width/2,expCanvas.height-200);
-            proceed = true;
+                expContext.fillText("Press 'spacebar' to continue.", expCanvas.width/2,expCanvas.height-200);
+                proceed = true;
+            }
+        }
+        function instructionsContinue(){
+            if (dispCont){
+                expContext.fillText("Press 'spacebar' to continue.",expCanvas.width/2,expCanvas.height-150);
+                proceed = true;
             }
         }
 
@@ -1842,7 +1930,9 @@ let paddle2History = new PaddleHistory();
             }
             
             drawCanvas(fontColour);
-            drawDRT(drtOnsets,practiceTrialDuration,start,moving);
+            if (drtActive){
+                drawDRT(drtOnsets,practiceTrialDuration,start,moving);
+            }
             drawFrame();
             allBalls.forEach(function(ball){ // ball is the name of each element in the object, same as [for balls in balllist: ball.draw()]
                 ball.draw();
@@ -1909,8 +1999,9 @@ let paddle2History = new PaddleHistory();
                 ball.draw();
             })
 
-            paddle1.draw();
             paddle2.draw();
+            paddle1.draw();
+            
 
             scoring();
             drawScore(state.block.block_type,state.blockNo +1);
@@ -2087,12 +2178,15 @@ let paddle2History = new PaddleHistory();
 
         function practiceTrial(){
             bInPractice = true;
-            drtOnsets   = drtStimTimes(respWin,60/2);
+            drtOnsets   = drtStimTimes(respWin,practiceTrialDuration);
             drtPanels   = new DRT();
-            let nPracBalls  = 1;
+            let nPracBalls  = bInCombinedPractice? 3 : 1
             bAngles     = uniqueAngles(nPracBalls,60, 120);
-            for (let i = 0; i < nPracBalls; i++){
-                allBalls.push(new Ball(bx[i%3], sharedColour, i, bAngles[i]));
+            allBalls = [];
+            if (!bInDRTPractice){
+                for (let i = 0; i < nPracBalls; i++){
+                    allBalls.push(new Ball(bx[i%3], sharedColour, i, bAngles[i]));
+                }
             }
             playerId = state.player_id;
             otherId = playerId === '0' ? '1' : '0';
@@ -2114,10 +2208,20 @@ let paddle2History = new PaddleHistory();
             p1Left  = false;
             drtResp1 = false;
             if (bInPractice){
-                blockInst(state.block.block_type,state.blockNo);
-                teamCumulativeScore = 0;
-                p1CumulativeScore = 0;
-                p2CumulativeScore = 0;
+                // this is where you need to make all your practice changes
+                if (bInPaddlePractice){
+                    hits1 = 0;
+                    instructions3()
+                    bInPaddlePractice = false;
+                } else if (bInDRTPractice){
+                    bInDRTPractice = false;
+                    hits1 = 0;
+                    instructions4()
+                } else if (bInCombinedPractice) {
+                    bInCombinedPractice = false;
+                    hits1 = 0;
+                    instructionsEnd()
+                } 
             } else if (bInTrialBreak){
                 interTrial(score1,score2,teamScore, currentBlock)
             }
