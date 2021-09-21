@@ -804,6 +804,11 @@ let paddle2History = new PaddleHistory();
                         p1HandChosen = true;
                         ws.send(JSON.stringify({'hand':'Right'}));
                     }
+                    if (event.keyCode == 32){
+                        expContext.fillText("Before you can continue, please indicate if you are", expCanvas.width/2, expCanvas.height-120);
+                        expContext.fillText("RIGHT-handed by pressing 'Z' or",expCanvas.width/2,expCanvas.height-100);
+                        expContext.fillText(" LEFT-handed by pressing 'UP' arrow.", expCanvas.width/2,expCanvas.height-80)
+                    }
                 }
                 if (p1Hand.length == 1 && p1HandChosen && !drawnKeys){
                     keyInsts(true,true,plyr1DRTrespKey,plyr2DRTrespKey);
@@ -1484,8 +1489,9 @@ let paddle2History = new PaddleHistory();
             expContext.fillText("The light will display in the side-panels of the screen briefly or",expCanvas.width/2,expCanvas.height/4-10);
             expContext.fillText("until you respond. However, you can still respond to the light for",expCanvas.width/2,expCanvas.height/4+10);
             expContext.fillText("a short time after it disappears.",expCanvas.width/2,expCanvas.height/4+30);
-            expContext.fillText("Respond quickly and accurately to the light for score bonuses!",expCanvas.width/2,expCanvas.height/4+70);
-            expContext.fillText("A short practice trial with ONLY the light will follow this screen.",expCanvas.width/2,expCanvas.height/4+90);
+            expContext.fillText('Your "Light Response" key is shown below.',expCanvas.width/2,expCanvas.height/4+70);
+            expContext.fillText("Respond quickly and accurately to the light for score bonuses!",expCanvas.width/2,expCanvas.height/4+100);
+            expContext.fillText("A short practice trial with ONLY the light will follow this screen.",expCanvas.width/2,expCanvas.height/4+120);
 
             timeout = setTimeout(instructionsContinue,instructionsPause*1000);
             // expContext.fillText("Press 'spacebar' to continue", expCanvas.width*.75,expCanvas.height-50);
@@ -1527,10 +1533,10 @@ let paddle2History = new PaddleHistory();
 
         function drawPracInst(time){
             expContext.fillStyle = "red";
+            expContext.font = "20px Arial";
             expContext.fillText("PRACTICE TRIAL",frameLeft+frameWidth/2,frameTop+50);
             expContext.fillStyle = "black";
-            expContext.font = "20 px Arial";
-            expContext.fillStyle = "rgb(0,0,0)";
+            expContext.font = "16px Arial";
                  
             if (time > practiceTrialDuration-dirInst){
                 if (bInPaddlePractice){
@@ -1569,25 +1575,29 @@ let paddle2History = new PaddleHistory();
                 count++;
                 expContext.fillText("Please take a short 20 second break before beginning block "+count+" of "+nBlocks,expCanvas.width/2, expCanvas.height/4-75);
                 count--;
+            } else {
+                count++;
+                expContext.fillText("Starting block "+count+" of "+nBlocks,expCanvas.width/2, expCanvas.height/4-75);
+                count--;
             }
+            expContext.fillText("Please use the below instructions to guide your playing strategy.",expCanvas.width/2, expCanvas.height/4-50);
             // expContext.fillText(,expCanvas.width/2,expCanvas.height/4-50);
             // count--;
 
             if (state.block.block_type == "nonCol"){
-                expContext.fillText("During this block you will only be able to hit the red balls.",expCanvas.width/2,expCanvas.height/4-25);
-                drawBorder(50,95,700,50,2)
+                expContext.fillText("During this block you will only be able to hit the red balls.",expCanvas.width/2,expCanvas.height/4+10);
+                drawBorder(175,120,450,75,2)
             } else if (state.block.block_type == "col"){
-                expContext.fillText("During this block you must work together!",expCanvas.width/2,expCanvas.height/4);
-                expContext.fillText("Both of your hits count toward the team score.",expCanvas.width/2,expCanvas.height/4+25);
+                expContext.fillText("During this block you must work together!",expCanvas.width/2,expCanvas.height/4+10);
+                expContext.fillText("Both of your hits count towards a team score.",expCanvas.width/2,expCanvas.height/4+25);
                 drawBorder(175,120,450,75,2)
             } else if (state.block.block_type == "com"){
-                expContext.fillText("During this block you must try to outscore your opponent.",expCanvas.width/2,expCanvas.height/4);
-                expContext.fillText("Try to hit as many as you can!",expCanvas.width/2,expCanvas.height/4+25);
+                expContext.fillText("During this block you must try to outscore your opponent.",expCanvas.width/2,expCanvas.height/4+10);
                 drawBorder(175,120,450,75,2)
             }
             
-            expContext.fillText("Score as high as you can but don't forget to respond quickly and accurately",expCanvas.width/2,expCanvas.height/4+75);
-            expContext.fillText("to the flashing light.",expCanvas.width/2,expCanvas.height/4+100);
+            expContext.fillText("Try to hit as many balls as you can but don't forget",expCanvas.width/2,expCanvas.height/4+75);
+            expContext.fillText("to respond quickly and accurately to the flashing light.",expCanvas.width/2,expCanvas.height/4+100);
 
 
             keyInsts(true,true,plyr1DRTrespKey,plyr2DRTrespKey,x = expCanvas.height/4+300);
@@ -1681,7 +1691,6 @@ let paddle2History = new PaddleHistory();
                 if (state.players[state.player_id].instructionProgress == 0){
                     getUsername1();
                 } else if (state.players[state.player_id].instructionProgress == 1) {
-                    
                     instructionsOnline()
                 } else if (state.players[state.player_id].instructionProgress == 2) {
                     instructions2()
@@ -1933,7 +1942,7 @@ let paddle2History = new PaddleHistory();
 
                     expContext.textAlign = "right";
                     expContext.fillText("Team Score: "+teamScore,frameRight-10,frameTop+20);
-                } else {
+                } else if (blockType == "com") {
                     // Player 1 Score
                     expContext.textAlign = "left";
                     expContext.font = "16px Arial";
@@ -1944,6 +1953,12 @@ let paddle2History = new PaddleHistory();
                     expContext.textAlign = "right";
                     expContext.fillStyle = fontColour;
                     expContext.fillText("Player 2 Score: "+score2,frameRight-10,frameTop+20);
+                } else {
+                    // Player 1 Score
+                    expContext.textAlign = "left";
+                    expContext.font = "16px Arial";
+                    expContext.fillStyle = fontColour;
+                    expContext.fillText("Your Score: "+score1,frameLeft+10,frameTop+20);
                 }
             }
         }
@@ -2284,7 +2299,7 @@ let paddle2History = new PaddleHistory();
             expContext.fillText("Player 2 disconnected",expCanvas.width/2,expCanvas.height/4-100);
             expContext.font="16px Arial";
             expContext.fillText("Thank you for your participation.",expCanvas.width/2,expCanvas.height/4-60);
-            expContext.fillText("The experiment has ended. Participation credit for SONA ID " + username1 + " been granted.", expCanvas.width/2, expCanvas.height/4-40);
+            expContext.fillText("The experiment has ended. Participation credit for SONA ID " + state.players[state.player_id].SONA + " been granted.", expCanvas.width/2, expCanvas.height/4-40);
             expContext.fillText("If this SONA ID is incorrect or you have any questions or concerns about the experiment", expCanvas.width/2, expCanvas.height/4-20);
             expContext.fillText("please contact the researchers Murray Bennett or Ami Eidels at:", expCanvas.width/2,expCanvas.height/4);
             expContext.fillText("murray.bennett@uon.edu.au or ami.eidels@newcastle.edu.au", expCanvas.width/2,expCanvas.height/4+20);
@@ -2386,7 +2401,7 @@ let paddle2History = new PaddleHistory();
                 teamCumulativeScore+=parseInt(teams);
                 justOncePlease = false;
             }
-            if (blockType == "nonCol" || blockType == "com"){
+            if (blockType == "com"){
                 expContext.fillText("You:",p1Start+pWidth/2,frameTop+frameHeight/4+100);
                 expContext.fillText("Player 2:",p2Start+pWidth/2,frameTop+frameHeight/4+100);
                 expContext.fillText("Trial Score",frameRight-frameWidth/2,frameTop+frameHeight/4+125);
@@ -2396,7 +2411,7 @@ let paddle2History = new PaddleHistory();
                 expContext.fillText(p1CumulativeScore,p1Start+pWidth/2,frameTop+frameHeight/4+175);
                 expContext.fillText(p2CumulativeScore,p2Start+pWidth/2,frameTop+frameHeight/4+175);
 
-            } else { // collaborative
+            } else if (blockType == "col") { // collaborative
                 expContext.fillText("You:",p1Start+pWidth/2,frameTop+frameHeight/4+150);
                 expContext.fillText("Player 2:",p2Start+pWidth/2,frameTop+frameHeight/4+150);
                 expContext.fillText("Team: ",expCanvas.width/2,frameTop+frameHeight/4+75);
@@ -2406,6 +2421,12 @@ let paddle2History = new PaddleHistory();
                 expContext.fillText(p2teamScore,p2Start+pWidth/2,frameTop+frameHeight/4+175);
                 expContext.fillText(teams,expCanvas.width/2,frameTop+frameHeight/4+100);
                 expContext.fillText(teamCumulativeScore,expCanvas.width/2,frameTop+frameHeight/4+125);
+            } else {
+                // expContext.fillText("You:",p1Start+pWidth/2,frameTop+frameHeight/4+100);
+                expContext.fillText("Trial Score",frameWidth/2-30,frameTop+frameHeight/4+60);
+                expContext.fillText("Total Score",frameWidth/2-30,frameTop+frameHeight/4+90);
+                expContext.fillText(p1s,frameRight-frameWidth/2,frameTop+frameHeight/4+60);
+                expContext.fillText(p1CumulativeScore,frameRight-frameWidth/2,frameTop+frameHeight/4+90);
             }
 
             keyInsts(true,true,plyr1DRTrespKey,plyr2DRTrespKey, x = expCanvas.height/4+300);
@@ -2423,7 +2444,7 @@ let paddle2History = new PaddleHistory();
             expContext.fillText("The experiment is complete!",expCanvas.width/2,expCanvas.height/4-100);
             expContext.font="16px Arial";
             expContext.fillText("Thank you for your participation.",expCanvas.width/2,expCanvas.height/4-60);
-            expContext.fillText("Participation credit for SONA ID " + username1 + " been granted.", expCanvas.width/2, expCanvas.height/4-40);
+            expContext.fillText("Participation credit for SONA ID " + state.players[state.player_id].SONA + " been granted.", expCanvas.width/2, expCanvas.height/4-40);
             expContext.fillText("If this SONA ID is incorrect or you have any questions or concerns about the experiment", expCanvas.width/2, expCanvas.height/4-20);
             expContext.fillText("please contact the researchers Murray Bennett or Ami Eidels at:", expCanvas.width/2,expCanvas.height/4);
             expContext.fillText("murray.bennett@uon.edu.au or ami.eidels@newcastle.edu.au", expCanvas.width/2,expCanvas.height/4+20);
@@ -2451,6 +2472,7 @@ let paddle2History = new PaddleHistory();
 
 
 		function pointsLink() {
+
             var url = "https://newcastle.sona-systems.com/webstudy_credit.aspx?experiment_id=1334&credit_token=becc4ef0cdab4fa4b41fbd778bef01d3&survey_code=" + state.players[state.player_id].SONA
         	var xhttp = new XMLHttpRequest();
         	xhttp.open("GET", url, true);
