@@ -172,19 +172,17 @@ let paddle2History = new PaddleHistory();
     <canvas id="fireworks" width="800" height="600" style="position:absolute; width: 100%; height:100%; z-index:2"></canvas>
     <script>
 
-    var skipIntro = false;
-
     // Define variables
         var nBlocks             = 3;
 
         // workload
         var workloadLevels      = [1,3,6,9];
-        var trialDuration       = 10   // 45 seconds
-        var practiceTrialDuration = 10; // 25
+        var trialDuration       = 45   // 45 seconds
+        var practiceTrialDuration = 25; // 25
         var dirInst             = 10;            // second intervals to display practice trial instructions
-        var blockBreakTime = 1; // 20
-        var trialBreakTime = 1; // 5
-        var instructionsPause = 1; // 5
+        var blockBreakTime = 20; // 20
+        var trialBreakTime = 5; // 5
+        var instructionsPause = 5; // 5
         var sharedColour        = "#963d97";
         var p1Colour            = "FireBrick";
         var p2Colour            = "RoyalBlue";
@@ -205,7 +203,7 @@ let paddle2History = new PaddleHistory();
 
         var drtLeft;
         var drtRight;
-        var drtOn               = "chartreuse";
+        var drtOn               = "#1bff00";
         var drtOff              = "black";
         var drtMin              = 3;
         var drtMax              = 5;
@@ -300,11 +298,11 @@ let paddle2History = new PaddleHistory();
         var left;
         var right;              
 
-        if (skipIntro){
-            left = RHleft; 
-            right = RHright; 
-            plyr1DRTrespKey = RHdrtRespKey;
-        }
+        // if (skipIntro){
+        //     left = RHleft; 
+        //     right = RHright; 
+        //     plyr1DRTrespKey = RHdrtRespKey;
+        // }
         
         var p1Hand              = [];
         var p1HandChosen        = false;
@@ -1650,11 +1648,11 @@ let paddle2History = new PaddleHistory();
             
             if (state.status === 'ending' || state.players[0].status === 'timedout' || state.players[1].status === 'timedout') { // if someone tries to rejoin later
                 gameclosed();
-            } else if (skipIntro){
-                ws.send(JSON.stringify({'hand':'Right', 'instructionProgress' : 6}))
-                state.players[state.player_id].instructionProgress = 6;
-                state.players[state.player_id].hand = 'Right';
-                blockInst(state.block.block_type, state.blockNo);
+            // } else if (skipIntro){
+            //     ws.send(JSON.stringify({'hand':'Right', 'instructionProgress' : 6}))
+            //     state.players[state.player_id].instructionProgress = 6;
+            //     state.players[state.player_id].hand = 'Right';
+            //     blockInst(state.block.block_type, state.blockNo);
             } else if (state.status === 'playing') {
                 clearTimeout(timeout)
                 nCurrentTrial = state.trialNo+1;
@@ -2210,7 +2208,7 @@ let paddle2History = new PaddleHistory();
                     else {
                         messageDelay = clientTime + serverTimeDelta - serverTime;
                     }
-                    if (state.status === 'waiting' && received.status === 'reading' && !skipIntro){
+                    if (state.status === 'waiting' && received.status === 'reading'){
                         instructions1();
                         drawWaitingRoomScientist = false;
                     }

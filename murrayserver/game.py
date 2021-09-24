@@ -27,7 +27,7 @@ async def run_later(coro, delay):
     await sleep(delay)
     return await coro
 
-trial_duration = 10
+trial_duration = 45
 timeout_limit = 60
 
 class Game:
