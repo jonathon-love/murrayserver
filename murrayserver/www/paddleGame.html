@@ -1,10 +1,9 @@
 <HTML>
     <HEAD>
     </HEAD>
-    <BODY>
+    <BODY style='color: #222222; background-color: ivory;'>
 
     <SCRIPT>
-
 
 
 function ready(fn) {
@@ -167,11 +166,54 @@ let paddle2History = new PaddleHistory();
 
 
   </SCRIPT>
+   <!-- entry form -->
+      <div id="theForm" style="margin:0 auto; background: ivory; display:none">
+        <h1 style="text-align:center; margin:0 auto;" id="userid"></h1>
+        <p style="text-align:center; margin:0 auto; font-size:20;" id="username_msg">Please enter your unique ID before continuing</p>
+        <form id='username-form' style="text-align:center; margin:0 auto;">
+            <input type="text" id="username-id" name="username-id"/>
+            <button type="button" id="formSubmit">submit</button>
+        </form>
+    </div> 
+    <!-- data check form -->
+    <div id="datacheck" style="margin:0 auto; background: ivory; display:none">
+        <h1 style="text-align:center; margin:0 auto;">Final Data Consent</h1>
+        <p style="text-align:center; margin:0 auto; font-size:20;" id="username_msg">
+            Before commencing the final trial of the experiment, we wish to confirm your consent to use the data collected.<br>
+            Please check the relevant box below to confirm that you wish for your data to be used or discarded from future use.<br>
+            Upon completion of this final trial, you will still be reimbursed for your time regardless of your decision here. <br> <br>
+            Once you have made your selection, please press submit to continue
+        </p>
+        <form id='data-retention' style="text-align:center; margin:0 auto;">
+            <p><label><input type='radio' id="removeData" name="rmData">I would like my data REMOVED from analysis</p></label>
+            <p><label><input type='radio' id="retainData" name="rmData">I would like my data INCLUDED in analysis</p></label>
+            <button type="button" id="submitData">submit</button>
+        </form>
+        <p id='empty_response_msg' style="text-align:center; margin:0 auto;font-size: 20;"></p>
+    </div> 
+  <!-- Exit form -->
+    <div id="exitForm" style="margin:0 auto;background: ivory; display:none">
+        <p style="text-align:center; margin:0 auto;">
+            <button type="button" id="exitButton"><h1>Return to Prolific</h1></button>
+        </p>
+    </div>
 
-    <canvas id="canvas" width="800" height="600" style="position:absolute; width: 100%; height:100%; z-index:1"></canvas>
-    <canvas id="fireworks" width="800" height="600" style="position:absolute; width: 100%; height:100%; z-index:2"></canvas>
+    <canvas id="canvas" width="800" height="600" style="position:absolute; width: 100%; height:100%; z-index:1;"></canvas>
+    <canvas id="fireworks" width="800" height="600" style="position:absolute; width: 100%; height:100%; z-index:2;"></canvas>
+
+
+
     <script>
+        // problematic because when you check it here, regardless of where they've come from, the current host will be murray.thon.cc
+        var sona_participants = window.location.hostname === 'psych-jatos.newcastle.edu.au';
 
+        // var sona_participants = window.location.hostname === 'localhost';
+
+        if (sona_participants) {
+            document.getElementById("userid").textContent = "SONA ID";
+        } else {
+            document.getElementById("userid").textContent = "Prolific User ID";
+        }
     // Define variables
         var nBlocks             = 3;
 
@@ -270,7 +312,7 @@ let paddle2History = new PaddleHistory();
         var bInCombinedPractice = false;
 
         var username1;
-
+        var data_consent_provided = false;
         // Trial Start
         let startCount          = 0;
         let start;
@@ -912,11 +954,13 @@ let paddle2History = new PaddleHistory();
             if (bInTrialBreak){
                 if (event.keyCode == 32 && proceed){
                     scoreReset();
-                    if (nCurrentTrial<state.maxTrials){
+                    if (state.trialNo == state.maxTrials-1 && state.blockNo == 2 && !data_consent_provided){ // prior to the commencement of the final trial
+                        dataCheck();
+                    } else if (nCurrentTrial<state.maxTrials){
                         ws.send(JSON.stringify({"status":"ready"}))
                         intertrialWaiting()
                     } else {
-                        if (state.trialNo+1>=state.maxTrials){ // it only reaches the max at the end of the exp, otherwise it resets to zero for the next block
+                        if (state.trialNo+1>=state.maxTrials){
                             expEnd();
                         } else {
                             blockInst(state.block.block_type,state.blockNo);
@@ -1402,7 +1446,12 @@ let paddle2History = new PaddleHistory();
             // }
             return timeRemaining;
         }
-        
+        function userEntry(){
+            document.getElementById('theForm').style.display = 'inline';
+            document.getElementById('canvas').style.display = 'none';
+            document.getElementById('fireworks').style.display = 'none';
+        }
+
         function instructions1(){
             bInInstructions1 = true;
             drawCanvas(frameColour);
@@ -1687,7 +1736,7 @@ let paddle2History = new PaddleHistory();
                     }
                 }
                 if (state.players[state.player_id].instructionProgress == 0){
-                    getUsername1();
+                    userEntry();
                 } else if (state.players[state.player_id].instructionProgress == 1) {
                     instructionsOnline()
                 } else if (state.players[state.player_id].instructionProgress == 2) {
@@ -1714,9 +1763,89 @@ let paddle2History = new PaddleHistory();
                     }
                 }
             } else {
-                getUsername1();
+                // getUsername1();
+                userEntry()
             }
         }
+
+        // accept user id 
+        var form = document.getElementById("username-form");
+        var form_data = document.getElementById("data-retention");
+        function handleForm(event) {event.preventDefault(); }
+        form.addEventListener('submit', handleForm);
+        form_data.addEventListener('submit', handleForm);
+
+        var enterUserID = document.getElementById('formSubmit');
+        enterUserID.onclick = function() {
+            var userForm = document.getElementById('theForm');
+            username1 = document.getElementById("username-id").value;           
+            let valid_entry =  false;
+
+            if (sona_participants){
+                if (username1 != null && (username1.length >= 5 && username1.length <=6) && isNumeric(username1)) {
+                    valid_entry = true;
+                    ws.send(JSON.stringify({"SONA":username1}));
+                    if (state.status === 'waiting'){
+                        drawWaitingRoomScientist = true;
+                        waitingRoom();
+                    } else {
+                        instructions1();
+                        drawWaitingRoomScientist = false;
+                    }
+                } else {
+                    document.getElementById("username_msg").textContent = "ERROR: Please ensure your ID is 5 or 6 digits."
+                }
+
+            } else {
+                if (username1 === ""){
+                    document.getElementById("username_msg").textContent = "ERROR: Please input your ID to continue."
+                }else{
+                    valid_entry = true;
+                    ws.send(JSON.stringify({"SONA":username1}));
+                    if (state.status === 'waiting'){
+                        drawWaitingRoomScientist = true;
+                        waitingRoom();
+                    } else {
+                        instructions1();
+                        drawWaitingRoomScientist = false;
+                    }
+                }
+            }
+            if (valid_entry){
+                userForm.style.display = 'none';
+                document.getElementById('canvas').style.display = 'inline';
+                document.getElementById('fireworks').style.display = 'inline';
+
+                // // Test exit form
+                // var eForm = document.getElementById('exitForm');
+                // eForm.style.display = 'inline'
+            }
+        }
+
+        var data_consent = document.getElementById("submitData")
+        data_consent.onclick = function (){
+            if ((!document.getElementById("removeData").checked && !document.getElementById("retainData").checked)){
+                document.getElementById('empty_response_msg').textContent = "Please make a selection to continue.";
+            } else {
+                data_consent_provided = true;
+                if (document.getElementById("removeData").checked){ws.send(JSON.stringify({"rmData":username1}));}
+                document.getElementById("datacheck").style.display = 'none';
+                document.getElementById("canvas").style.display = 'inline';
+                ws.send(JSON.stringify({"status":"ready"}))
+                intertrialWaiting();
+            }
+        }
+
+        var prolificReturn = document.getElementById('exitButton');
+        prolificReturn.onclick = function() {
+            // Set this to the provided prolific address
+            window.location.href = 'http://localhost:8080'
+            // window.location.href = 'https://app.prolific.co/submissions/complete?cc=80A936B0'
+        }
+        // make the button dance.
+        prolificReturn.addEventListener("mouseover", function(e){prolificReturn.style.backgroundColor = '#247c7f';},false);
+        prolificReturn.addEventListener("mouseout", function(e){prolificReturn.style.backgroundColor = '#5fb49c';},false);
+
         //Addin
         function getUsername1() {
             if (username1 == null) {
@@ -2288,7 +2417,7 @@ let paddle2History = new PaddleHistory();
         }
 
         function participantTO(){
-            dispFireworks = true;
+            // dispFireworks = true;
             drawCanvas(frameColour);
             entryPageStyling();
             expContext.fillStyle = fontColour;
@@ -2296,14 +2425,21 @@ let paddle2History = new PaddleHistory();
             expContext.textAlign = "center";
             expContext.fillText("Player 2 disconnected",expCanvas.width/2,expCanvas.height/4-100);
             expContext.font="16px Arial";
-            expContext.fillText("Thank you for your participation.",expCanvas.width/2,expCanvas.height/4-60);
-            expContext.fillText("The experiment has ended. Participation credit for SONA ID " + state.players[state.player_id].SONA + " been granted.", expCanvas.width/2, expCanvas.height/4-40);
-            expContext.fillText("If this SONA ID is incorrect or you have any questions or concerns about the experiment", expCanvas.width/2, expCanvas.height/4-20);
-            expContext.fillText("please contact the researchers Murray Bennett or Ami Eidels at:", expCanvas.width/2,expCanvas.height/4);
-            expContext.fillText("murray.bennett@uon.edu.au or ami.eidels@newcastle.edu.au", expCanvas.width/2,expCanvas.height/4+20);
-
-            expContext.fillText("Please close the browser window to exit the study.",expCanvas.width/2,expCanvas.height/4+60);
-            pointsLink()     
+            expContext.fillText("Thank you for your participation. The experiment has ended.",expCanvas.width/2,expCanvas.height/4-60);
+            if (sona_participants){
+                expContext.fillText("Participation credit for SONA ID " + state.players[state.player_id].SONA + " been granted.", expCanvas.width/2, expCanvas.height/4-40);
+                expContext.fillText("Please close the browser window to exit the study.",expCanvas.width/2,expCanvas.height/4+60);
+                pointsLink()     
+            } else {
+                expContext.fillText("A partial payment will be determined based on your total progression.", expCanvas.width/2, expCanvas.height/4-40);
+                expContext.fillText("Please click the 'Return to Prolific' button at the top of the page.", expCanvas.width/2, expCanvas.height/4+60);
+                var eForm = document.getElementById('exitForm');
+                eForm.style.display = 'inline'
+                document.getElementById('exitButton').style.backgroundColor = '#5fb49c';
+                document.getElementById('exitButton').style.color = 'ivory';
+            }
+            expContext.fillText("If you have any questions or concerns about the experiment please contact the researcher", expCanvas.width/2,expCanvas.height/4);
+            expContext.fillText("Murray Bennett at murray.bennett@uon.edu.au", expCanvas.width/2,expCanvas.height/4+20);
         }
 
         function practiceTrial(){
@@ -2388,7 +2524,7 @@ let paddle2History = new PaddleHistory();
                 drawBorder(200,140, 400, 50, 2);
             }
             
-            dispFireworks = nCurrentTrial == state.maxTrials
+            dispFireworks = nCurrentTrial == state.maxTrials & state.trialNo == 0;
             if (dispFireworks){drawFireWorks()} else {fwCtx.clearRect(0,0,expCanvas.width, expCanvas.height)};
             // This notation is whack. Essentially - prepend a string with + to evaluate as a number
             p1teamScore = p1s; //Math.round((+p1s/(+p1s + +p2s))*+teams);
@@ -2431,6 +2567,13 @@ let paddle2History = new PaddleHistory();
 
             timeout = setTimeout(timedContinue,trialBreakTime*1000);
         }
+
+        function dataCheck(){
+            var bInDataCheck = true;
+            document.getElementById("datacheck").style.display = 'inline';
+            document.getElementById("canvas").style.display = 'none';
+        }
+
         function expEnd(){
             dispFireworks = true;
             drawFireWorks();
@@ -2442,14 +2585,24 @@ let paddle2History = new PaddleHistory();
             expContext.fillText("The experiment is complete!",expCanvas.width/2,expCanvas.height/4-100);
             expContext.font="16px Arial";
             expContext.fillText("Thank you for your participation.",expCanvas.width/2,expCanvas.height/4-60);
-            expContext.fillText("Participation credit for SONA ID " + state.players[state.player_id].SONA + " been granted.", expCanvas.width/2, expCanvas.height/4-40);
-            expContext.fillText("If this SONA ID is incorrect or you have any questions or concerns about the experiment", expCanvas.width/2, expCanvas.height/4-20);
+            if (sona_participants){
+                expContext.fillText("Participation credit for ID " + state.players[state.player_id].SONA + " been granted.", expCanvas.width/2, expCanvas.height/4-40);
+                expContext.fillText("If this ID is incorrect or you have any questions or concerns about the experiment", expCanvas.width/2, expCanvas.height/4-20);
+                expContext.fillText("You may close the browser window at any time.",expCanvas.width/2,expCanvas.height/4+75);           
+                pointsLink()
+            } else {
+                expContext.fillText("Please click on the 'Return to Prolific' button on the top of the screen.", expCanvas.width/2, expCanvas.height/4-40);
+                expContext.fillText("If you have any questions or concerns about the experiment", expCanvas.width/2, expCanvas.height/4-20);
+                var eForm = document.getElementById('exitForm');
+                eForm.style.display = 'inline';
+                document.getElementById('exitButton').style.backgroundColor = '#5fb49c';
+                document.getElementById('exitButton').style.color = 'ivory';
+            }
             expContext.fillText("please contact the researchers Murray Bennett or Ami Eidels at:", expCanvas.width/2,expCanvas.height/4);
             expContext.fillText("murray.bennett@uon.edu.au or ami.eidels@newcastle.edu.au", expCanvas.width/2,expCanvas.height/4+20);
 
-            expContext.fillText("You may close the browser window at any time.",expCanvas.width/2,expCanvas.height/4+75);
+     
 
-            pointsLink()
         }
         function gameclosed(){
             drawCanvas(frameColour);
@@ -2470,7 +2623,6 @@ let paddle2History = new PaddleHistory();
 
 
 		function pointsLink() {
-
             var url = "https://newcastle.sona-systems.com/webstudy_credit.aspx?experiment_id=1334&credit_token=becc4ef0cdab4fa4b41fbd778bef01d3&survey_code=" + state.players[state.player_id].SONA
         	var xhttp = new XMLHttpRequest();
         	xhttp.open("GET", url, true);
