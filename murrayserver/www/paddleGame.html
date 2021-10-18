@@ -166,15 +166,6 @@ let paddle2History = new PaddleHistory();
 
 
   </SCRIPT>
-   <!-- entry form -->
-      <div id="theForm" style="margin:0 auto; background: ivory; display:none">
-        <h1 style="text-align:center; margin:0 auto;" id="userid"></h1>
-        <p style="text-align:center; margin:0 auto; font-size:20;" id="username_msg">Please enter your unique ID before continuing</p>
-        <form id='username-form' style="text-align:center; margin:0 auto;">
-            <input type="text" id="username-id" name="username-id"/>
-            <button type="button" id="formSubmit">submit</button>
-        </form>
-    </div> 
     <!-- data check form -->
     <div id="datacheck" style="margin:0 auto; background: ivory; display:none">
         <h1 style="text-align:center; margin:0 auto;">Final Data Consent</h1>
@@ -204,16 +195,11 @@ let paddle2History = new PaddleHistory();
 
 
     <script>
-        // problematic because when you check it here, regardless of where they've come from, the current host will be murray.thon.cc
-        var sona_participants = window.location.hostname === 'psych-jatos.newcastle.edu.au';
-
+        let platform_source = new URLSearchParams(document.location.search.substring(1));
+        var sona_participants = platform_source.get('platform') === 'sona';
         // var sona_participants = window.location.hostname === 'localhost';
+        username1 = platform_source.get('user_id');
 
-        if (sona_participants) {
-            document.getElementById("userid").textContent = "SONA ID";
-        } else {
-            document.getElementById("userid").textContent = "Prolific User ID";
-        }
     // Define variables
         var nBlocks             = 3;
 
@@ -821,10 +807,7 @@ let paddle2History = new PaddleHistory();
                     instructions2();
                     
                 }
-                // if (event.keyCode == 66){ // b
-                //     bInInstructionsOnline = false;
-                //     instructions1();
-                // }
+
             } else if (bInInstructions2){
                 if (p1Hand.length == 0 && !p1HandChosen){
                     if (e.keyCode == LHdrtRespKey){
@@ -869,16 +852,11 @@ let paddle2History = new PaddleHistory();
                         ws.send(JSON.stringify({"instructionProgress": 3}))
                         bInInstructions2 = false;
                         bInPaddlePractice = true;
-                        // instructions3();
                         drtActive = false;
                         practiceTrial();
-                        // keyInsts(true,true,plyr1DRTrespKey,plyr2DRTrespKey);
                     }
                 }
-                // } else if (event.keyCode == 66){ // b
-                //     bInstructions2 = false;
-                //     instructionsOnline();
-                // }
+
             } else if (bInInstructions3){
                 if (event.keyCode == 32 && proceed) {
                     event.preventDefault();
@@ -889,18 +867,6 @@ let paddle2History = new PaddleHistory();
                     drtActive = true;
                     bInDRTPractice = true;
                     practiceTrial();
-                // } else if (event.keyCode == 66){ // b
-                //     bInstructions3 = false;
-                //     p1HandChosen = true;
-                //     p2HandChosen = true;
-                //     instructions2();
-                //     keyInsts(true,true,plyr1DRTrespKey,plyr2DRTrespKey);
-                //     expContext.fillText("Press 'spacebar' to continue", expCanvas.width*.75,expCanvas.height-50);
-                //     expContext.fillStyle = "red";
-                //     expContext.font="30px Arial";
-                //     expContext.fillText("Controls cannot be changed.",expCanvas.width/2,expCanvas.height-160);
-                //     expContext.fillStyle = frameColour;
-                //     expContext.font="16px Arial";
                 }
             }
             else if (bInInstructions4){
@@ -1384,7 +1350,6 @@ let paddle2History = new PaddleHistory();
                 if (currentWaiter[i]==0){
                     continue
                 }
-                // except I think I want to do this on the fireworks canvas.
                 fwCtx.fillRect(xPos,yPos,pxSize,pxSize);
             }
         }
@@ -1406,50 +1371,28 @@ let paddle2History = new PaddleHistory();
             expContext.fillText("The experiment instructions will automatically begin once they connect.", expCanvas.width/2, expCanvas.height/4+60);
             expContext.fillText("Please close the browser window if you do not wish to wait.",expCanvas.width/2,expCanvas.height/4+80);
             
-            // expContext.fillText("The formal experiment explanation will automatically commence once player 2 has joined.",expCanvas.width/2,expCanvas.height/4+90);
             drawWaitingRoomTimer();
             // border for the picture
             drawBorder(expCanvas.width/2-132, 248, 263,263,2);
-            // border for timer
-            // drawBorder(expCanvas.width/2-27, frameBottom-122,53,33,2);
         }
 
         function waitingRoomTimer(totalWaitTime, start){
-            //clear the patch you're about to draw on.
-            // expContext.fillStyle = frameColour;
-            // expContext.fillRect(expCanvas.width/2-20,frameBottom-115, 40, 20);
             let timeRemaining;
             let startTime = Date.now();
             timeRemaining = (startTime-start)/1000;//+totalWaitTime;
             let dispTime = timeRemaining.toFixed(0);
-            // if (timeWaited){
-            //     dispTime = timeRemaining-(totalWaitTime-timeWaited);
-            // } else{
-            //     dispTime = timeRemaining;
-            // }
-            // dispTime.toFixed(2);
-            // expContext.font = "16px Arial";
-            // expContext.fillStyle = fontColour;
-            // expContext.textAlign = "center";
-            // let mins = Math.floor(dispTime/60);
-            // let secs = Math.floor(dispTime%60);
-            // if (dispTime<=0){
-            //     dispTime = 0;
-            //     timeRemaining = 0;
-            //     expContext.fillText("0:00",expCanvas.width/2,frameBottom-100);
-            // } else {
-            //     if (secs<10){
-            //         expContext.fillText(mins.toFixed(0)+":0"+secs.toFixed(0),expCanvas.width/2,frameBottom-100);
-            //     } else {
-            //         expContext.fillText(mins.toFixed(0)+":"+secs.toFixed(0),expCanvas.width/2,frameBottom-100);
-            //     }
-            // }
+
             return timeRemaining;
         }
         function userEntry(){
-            document.getElementById('theForm').style.display = 'inline';
-            document.getElementById('canvas').style.display = 'none';
-            document.getElementById('fireworks').style.display = 'none';
+            ws.send(JSON.stringify({"platformID":username1}));
+            if (state.status === 'waiting'){
+                drawWaitingRoomScientist = true;
+                waitingRoom();
+            } else {
+                instructions1();
+                drawWaitingRoomScientist = false;
+            }
         }
 
         function instructions1(){
@@ -1763,64 +1706,14 @@ let paddle2History = new PaddleHistory();
                     }
                 }
             } else {
-                // getUsername1();
                 userEntry()
             }
         }
 
-        // accept user id 
-        var form = document.getElementById("username-form");
+        // confirm user consent to use data
         var form_data = document.getElementById("data-retention");
         function handleForm(event) {event.preventDefault(); }
-        form.addEventListener('submit', handleForm);
         form_data.addEventListener('submit', handleForm);
-
-        var enterUserID = document.getElementById('formSubmit');
-        enterUserID.onclick = function() {
-            var userForm = document.getElementById('theForm');
-            username1 = document.getElementById("username-id").value;           
-            let valid_entry =  false;
-
-            if (sona_participants){
-                if (username1 != null && (username1.length >= 5 && username1.length <=6) && isNumeric(username1)) {
-                    valid_entry = true;
-                    ws.send(JSON.stringify({"SONA":username1}));
-                    if (state.status === 'waiting'){
-                        drawWaitingRoomScientist = true;
-                        waitingRoom();
-                    } else {
-                        instructions1();
-                        drawWaitingRoomScientist = false;
-                    }
-                } else {
-                    document.getElementById("username_msg").textContent = "ERROR: Please ensure your ID is 5 or 6 digits."
-                }
-
-            } else {
-                if (username1 === ""){
-                    document.getElementById("username_msg").textContent = "ERROR: Please input your ID to continue."
-                }else{
-                    valid_entry = true;
-                    ws.send(JSON.stringify({"SONA":username1}));
-                    if (state.status === 'waiting'){
-                        drawWaitingRoomScientist = true;
-                        waitingRoom();
-                    } else {
-                        instructions1();
-                        drawWaitingRoomScientist = false;
-                    }
-                }
-            }
-            if (valid_entry){
-                userForm.style.display = 'none';
-                document.getElementById('canvas').style.display = 'inline';
-                document.getElementById('fireworks').style.display = 'inline';
-
-                // // Test exit form
-                // var eForm = document.getElementById('exitForm');
-                // eForm.style.display = 'inline'
-            }
-        }
 
         var data_consent = document.getElementById("submitData")
         data_consent.onclick = function (){
@@ -1839,59 +1732,12 @@ let paddle2History = new PaddleHistory();
         var prolificReturn = document.getElementById('exitButton');
         prolificReturn.onclick = function() {
             // Set this to the provided prolific address
-            window.location.href = 'http://localhost:8080'
-            // window.location.href = 'https://app.prolific.co/submissions/complete?cc=80A936B0'
+            // window.location.href = 'http://localhost:8080'
+            window.location.href = 'https://app.prolific.co/submissions/complete?cc=80A936B0'
         }
         // make the button dance.
         prolificReturn.addEventListener("mouseover", function(e){prolificReturn.style.backgroundColor = '#247c7f';},false);
         prolificReturn.addEventListener("mouseout", function(e){prolificReturn.style.backgroundColor = '#5fb49c';},false);
-
-        //Addin
-        function getUsername1() {
-            if (username1 == null) {
-                username1 = prompt("Please enter your 5 or 6 digit SONA ID");
-                confirmUsername1();
-            }
-            else if (!(username1.length >= 5 && username1.length <=6) || !isNumeric(username1)){
-                username1 = prompt("Please enter your 5 or 6 digit SONA ID");
-                confirmUsername1();
-            }
-            else if (username1 != null && !(username1.length >= 5 && username1.length <=6) && isNumeric(username1)) {
-                ws.send(JSON.stringify({"SONA":username1}));
-                if (state.status === 'waiting'){
-                    drawWaitingRoomScientist = true;
-                    waitingRoom();
-                } else {
-                    instructions1();
-                    drawWaitingRoomScientist = false;
-                }
-            }
-            else {(confirmUsername1())}
-        }
-
-        function confirmUsername1() {
-            if (!(username1.length >= 5 && username1.length <=6) || !isNumeric(username1)) {
-                alert("You entered: "+ username1 + "\n" + "Please ensure your SONA ID is 5 or 6 numerical characters");
-                getUsername1();
-            }
-            else {
-                ws.send(JSON.stringify({"SONA":username1}));
-                if (state.status === 'waiting'){
-                    drawWaitingRoomScientist = true;
-                    waitingRoom();
-                } else {
-                    instructions1();
-                    drawWaitingRoomScientist = false;
-                }
-            }
-        }
-
-        function isNumeric(str){
-            if (typeof str != "string"){
-                return false
-            }
-            return !isNaN(str) && !isNaN(parseFloat(str))
-        }
 
         function removeAllVals(arr, value) {
             var i = 0;
@@ -2427,7 +2273,7 @@ let paddle2History = new PaddleHistory();
             expContext.font="16px Arial";
             expContext.fillText("Thank you for your participation. The experiment has ended.",expCanvas.width/2,expCanvas.height/4-60);
             if (sona_participants){
-                expContext.fillText("Participation credit for SONA ID " + state.players[state.player_id].SONA + " been granted.", expCanvas.width/2, expCanvas.height/4-40);
+                expContext.fillText("Participation credit for SONA ID " + state.players[state.player_id].platformID + " been granted.", expCanvas.width/2, expCanvas.height/4-40);
                 expContext.fillText("Please close the browser window to exit the study.",expCanvas.width/2,expCanvas.height/4+60);
                 pointsLink()     
             } else {
@@ -2586,7 +2432,7 @@ let paddle2History = new PaddleHistory();
             expContext.font="16px Arial";
             expContext.fillText("Thank you for your participation.",expCanvas.width/2,expCanvas.height/4-60);
             if (sona_participants){
-                expContext.fillText("Participation credit for ID " + state.players[state.player_id].SONA + " been granted.", expCanvas.width/2, expCanvas.height/4-40);
+                expContext.fillText("Participation credit for ID " + state.players[state.player_id].platformID + " been granted.", expCanvas.width/2, expCanvas.height/4-40);
                 expContext.fillText("If this ID is incorrect or you have any questions or concerns about the experiment", expCanvas.width/2, expCanvas.height/4-20);
                 expContext.fillText("You may close the browser window at any time.",expCanvas.width/2,expCanvas.height/4+75);           
                 pointsLink()
@@ -2623,7 +2469,7 @@ let paddle2History = new PaddleHistory();
 
 
 		function pointsLink() {
-            var url = "https://newcastle.sona-systems.com/webstudy_credit.aspx?experiment_id=1334&credit_token=becc4ef0cdab4fa4b41fbd778bef01d3&survey_code=" + state.players[state.player_id].SONA
+            var url = "https://newcastle.sona-systems.com/webstudy_credit.aspx?experiment_id=1334&credit_token=becc4ef0cdab4fa4b41fbd778bef01d3&survey_code=" + state.players[state.player_id].platformID
         	var xhttp = new XMLHttpRequest();
         	xhttp.open("GET", url, true);
 			xhttp.send();
