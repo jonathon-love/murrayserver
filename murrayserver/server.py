@@ -44,14 +44,14 @@ class Server:
             self._current_game = Game(self._current_game_no)
             self._start_game(self._current_game)
             self._games[str(self._current_game_no)] = self._current_game
-        
+
         game_id = self._current_game_no
         player_id = self._current_game.add_player()
         if self._current_game.ready():
             self._current_game = None
             self._current_game_no += 1
 
-        return HTTPFound(f'/{ game_id }/{ player_id }/paddleGame.html')
+        return HTTPFound(f'/{ game_id }/{ player_id }/paddleGame.html?{ request.query_string }')
 
     async def _enter_game(self, request):
         game_id = request.match_info.get('game_id')
