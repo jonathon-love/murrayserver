@@ -27,8 +27,8 @@ async def run_later(coro, delay):
     await sleep(delay)
     return await coro
 
-trial_duration = 45
-timeout_limit = 60
+trial_duration = 45 #45
+timeout_limit = 60  #60
 
 class Game:
     def __init__(self, game_no):
@@ -66,13 +66,18 @@ class Game:
             'ballR': bRad,
         }
 
-        block_orders = [
-           ["nonCol","col","com"],
-           ["nonCol","com","col"],
-           ["col","nonCol","com"],
-           ["col","com","nonCol"],
-           ["com","nonCol","col"],
-           ["com","col","nonCol"]
+        # block_orders = [
+        #    ["nonCol","col","com"], #123 A
+        #    ["nonCol","com","col"], #132 B
+        #    ["col","nonCol","com"], #213 C
+        #    ["col","com","nonCol"], #231 D
+        #    ["com","nonCol","col"], #312 E
+        #    ["com","col","nonCol"]  #321 F
+        #    ]
+        block_orders = [ # 2/11/21 - Remedy an imbalance where A, D and F are overrepresented.
+           ["nonCol","com","col"], #132 B
+           ["col","nonCol","com"], #213 C
+           ["com","nonCol","col"], #312 E
            ]
 
         block_types = block_orders[self._game_no % len(block_orders)]
