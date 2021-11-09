@@ -74,9 +74,11 @@ class Game:
         #    ["com","nonCol","col"], #312 E
         #    ["com","col","nonCol"]  #321 F
         #    ]
-        block_orders = [ # 2/11/21 - Remedy an imbalance where A, D and F are overrepresented.
+        block_orders = [ # 2/11/21 - Remedy imbalances. The "double-E" is intentional. Risky, but intentional.
+           ["nonCol","col","com"], #123 A
            ["nonCol","com","col"], #132 B
-           ["col","nonCol","com"], #213 C
+           ["col","com","nonCol"], #231 D
+           ["com","nonCol","col"], #312 E
            ["com","nonCol","col"], #312 E
            ]
 
