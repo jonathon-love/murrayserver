@@ -201,6 +201,7 @@ let paddle2History = new PaddleHistory();
         username1 = platform_source.get('user_id');
         var exp_completed = false;
 
+        drtChecks = [];
     // Define variables
         var nBlocks             = 3;
 
@@ -1625,7 +1626,7 @@ let paddle2History = new PaddleHistory();
 			frameRight          = drtWidth*0.95;
 			frameTop            = 0;
 			frameBottom         = frameHeight;
-            //DRT Panels
+            //DRT Panels        
             drtLeft             = 0;
 			drtRight            = frameRight;
 			// Sprite positions
@@ -1824,6 +1825,7 @@ let paddle2History = new PaddleHistory();
             } else {
                 tRem = duration;
             }
+
 
             if (drtResp1){
                 if (stimTimes[0]-tRem > rtMin && counter1){

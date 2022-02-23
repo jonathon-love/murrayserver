@@ -74,12 +74,12 @@ class Game:
         #    ["com","nonCol","col"], #312 E
         #    ["com","col","nonCol"]  #321 F
         #    ]
-        block_orders = [ # 2/11/21 - Remedy imbalances. The "double-E" is intentional. Risky, but intentional.
+        block_orders = [ # 24/02/22
+           ["nonCol","col","com"], #123 A
            ["nonCol","col","com"], #123 A
            ["nonCol","com","col"], #132 B
+           ["nonCol","com","col"], #132 B
            ["col","com","nonCol"], #231 D
-           ["com","nonCol","col"], #312 E
-           ["com","nonCol","col"], #312 E
            ]
 
         block_types = block_orders[self._game_no % len(block_orders)]
