@@ -18,7 +18,8 @@ from os import environ
 from os import path
 import math
 import sys
-from .stream import ProgressStream
+
+from .bot import Bot
 
 import logging
 
@@ -40,6 +41,7 @@ class Game:
         self._ready = Event()
         self._ended = False
         self._blocks = [ ]
+        self._bot = None
 
         drtWidth = 800
         width  = drtWidth * 0.9
@@ -159,6 +161,12 @@ class Game:
             self._joined[player_id] = True
             if self._joined['0'] and self._joined['1']:
                 self._ready.set()
+
+        if self._bot is None:
+            bot_type = environ.get('MURRAYSERVER_BOT_TYPE', 'dumb')
+            if bot_type == 'dumb':
+                self._bot = Bot()
+                self._bot.start(self)
 
         async def send(obj, delay=None):
             if delay is not None:
