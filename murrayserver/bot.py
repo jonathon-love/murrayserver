@@ -38,6 +38,7 @@ class Bot:
             'paddle': self._dim['paddleY'] - self._dim['ballR'],
         }
 
+        self._player_id = self._game.add_player()
         self._run_task = create_task(self._run())
         self._run_task.add_done_callback(lambda t: t.result())
 
@@ -47,7 +48,6 @@ class Bot:
 
     async def _run(self):
 
-        self._player_id = self._game.add_player()
         complete = create_task(self._game.join(self._player_id, self._stream))
 
         while not complete.done():
