@@ -67,23 +67,13 @@ class Game:
             'ballR': bRad,
         }
 
-        # block_orders = [
-        #    ["nonCol","col","com"], #123 A
-        #    ["nonCol","com","col"], #132 B
-        #    ["col","nonCol","com"], #213 C
-        #    ["col","com","nonCol"], #231 D
-        #    ["com","nonCol","col"], #312 E
-        #    ["com","col","nonCol"]  #321 F
-        #    ]
-        block_orders = [ # 24/02/22
-            ["nonCol","col","com"], #123 A
-            ["nonCol","col","com"], #123 A
-            ["nonCol","com","col"], #132 B
-            ["nonCol","com","col"], #132 B
-            ["col","nonCol","com"], #213 C
-            ["col","com","nonCol"], #231 D
-            ["com","nonCol","col"], #312 E
-            ["com","col","nonCol"]  #321 F
+        block_orders = [
+           ["nonCol","col","com"], #123 A
+           ["nonCol","com","col"], #132 B
+           ["col","nonCol","com"], #213 C
+           ["col","com","nonCol"], #231 D
+           ["com","nonCol","col"], #312 E
+           ["com","col","nonCol"]  #321 F
            ]
 
         block_types = block_orders[self._game_no % len(block_orders)]
