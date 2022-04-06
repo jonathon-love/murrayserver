@@ -795,20 +795,21 @@ let paddle2History = new PaddleHistory();
                     bInInstructions1 = false;
                     clearTimeout(timeout)
                     proceed = false;
-                    ws.send(JSON.stringify({"instructionProgress": 1}))
-                    instructionsOnline()
-                    
-                }
-            } else if (bInInstructionsOnline){
-                if (event.keyCode == 32 && proceed){
-                    event.preventDefault();
-                    bInInstructionsOnline = false;
-                    clearTimeout(timeout)
-                    proceed = false;
                     ws.send(JSON.stringify({"instructionProgress": 2}))
+                    // instructionsOnline()
                     instructions2();
                     
                 }
+            //} else if (bInInstructionsOnline){
+            //     if (event.keyCode == 32 && proceed){
+            //         event.preventDefault();
+            //         bInInstructionsOnline = false;
+            //         clearTimeout(timeout)
+            //         proceed = false;
+            //         ws.send(JSON.stringify({"instructionProgress": 2}))
+            //         instructions2();
+                    
+            //     }
 
             } else if (bInInstructions2){
                 if (p1Hand.length == 0 && !p1HandChosen){
@@ -1411,37 +1412,38 @@ let paddle2History = new PaddleHistory();
             expContext.fillText("Please ensure that your browser window is maximised.",expCanvas.width/2,expCanvas.height/4+20);
             expContext.fillText("1/6", expCanvas.width*.75,25);
             expContext.fillText("The game involves a set of balls flying around the screen and two paddles.",expCanvas.width/2,expCanvas.height/4+50);
-            expContext.fillText("Your task is to move your paddle to hit as many balls as you can within the time limit.",expCanvas.width/2,expCanvas.height/4+70);
+            expContext.fillText("Your task is to move your paddle to hit as many balls as you can within the time limit whilst",expCanvas.width/2,expCanvas.height/4+70);
+            expContext.fillText("collaborating, competing, or playing separately to the other player.", expCanvas.width/2,expCanvas.height/4+90);
 
-            expContext.fillText("The game runs over 3 blocks of 12 trials, where each trial lasts 45 seconds.", expCanvas.width/2,expCanvas.height/4+110);
-            expContext.fillText("There is a forced 20 second break between blocks.", expCanvas.width/2,expCanvas.height/4+130);
-            expContext.fillText("The experiment will take approximately 35-40 minutes and you will be reimbursed 2 SONA points.", expCanvas.width/2,expCanvas.height/4+150);
-            expContext.fillText("You may exit the study at any time without penalty by closing your browser window.", expCanvas.width/2,expCanvas.height/4+170);
+            expContext.fillText("The game runs over 3 blocks of 12 trials, where each trial lasts 45 seconds.", expCanvas.width/2,expCanvas.height/4+130);
+            expContext.fillText("There is a forced 20 second break between blocks.", expCanvas.width/2,expCanvas.height/4+150);
+            expContext.fillText("The experiment will take approximately 35-40 minutes.", expCanvas.width/2,expCanvas.height/4+170);
+            expContext.fillText("You may exit the study at any time without penalty by closing your browser window.", expCanvas.width/2,expCanvas.height/4+190);
 
             // expContext.fillText("Press 'spacebar' to continue", expCanvas.width*.75,expCanvas.height-50);
             timeout = setTimeout(instructionsContinue,instructionsPause*1000);
         }
         // Perhaps include another page here that explains to them the nature of the multiplayer game. For example:
-        function instructionsOnline(){
-            bInInstructionsOnline = true;
-            drawCanvas(frameColour);
-            entryPageStyling();
-            drawGameTitle();
-			expContext.fillStyle = fontColour;
-            expContext.font="16px Arial";
-            expContext.textAlign = "center";
-            expContext.fillText("This experiment is unique in that you will be playing with and against another participant.",expCanvas.width/2,expCanvas.height/4);
-            expContext.fillText("2/6", expCanvas.width*.75,25);
-            expContext.fillText("You are both currently reading through the instructions at your own pace but when the experiment",expCanvas.width/2,expCanvas.height/4+30); 
-            expContext.fillText("begins you will both be required to indicate that you are ready before the next trial begins.",expCanvas.width/2,expCanvas.height/4+50);
-            expContext.fillText("We understand that these tasks can become tedious however, as a courtesy to",expCanvas.width/2,expCanvas.height/4+80);
-            expContext.fillText("time constraints of your fellow participant, it is important that", expCanvas.width/2,expCanvas.height/4+100);
-            expContext.fillText("you remain engaged with and progress through the inter-trial and inter-block breaks.",expCanvas.width/2,expCanvas.height/4+120);
+        // function instructionsOnline(){
+        //     bInInstructionsOnline = true;
+        //     drawCanvas(frameColour);
+        //     entryPageStyling();
+        //     drawGameTitle();
+		// 	expContext.fillStyle = fontColour;
+        //     expContext.font="16px Arial";
+        //     expContext.textAlign = "center";
+        //     expContext.fillText("During this experiment you will be playing with and against another player.",expCanvas.width/2,expCanvas.height/4);
+        //     expContext.fillText("2/6", expCanvas.width*.75,25);
+        //     expContext.fillText("Please read through the instructions at your own pace but when the experiment",expCanvas.width/2,expCanvas.height/4+30); 
+        //     expContext.fillText("begins you will be required to indicate that you are ready before the next trial begins.",expCanvas.width/2,expCanvas.height/4+50);
+        //     expContext.fillText("We understand that these tasks can become tedious however, as a courtesy to",expCanvas.width/2,expCanvas.height/4+80);
+        //     expContext.fillText("time constraints of your fellow participant, it is important that", expCanvas.width/2,expCanvas.height/4+100);
+        //     expContext.fillText("you remain engaged with and progress through the inter-trial and inter-block breaks.",expCanvas.width/2,expCanvas.height/4+120);
 
-            // expContext.fillText("Press 'spacebar' to continue", expCanvas.width*.75,expCanvas.height-50);
-            timeout = setTimeout(instructionsContinue,instructionsPause*1000);
-            // expContext.fillText("Press 'b' to return", expCanvas.width*.25,expCanvas.height-50);
-        }
+        //     // expContext.fillText("Press 'spacebar' to continue", expCanvas.width*.75,expCanvas.height-50);
+        //     timeout = setTimeout(instructionsContinue,instructionsPause*1000);
+        //     // expContext.fillText("Press 'b' to return", expCanvas.width*.25,expCanvas.height-50);
+        // }
         function instructions2(){
             bInInstructions2 = true;
             drawCanvas(frameColour);
@@ -1451,7 +1453,7 @@ let paddle2History = new PaddleHistory();
             expContext.textAlign = "center";
             expContext.font="16px Arial";
             expContext.fillText("3/6", expCanvas.width*.75,25);
-            expContext.fillText("Your paddle is red whereas your fellow participants paddle is blue.",expCanvas.width/2,expCanvas.height/4-50);
+            expContext.fillText("Your paddle is red whereas your fellow player's paddle is blue.",expCanvas.width/2,expCanvas.height/4-50);
             expContext.fillText("Score points by moving your paddle left or right to hit the balls.",expCanvas.width/2,expCanvas.height/4-30);
             expContext.fillText("Control the movement of the paddle with your dominant hand using the keyboard.",expCanvas.width/2,expCanvas.height/4-10);
 
@@ -1611,7 +1613,7 @@ let paddle2History = new PaddleHistory();
             expContext.fillText("Player 1: Ready",expCanvas.width/2, expCanvas.height/3);
             expContext.fillText("Waiting for Player 2", expCanvas.width/2, expCanvas.height/3 + 25);
             expContext.fillText("Please wait for player 2.", expCanvas.width/2, expCanvas.height/3 + 100);
-            expContext.fillText(" The trial will commence once they have indicated they are ready.", expCanvas.width/2, expCanvas.height/3 + 125);
+            expContext.fillText("The trial will commence once they have indicated they are ready.", expCanvas.width/2, expCanvas.height/3 + 125);
 
         }
 
@@ -1682,8 +1684,8 @@ let paddle2History = new PaddleHistory();
                 }
                 if (state.players[state.player_id].instructionProgress == 0){
                     userEntry();
-                } else if (state.players[state.player_id].instructionProgress == 1) {
-                    instructionsOnline()
+                // } else if (state.players[state.player_id].instructionProgress == 1) {
+                //     instructionsOnline()
                 } else if (state.players[state.player_id].instructionProgress == 2) {
                     instructions2()
                     // selecting controls - check if they have or haven't already.
@@ -2231,9 +2233,9 @@ let paddle2History = new PaddleHistory();
                         paddle2History.add(parseInt(received.timestamp*1000), received.players[otherId].pos)
                     }
                     
-                    if (state.players && state.players[playerId]['status'] === 'notReady' && state.players[otherId]['status'] === 'ready'){
-                        expContext.fillText("Player 2 is ready.", expCanvas.width/2, expCanvas.height/4+225);
-                    }
+                    // if (state.players && state.players[playerId]['status'] === 'notReady' && state.players[otherId]['status'] === 'ready'){
+                    //     expContext.fillText("Player 2 is ready.", expCanvas.width/2, expCanvas.height/4+225);
+                    // }
                     if (state.players && state.players[otherId]['status'] === 'timedout' && state.players[playerId]['status'] != 'timedout'){
                         drawWaitingRoomScientist = false
                         participantTO();
