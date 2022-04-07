@@ -178,7 +178,7 @@ class Game:
                     self._joined[player_id] = False
                 if self._state['status'] == 'ending':
                     self._joined[player_id] = False
-                    if self._joined[0] is False and self._joined[1] is False:
+                    if self._joined['0'] is False and self._joined['1'] is False:
                         self._ended = True
                 else:
                     # player is having connection issues:
