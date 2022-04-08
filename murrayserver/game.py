@@ -20,6 +20,7 @@ import math
 import sys
 
 from .bot import Bot
+from .bot import Bot2
 
 import logging
 
@@ -129,7 +130,9 @@ class Game:
         if bot_type == 'dumb':
             self._bot = Bot()
             self._bot.start(self)
-
+        elif bot_type == 'dumb2':
+            self._bot = Bot2()
+            self._bot.start(self)
 
     def add_player(self):
         player_id = None

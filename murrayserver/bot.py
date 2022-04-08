@@ -76,6 +76,30 @@ class Bot:
 
             await wait({ complete }, timeout=.05)
 
+    def determinePositionWeights(self, balls):
+        width = self._bounds['right'] - self._bounds['left']
+        nBins = 80
+        binWidth = width / (nBins - 1)
+        weights = [None] * nBins
+
+        for i in range(nBins):
+            x = self._bounds['left'] + (i + 0.5) / nBins * width
+            t = 1 - abs(x - (width / 2)) / (width / 2)
+            weights[i] = { 'x': x, 't': t }
+
+        for ball in balls:
+            intercept = self.determinePaddleIntercept(ball['x'], ball['y'], ball['speed'], ball['angle'])
+            if intercept is None:
+                continue
+            for weight in weights:
+                distance = abs(intercept['x'] - weight['x'])
+                proximity = 1 - (distance / width);
+                #weight['t'] += pow(proximity, 3) * pow(intercept['p'], 5) * 100
+                #weight['t'] += pow(proximity, 1) * pow(intercept['p'], 1) * 100
+                weight['t'] += pow(proximity, 1) * 100
+
+        return weights
+
     def determineOptimalPosition(self, balls):
 
         block_type = self._state['block']['block_type']
@@ -89,32 +113,15 @@ class Bot:
                 stop = None
             balls = islice(balls, start, stop)
 
-        width = self._bounds['right'] - self._bounds['left']
-        nBins = 80
-        binWidth = width / (nBins - 1)
-        bins = [None] * nBins
+        weights = self.determinePositionWeights(balls)
 
-        for i in range(nBins):
-            bins[i] = { 'x': self._bounds['left'] + (i + 0.5) / nBins * width, 't': 0 }
+        max_weight = { 'x': 400, 't': 0 };
 
-        for ball in balls:
-            intercept = self.determinePaddleIntercept(ball['x'], ball['y'], ball['speed'], ball['angle'])
-            if intercept is None:
-                continue
-            for bin in bins:
-                distance = abs(intercept['x'] - bin['x'])
-                proximity = 1 - (distance / width);
-                #bin['t'] += pow(proximity, 3) * pow(intercept['p'], 5) * 100
-                #bin['t'] += pow(proximity, 1) * pow(intercept['p'], 1) * 100
-                bin['t'] += pow(proximity, 1) * 100
+        for weight in weights:
+            if weight['t'] > max_weight['t']:
+                max_weight = weight
 
-        max_t = { 'x': 400, 't': 0 };
-
-        for bin in bins:
-            if bin['t'] > max_t['t']:
-                max_t = bin
-
-        return max_t['x']
+        return max_weight['x']
 
     def calc_pos(self, x, y, speed, angle, elapsed):
         xe = x + speed * math.cos(angle) * elapsed / 1000 / 0.02
@@ -221,3 +228,22 @@ class Bot:
             return { 'x': x, 'y': y, 'speed': speed, 'angle': angle, 'elapsed': elapsed }
         else:
             return None
+
+
+class Bot2(Bot):
+
+    def determinePositionWeights(self, balls):
+
+        weights = super().determinePositionWeights(balls)
+
+        block_type = self._state['block']['block_type']
+        if block_type == 'col':
+            other_player = '1' if self._player_id == '0' else '1'
+            paddle_left = self._state['players'][other_player]['pos']
+            paddle_right = paddle_left + self._dim['pWidth']
+
+            for weight in weights:
+                if weight['x'] >= paddle_left - 100 and weight['x'] <= paddle_right + 100:
+                    weight['t'] = 0
+
+        return weights
