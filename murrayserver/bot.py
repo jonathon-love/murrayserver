@@ -77,26 +77,59 @@ class Bot:
             await wait({ complete }, timeout=.05)
 
     def determinePositionWeights(self, balls):
+
+        # construct 80 bins, with each bin representing a position the paddle can move to.
+
         width = self._bounds['right'] - self._bounds['left']
         nBins = 80
         binWidth = width / (nBins - 1)
         weights = [None] * nBins
 
+
+        # each bin is assigned an x, and a t ... x is the x coord, t is the
+        # preference for moving to that location. the bin with
+        # the highest t is where the bot will move the paddle
+
         for i in range(nBins):
             x = self._bounds['left'] + (i + 0.5) / nBins * width
+            # here we provide a slight bias towards the center of the screen
             t = 1 - abs(x - (width / 2)) / (width / 2)
             weights[i] = { 'x': x, 't': t }
 
+        # here we iterate over each ball
         for ball in balls:
+            # calculating when/where it will intersect the paddle line
+            # note that from dumbing it down, it will only consider intersections
+            # less than 1.2 seconds into the future
             intercept = self.determinePaddleIntercept(ball['x'], ball['y'], ball['speed'], ball['angle'])
             if intercept is None:
                 continue
+
             for weight in weights:
+                # calculate the x distance between the intersect and the bin
                 distance = abs(intercept['x'] - weight['x'])
+                # convert that to a
                 proximity = 1 - (distance / width);
-                #weight['t'] += pow(proximity, 3) * pow(intercept['p'], 5) * 100
-                #weight['t'] += pow(proximity, 1) * pow(intercept['p'], 1) * 100
+
+                # proximity, 1 = close, 0 = distant
+                # intercept['p'] is 'temporal proximity', 1 = intersection soon, 0 = distant
+
+                # these are examples of how you can weight the weights
+                # using a 1 -> 0 interval is nice because we can raise it to
+                # different powers to tune the behaviour:
+                #
+                # weight['t'] += pow(proximity, 3) * pow(intercept['p'], 5) * 100
+                # weight['t'] += pow(proximity, 1) * pow(intercept['p'], 1) * 100
+
+                # but in the process of dumbing the whole thing down, this is
+                # what i ened up with
+
                 weight['t'] += pow(proximity, 1) * 100
+
+                # in fact i could simplify this to just
+                #   weight['t'] += proximity
+                # but whatevs
+
 
         return weights
 
@@ -234,6 +267,7 @@ class Bot2(Bot):
 
     def determinePositionWeights(self, balls):
 
+        # calculate the weights
         weights = super().determinePositionWeights(balls)
 
         block_type = self._state['block']['block_type']
@@ -243,6 +277,9 @@ class Bot2(Bot):
             paddle_right = paddle_left + self._dim['pWidth']
 
             for weight in weights:
+
+                # if the bin falls within 100 pixels of the opponents paddle,
+                # set the weight to 0.
                 if weight['x'] >= paddle_left - 100 and weight['x'] <= paddle_right + 100:
                     weight['t'] = 0
 
