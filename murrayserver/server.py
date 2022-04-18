@@ -19,7 +19,10 @@ import mimetypes
 
 from os import path
 from time import time
+
 from .game import Game
+from .bot import Bot
+from .bot import Bot2
 
 
 class Server:
@@ -47,6 +50,21 @@ class Server:
 
         game_id = self._current_game_no
         player_id = self._current_game.add_player()
+
+        bot_type = request.query.get('b')
+        pretend_to_be_human = request.query.get('h', '0') == '1'
+
+        if bot_type == 'd':
+            self._bot = Bot(pretend_to_be_human)
+            self._bot.start(self._current_game)
+        elif bot_type == 'c':
+            self._bot = Bot2(pretend_to_be_human)
+            self._bot.start(self._current_game)
+        elif bot_type == 's':
+            #self._bot = BotSmart(pretend_to_be_human)
+            #self._bot.start(self._current_game)
+            pass
+
         if self._current_game.ready():
             self._current_game = None
             self._current_game_no += 1

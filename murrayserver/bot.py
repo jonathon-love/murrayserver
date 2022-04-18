@@ -5,6 +5,7 @@ from asyncio import wait
 
 import math
 import json
+from random import randint
 
 from .stream import ProgressStream
 from collections import namedtuple
@@ -19,7 +20,8 @@ class WS(ProgressStream):
 
 class Bot:
 
-    def __init__(self):
+    def __init__(self, pretend_to_be_human):
+        self._pretend_to_be_human = pretend_to_be_human
         self._state = None
         self._run_task = None
         self._stream = WS()
@@ -54,7 +56,14 @@ class Bot:
 
             if self._state['status'] == 'reading':
                 if self._state['players'][self._player_id]['status'] != 'ready':
-                    self._send({'status':'ready'})
+                    if self._pretend_to_be_human:
+                        other_player = '1' if self._player_id == '0' else '0'
+                        # always have the player wait for the bot
+                        if self._state['players'][other_player]['status'] == 'ready':
+                            await sleep(randint(1, 6))
+                            self._send({'status':'ready'})
+                    else:
+                        self._send({'status':'ready'})
             else:
                 balls = self._state['balls']
                 optimal_pos = self.determineOptimalPosition(balls) - self._dim['pWidth'] / 2
