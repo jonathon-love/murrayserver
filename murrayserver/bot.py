@@ -272,7 +272,7 @@ class Bot2(Bot):
 
         block_type = self._state['block']['block_type']
         if block_type == 'col':
-            other_player = '1' if self._player_id == '0' else '1'
+            other_player = '0' if self._player_id == '1' else '1'
             paddle_left = self._state['players'][other_player]['pos']
             paddle_right = paddle_left + self._dim['pWidth']
 
