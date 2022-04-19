@@ -169,12 +169,29 @@ let paddle2History = new PaddleHistory();
     <!-- data check form -->
     <div id="datacheck" style="margin:0 auto; background: ivory; display:none">
         <h1 style="text-align:center; margin:0 auto;">Final Data Consent</h1>
-        <p style="text-align:center; margin:0 auto; font-size:20;" id="username_msg">
-            Before commencing the final trial of the experiment, we wish to confirm your consent to use the data collected.<br>
-            Please check the relevant box below to confirm that you wish for your data to be used or discarded from future use.<br>
-            Upon completion of this final trial, you will still be reimbursed for your time regardless of your decision here. <br> <br>
-            Once you have made your selection, please press submit to continue
-        </p>
+        <div id="username_msg" style="margin:0 auto; background: ivory;">
+            <p style="text-align:center; margin:0 auto; font-size:20;" >
+                Before commencing the final trial of the experiment, we wish to confirm your consent to use the data collected.<br>
+                Please check the relevant box below to confirm that you wish for your data to be used or discarded from future use.<br>
+                Upon completion of this final trial, you will still be reimbursed for your time regardless of your decision here. <br> <br>
+                Once you have made your selection, please press submit to continue
+            </p> 
+        </div>
+        <div id="p2_type" style="margin:0 auto; background: ivory; display:none">
+            <p style="text-align:center; margin:0 auto; font-size:20;">
+                Before commencing the final trial of the experiment, we wish to reveal the complete experimental design before confirming your consent to use the data collected.<br><br>
+                Our experiment aims to examine the behavioural and cognitive performance of individuals working with artificially intelligent machines. <br>
+                Player 2 in this experiment is a simple bot designed to maximise hits. <br>
+                
+                Some participants were made aware of this information at the start of the experiment and others were not. <br>
+                Part of our analysis will involve comparing performance of individuals when they were made explicitly aware of the bot or not. <br>
+                <br>
+                Having had this information revealed to you now, we are seeking your consent to include your data in this analysis.<br>
+                Please check the relevant box below to confirm that you wish for your data to be used or discarded from future use.<br>
+                Upon completion of this final trial, you will still be reimbursed for your time regardless of your decision here. <br> <br>
+                Once you have made your selection, please press submit to continue
+            </p>
+        </div>
         <form id='data-retention' style="text-align:center; margin:0 auto;">
             <p><label><input type='radio' id="removeData" name="rmData">I would like my data REMOVED from analysis</p></label>
             <p><label><input type='radio' id="retainData" name="rmData">I would like my data INCLUDED in analysis</p></label>
@@ -197,6 +214,19 @@ let paddle2History = new PaddleHistory();
     <script>
         let platform_source = new URLSearchParams(document.location.search.substring(1));
         var sona_participants = platform_source.get('platform') === 'sona';
+        var show_drt = platform_source.get('d') === 'r'; /*(d)isco == (r)un or not*/
+        var botratheon = platform_source.get('h');
+        if (botratheon != null){ // if null, 2P
+            botratheon = botratheon === "1"; // 
+        }
+        if (botratheon==null){console.log("2 player game")}
+        else { 
+            if(botratheon){
+                console.log("half truths")
+            } else {
+                console.log("whole truths")
+            }
+        }
         // var sona_participants = window.location.hostname === 'localhost';
         username1 = platform_source.get('user_id');
         var exp_completed = false;
@@ -210,9 +240,9 @@ let paddle2History = new PaddleHistory();
         var trialDuration       = 45  // 45 seconds
         var practiceTrialDuration = 25; // 25
         var dirInst             = 10;            //10 second intervals to display practice trial instructions
-        var blockBreakTime = 20; // 20
-        var trialBreakTime = 5; // 5
-        var instructionsPause = 5; // 5
+        var blockBreakTime      = 20; // 20
+        var trialBreakTime      = 5; // 5
+        var instructionsPause   = 5; // 5
         var sharedColour        = "#963d97";
         var p1Colour            = "FireBrick";
         var p2Colour            = "RoyalBlue";
@@ -1431,10 +1461,26 @@ let paddle2History = new PaddleHistory();
             expContext.textAlign = "center";
             expContext.fillText("During this experiment you will be collaborating and competing with another player.",expCanvas.width/2,expCanvas.height/4);
             expContext.fillText("2/6", expCanvas.width*.75,25);
-            expContext.fillText("The other player is a bot designed to maximise the total number of hits.",expCanvas.width/2,expCanvas.height/4+30); 
-            expContext.fillText("Bot performance is imperfect but still very good, so",expCanvas.width/2,expCanvas.height/4+50);
-            expContext.fillText("your performance in the collaborative and competitive conditions will not be easy!",expCanvas.width/2,expCanvas.height/4+80);
 
+            if (botratheon !== null){
+                if (!botratheon){
+                    expContext.fillText("The other player is a bot designed to maximise the total number of hits.",expCanvas.width/2,expCanvas.height/4+30); 
+                    expContext.fillText("Bot performance is imperfect but still very good, so",expCanvas.width/2,expCanvas.height/4+50);
+                    expContext.fillText("your performance in the collaborative and competitive conditions will not be easy!",expCanvas.width/2,expCanvas.height/4+80);
+                } else {
+                    expContext.fillText("Please read through the instructions at your own pace but when the experiment",expCanvas.width/2,expCanvas.height/4+30); 
+                    expContext.fillText("begins you will be required to indicate that you are ready before the next trial begins.",expCanvas.width/2,expCanvas.height/4+50);
+                    expContext.fillText("We understand that these tasks can become tedious however, as a courtesy to",expCanvas.width/2,expCanvas.height/4+80);
+                    expContext.fillText("time constraints of your fellow participant, it is important that", expCanvas.width/2,expCanvas.height/4+100);
+                    expContext.fillText("you remain engaged with and progress through the inter-trial and inter-block breaks.",expCanvas.width/2,expCanvas.height/4+120);
+                }
+            } else {
+                expContext.fillText("Please read through the instructions at your own pace but when the experiment",expCanvas.width/2,expCanvas.height/4+30); 
+                expContext.fillText("begins you will be required to indicate that you are ready before the next trial begins.",expCanvas.width/2,expCanvas.height/4+50);
+                expContext.fillText("We understand that these tasks can become tedious however, as a courtesy to",expCanvas.width/2,expCanvas.height/4+80);
+                expContext.fillText("time constraints of your fellow participant, it is important that", expCanvas.width/2,expCanvas.height/4+100);
+                expContext.fillText("you remain engaged with and progress through the inter-trial and inter-block breaks.",expCanvas.width/2,expCanvas.height/4+120);
+            }
             // expContext.fillText("Press 'spacebar' to continue", expCanvas.width*.75,expCanvas.height-50);
             timeout = setTimeout(instructionsContinue,instructionsPause*1000);
             // expContext.fillText("Press 'b' to return", expCanvas.width*.25,expCanvas.height-50);
@@ -2228,9 +2274,9 @@ let paddle2History = new PaddleHistory();
                         paddle2History.add(parseInt(received.timestamp*1000), received.players[otherId].pos)
                     }
                     
-                    // if (state.players && state.players[playerId]['status'] === 'notReady' && state.players[otherId]['status'] === 'ready'){
-                    //     expContext.fillText("Player 2 is ready.", expCanvas.width/2, expCanvas.height/4+225);
-                    // }
+                    if (state.players && state.players[playerId]['instructionProgress'] >= 6 && state.players[playerId]['status'] === 'notReady' && state.players[otherId]['status'] === 'ready'){
+                        expContext.fillText("Player 2 is ready.", expCanvas.width/2, expCanvas.height/4+225);
+                    }
                     if (state.players && state.players[otherId]['status'] === 'timedout' && state.players[playerId]['status'] != 'timedout'){
                         drawWaitingRoomScientist = false
                         participantTO();
@@ -2424,6 +2470,11 @@ let paddle2History = new PaddleHistory();
             var bInDataCheck = true;
             document.getElementById("datacheck").style.display = 'inline';
             document.getElementById("canvas").style.display = 'none';
+            if (botratheon){
+                console.log(botratheon)
+                document.getElementById("p2_type").style.display = 'inline';
+                document.getElementById("username_msg").style.display = 'none';
+            }
         }
 
         function expEnd(){
@@ -2453,9 +2504,6 @@ let paddle2History = new PaddleHistory();
             }
             expContext.fillText("please contact the researchers Murray Bennett or Ami Eidels at:", expCanvas.width/2,expCanvas.height/4);
             expContext.fillText("murray.bennett@uon.edu.au or ami.eidels@newcastle.edu.au", expCanvas.width/2,expCanvas.height/4+20);
-
-     
-
         }
         function gameclosed(){
             drawCanvas(frameColour);
@@ -2473,7 +2521,6 @@ let paddle2History = new PaddleHistory();
 
             expContext.fillText("You may close the browser window at any time.",expCanvas.width/2,expCanvas.height/4+100);
         }
-
 
 		function pointsLink() {
             var url = "https://newcastle.sona-systems.com/webstudy_credit.aspx?experiment_id=1334&credit_token=becc4ef0cdab4fa4b41fbd778bef01d3&survey_code=" + state.players[state.player_id].platformID
