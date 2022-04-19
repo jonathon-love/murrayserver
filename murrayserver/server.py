@@ -23,7 +23,7 @@ from time import time
 from .game import Game
 from .bot import Bot
 from .bot import Bot2
-
+from .bot import BotQ
 
 class Server:
 
@@ -53,6 +53,7 @@ class Server:
 
         bot_type = request.query.get('b')
         pretend_to_be_human = request.query.get('h', '0') == '1'
+        # other params are: d for drt, platform for sona/prolific
 
         if bot_type == 'd':
             self._bot = Bot(pretend_to_be_human)
@@ -64,6 +65,10 @@ class Server:
             #self._bot = BotSmart(pretend_to_be_human)
             #self._bot.start(self._current_game)
             pass
+        elif bot_type == 'q':
+            self._bot = BotQ(pretend_to_be_human)
+            self._bot.start(self._current_game)
+        print(f"bot type = {bot_type}")
 
         if self._current_game.ready():
             self._current_game = None

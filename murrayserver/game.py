@@ -63,7 +63,7 @@ class Game:
             'pWidth': pWidth,
             'pHeight': pHeight,
             'ballR': bRad,
-        }
+            }
 
         block_orders = [
            ["nonCol","col","com"], #123 A
@@ -238,6 +238,7 @@ class Game:
                 x = ball['x'] + ball['speed'] * math.cos(ball['angle']) * elapsed / 0.02
                 y = ball['y'] + ball['speed'] * math.sin(ball['angle']) * elapsed / 0.02
                 angle = ball['angle']
+                trajectory = ball['dir']
 
                 right = self._dim['frameRight'] - self._dim['ballR']
                 left = self._dim['frameLeft'] + self._dim['ballR']
@@ -252,6 +253,7 @@ class Game:
                     angle = math.pi - angle
                 if y > bottom:
                     y -= (bottom - top)
+                    trajectory = 0
                     if self._state['block']['block_type'] == 'nonCol':
                         if ball['id'] < 9:
                             self._state['players']['0']['miss'] += 1
@@ -263,6 +265,7 @@ class Game:
                 if y < top:
                     y = top + (top - y)
                     angle = -angle
+                    trajectory = 0
 
                 # If a player is in the right spot at the right ?time?
                 if self._state['block']['block_type'] == 'nonCol':
@@ -280,6 +283,7 @@ class Game:
                                 y = self._dim['paddleY'] - (self._dim['paddleY'] - y) - self._dim['ballR']
                                 self._state['players']['0']['hits'] += 1
                                 self._state['players']['0']['score'] += 1
+                                trajectory = 1
 
                     if ball['id'] >= 9:
                         if y + self._dim['ballR'] > self._dim['paddleY'] and y < self._dim['paddleY']+self._dim['ballR']:
@@ -293,6 +297,7 @@ class Game:
                                 y = self._dim['paddleY'] - (self._dim['paddleY'] - y) - self._dim['ballR']
                                 self._state['players']['1']['hits'] += 1
                                 self._state['players']['1']['score'] += 1
+                                trajectory = 1
                 else:
                     if y + self._dim['ballR'] > self._dim['paddleY'] and y < self._dim['paddleY']+self._dim['ballR']:
                         if x + self._dim['ballR'] > self._state['players']['0']['pos'] and x < self._state['players']['0']['pos'] + self._dim['pWidth'] + self._dim['ballR']:
@@ -311,6 +316,7 @@ class Game:
                             else:
                                 self._state['players']['0']['hits'] += 1
                                 self._state['players']['0']['score'] += 1
+                            trajectory = 1
 
                         elif x + self._dim['ballR'] > self._state['players']['1']['pos'] and x < self._state['players']['1']['pos'] + self._dim['pWidth'] + self._dim['ballR']:
                             impact = (x + self._dim['ballR']/2) - (self._state['players']['1']['pos']+ (self._dim['pWidth']/2))
@@ -322,10 +328,12 @@ class Game:
                             y = self._dim['paddleY'] - (self._dim['paddleY'] - y) - self._dim['ballR']
                             self._state['players']['1']['hits'] += 1
                             self._state['players']['1']['score'] += 1
+                            trajectory = 1
 
                 ball['x'] = x
                 ball['y'] = y
                 ball['angle'] = angle
+                ball['dir'] = trajectory
 
         if log_state:
             self._log.info(json.dumps(self._state))
@@ -387,6 +395,7 @@ class Game:
                                 'angle': angles[i],
                                 'speed': speed,
                                 'id': int(9 - ((len(balls)/2) - i)),
+                                'dir': 1,
                             }
                         else:
                             balls[i] = {
@@ -395,6 +404,7 @@ class Game:
                             'angle': angles[i],
                             'speed': speed,
                             'id': i,
+                            'dir': 1,
                             }
                     else:
                         balls[i] = {
@@ -403,6 +413,7 @@ class Game:
                         'angle': angles[i],
                         'speed': speed,
                         'id': i,
+                        'dir': 1,
                         }
                 self._state['balls'] = balls
 
