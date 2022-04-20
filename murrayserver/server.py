@@ -56,19 +56,18 @@ class Server:
         # other params are: d for drt, platform for sona/prolific
 
         if bot_type == 'd':
-            self._bot = Bot(pretend_to_be_human)
+            self._bot = Bot(pretend_to_be_human, bot_type)
             self._bot.start(self._current_game)
         elif bot_type == 'c':
-            self._bot = Bot2(pretend_to_be_human)
+            self._bot = Bot2(pretend_to_be_human, bot_type)
             self._bot.start(self._current_game)
         elif bot_type == 's':
             #self._bot = BotSmart(pretend_to_be_human)
             #self._bot.start(self._current_game)
             pass
         elif bot_type == 'q':
-            self._bot = BotQ(pretend_to_be_human)
+            self._bot = BotQ(pretend_to_be_human, bot_type)
             self._bot.start(self._current_game)
-        print(f"bot type = {bot_type}")
 
         if self._current_game.ready():
             self._current_game = None

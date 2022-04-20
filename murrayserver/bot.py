@@ -25,13 +25,14 @@ class WS(ProgressStream):
 
 class Bot:
 
-    def __init__(self, pretend_to_be_human):
+    def __init__(self, pretend_to_be_human, bot_type):
         self._pretend_to_be_human = pretend_to_be_human
         self._state = None
         self._run_task = None
         self._stream = WS()
         self._player_id = None
         self.q_table = q_table
+        self._bot_type = bot_type
 
     def start(self, game):
         self._game = game
@@ -394,6 +395,7 @@ class BotQ(Bot):
 
     async def _run(self):
         complete = create_task(self._game.join(self._player_id, self._stream))
+        self._state['players'][self._player_id]['hand'] = f"{self._bot_type}-{self._pretend_to_be_human}"
         while not complete.done():
             if self._state['status'] == 'reading':
                 if self._state['players'][self._player_id]['status'] != 'ready':

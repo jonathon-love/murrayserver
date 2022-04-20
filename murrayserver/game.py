@@ -46,6 +46,8 @@ class Game:
         pWidth = width * 0.10
         pHeight= pWidth* 0.12
         bRad   = pHeight*0.90
+        starting_x = [drtWidth*0.33 - (pWidth/2), drtWidth*0.67]
+        shuffle(starting_x)
 
         self._dim = {
             ## for 800x600
@@ -56,8 +58,8 @@ class Game:
             'frameTop': 0,
             'frameBottom': height,
             'paddleY': height - pHeight*3,
-            'p1Start': drtWidth*0.33 - (pWidth/2),
-            'p2Start': drtWidth*0.67,
+            'p1Start': starting_x[0], #drtWidth*0.33 - (pWidth/2),
+            'p2Start': starting_x[1], #drtWidth*0.67,
             'ballX': [drtWidth/2 - bRad*4, drtWidth/2, drtWidth/2 + bRad*4],
             'ballY': (height - pHeight*3) - bRad,
             'pWidth': pWidth,
