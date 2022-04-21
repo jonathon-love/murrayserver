@@ -1813,7 +1813,7 @@ let paddle2History = new PaddleHistory();
                 document.getElementById('empty_response_msg').textContent = "Please make a selection to continue.";
             } else {
                 data_consent_provided = true;
-                if (document.getElementById("removeData").checked){ws.send(JSON.stringify({"rmData":username1}));}
+                if (document.getElementById("removeData").checked){ws.send(JSON.stringify({'instructionProgress':username1}));}
                 document.getElementById("datacheck").style.display = 'none';
                 document.getElementById("canvas").style.display = 'inline';
                 ws.send(JSON.stringify({"status":"ready"}))
