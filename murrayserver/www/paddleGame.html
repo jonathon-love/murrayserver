@@ -2323,11 +2323,7 @@ let paddle2History = new PaddleHistory();
                         paddle2History.add(parseInt(received.timestamp*1000), received.players[otherId].pos)
                     }
                     
-                    if (state.players && state.players[playerId]['instructionProgress'] >= 6 && state.players[playerId]['status'] === 'notReady' && state.players[otherId]['status'] === 'ready' && ((botratheon && ambigubot) || !botratheon) && onereminder){
-                        expContext.fillText("Player 2 is ready.", expCanvas.width/2, expCanvas.height/4+225);
-                        onereminder = false;
-                    }
-                    else if (state.players && state.players[playerId]['instructionProgress'] >= 6 && state.players[playerId]['status'] === 'notReady' && state.players[otherId]['status'] === 'notReady' && ((botratheon && ambigubot) || botratheon) && onereminder){
+                    if (state.players && state.players[playerId]['instructionProgress'] >= 6 && state.players[playerId]['status'] === 'notReady' && state.players[otherId]['status'] === 'ready' && !botratheon && onereminder){
                         expContext.fillText("Player 2 is ready.", expCanvas.width/2, expCanvas.height/4+225);
                         onereminder = false;
                     }
