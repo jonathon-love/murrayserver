@@ -53,7 +53,6 @@ class Server:
 
         bot_type = request.query.get('b')
         pretend_to_be_human = request.query.get('h', '0') == '1'
-        # other params are: d for drt, platform for sona/prolific
 
         if bot_type == 'd':
             self._bot = Bot(pretend_to_be_human, bot_type)
