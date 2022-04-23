@@ -215,18 +215,9 @@ let paddle2History = new PaddleHistory();
         let platform_source = new URLSearchParams(document.location.search.substring(1));
         var sona_participants = platform_source.get('platform') === 'sona';
         var show_drt = platform_source.get('d') == null; /*(d)isco or not - if we don't include it in params it should default to 'on'*/
-        var botratheon = platform_source.get('h');
-        if (botratheon != null){ // if null, 2P
-            botratheon = botratheon === "1"; // 
-        }
-        if (botratheon==null){console.log("2 player game")}
-        else { 
-            if(botratheon){
-                console.log("half truths")
-            } else {
-                console.log("whole truths")
-            }
-        }
+        var botratheon = platform_source.get('b') != null;        
+        var ambigubot = false;
+        
         // var sona_participants = window.location.hostname === 'localhost';
         username1 = platform_source.get('user_id');
         var exp_completed = false;
@@ -370,6 +361,7 @@ let paddle2History = new PaddleHistory();
         var rtMin               = 0.1; // tenth of a second - used to clean RT times as they're made
         var counter1 = true; // these are response counters so we don't have 100 RTs saved as hits for each DRT stimulus event.
         var counter2 = true;
+        var onereminder = true;
 
 
         // Balls
@@ -398,7 +390,7 @@ let paddle2History = new PaddleHistory();
         var teamCumulativeScore = 0;
         var p1teamScore         = 0;
         var p2teamScore         = 0;
-
+        
         // save Data
         var paddleCoords        = [];
         var ballCoords          = [];
@@ -842,7 +834,7 @@ let paddle2History = new PaddleHistory();
                     clearTimeout(timeout)
                     proceed = false;
                     ws.send(JSON.stringify({"instructionProgress": 1}))
-                    instructionsOnline()                    
+                    instructionsOnline()                  
                 }
             } else if (bInInstructionsOnline){
                 if (event.keyCode == 32 && proceed){
@@ -983,6 +975,9 @@ let paddle2History = new PaddleHistory();
                         dataCheck();
                     } else if (nCurrentTrial<state.maxTrials){
                         ws.send(JSON.stringify({"status":"ready"}))
+                        if (!show_drt){
+                            ws.send(JSON.stringify({'rt': -999}))
+                        }
                         intertrialWaiting()
                     } else {
                         if (state.trialNo+1>=state.maxTrials){
@@ -1493,18 +1488,18 @@ let paddle2History = new PaddleHistory();
             
             if (show_drt){expContext.fillText("2/6", expCanvas.width*.75,25);}
             else {expContext.fillText("2/5", expCanvas.width*.75,25);}
-
-            if (botratheon !== null){
-                if (!botratheon){
-                    expContext.fillText("The other player is a bot designed to maximise the total number of hits.",expCanvas.width/2,expCanvas.height/4+30); 
-                    expContext.fillText("Bot performance is imperfect but still very good, so",expCanvas.width/2,expCanvas.height/4+50);
-                    expContext.fillText("your performance in the collaborative and competitive conditions will not be easy!",expCanvas.width/2,expCanvas.height/4+80);
-                } else {
+            
+            if (botratheon){
+                if (ambigubot){
                     expContext.fillText("Please read through the instructions at your own pace but when the experiment",expCanvas.width/2,expCanvas.height/4+30); 
                     expContext.fillText("begins you will be required to indicate that you are ready before the next trial begins.",expCanvas.width/2,expCanvas.height/4+50);
                     expContext.fillText("We understand that these tasks can become tedious however, as a courtesy to",expCanvas.width/2,expCanvas.height/4+80);
                     expContext.fillText("time constraints of your fellow participant, it is important that", expCanvas.width/2,expCanvas.height/4+100);
                     expContext.fillText("you remain engaged with and progress through the inter-trial and inter-block breaks.",expCanvas.width/2,expCanvas.height/4+120);
+                } else {
+                    expContext.fillText("The other player is a bot designed to maximise the total number of hits.",expCanvas.width/2,expCanvas.height/4+30); 
+                    expContext.fillText("Bot performance is imperfect but still very good, so",expCanvas.width/2,expCanvas.height/4+50);
+                    expContext.fillText("your performance in the collaborative and competitive conditions will not be easy!",expCanvas.width/2,expCanvas.height/4+80);
                 }
             } else {
                 expContext.fillText("Please read through the instructions at your own pace but when the experiment",expCanvas.width/2,expCanvas.height/4+30); 
@@ -1729,6 +1724,10 @@ let paddle2History = new PaddleHistory();
             fwCanvas = document.getElementById("fireworks");
             fwCtx = fwCanvas.getContext("2d");
             waitingRoomStart = Date.now();
+
+            if (botratheon){
+                ambigubot = state.players[1].hand.split('-')[1] === 'True';
+            }
             
             if (state.status === 'ending' || state.players[0].status === 'timedout' || state.players[1].status === 'timedout') { // if someone tries to rejoin later
                 gameclosed();
@@ -2307,6 +2306,7 @@ let paddle2History = new PaddleHistory();
                         bInBlockInstructions = false;
                         bInPractice = false;
                         bInTrial = true;
+                        onereminder = true;
                     }
 
                     if (state.status === 'playing' && (received.status === 'reading' || received.status==='ending') && bInTrial) {
@@ -2323,8 +2323,13 @@ let paddle2History = new PaddleHistory();
                         paddle2History.add(parseInt(received.timestamp*1000), received.players[otherId].pos)
                     }
                     
-                    if (state.players && state.players[playerId]['instructionProgress'] >= 6 && state.players[playerId]['status'] === 'notReady' && state.players[otherId]['status'] === 'ready'){
+                    if (state.players && state.players[playerId]['instructionProgress'] >= 6 && state.players[playerId]['status'] === 'notReady' && state.players[otherId]['status'] === 'ready' && ((botratheon && ambigubot) || !botratheon) && onereminder){
                         expContext.fillText("Player 2 is ready.", expCanvas.width/2, expCanvas.height/4+225);
+                        onereminder = false;
+                    }
+                    else if (state.players && state.players[playerId]['instructionProgress'] >= 6 && state.players[playerId]['status'] === 'notReady' && state.players[otherId]['status'] === 'notReady' && ((botratheon && ambigubot) || botratheon) && onereminder){
+                        expContext.fillText("Player 2 is ready.", expCanvas.width/2, expCanvas.height/4+225);
+                        onereminder = false;
                     }
                     if (state.players && state.players[otherId]['status'] === 'timedout' && state.players[playerId]['status'] != 'timedout'){
                         drawWaitingRoomScientist = false
@@ -2523,8 +2528,7 @@ let paddle2History = new PaddleHistory();
             var bInDataCheck = true;
             document.getElementById("datacheck").style.display = 'inline';
             document.getElementById("canvas").style.display = 'none';
-            if (botratheon){
-                console.log(botratheon)
+            if (ambigubot){
                 document.getElementById("p2_type").style.display = 'inline';
                 document.getElementById("username_msg").style.display = 'none';
             }

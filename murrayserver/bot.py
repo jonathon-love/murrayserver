@@ -58,7 +58,8 @@ class Bot:
     async def _run(self):
 
         complete = create_task(self._game.join(self._player_id, self._stream))
-
+        self._state['players'][self._player_id]['hand'] = f"{self._bot_type}-{self._pretend_to_be_human}"
+        
         while not complete.done():
 
             if self._state['status'] == 'reading':
