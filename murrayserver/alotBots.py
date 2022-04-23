@@ -31,7 +31,44 @@ pIDs = ['610421096c1af729ade5aac1',
     '61518742af2f6094e92bace1',	
     '577e3a5025cb71000128727e',
     '5cd139c62ce2410014540d4d',
-    '5e3056fa23a9e80286bbb370'
+    '5e3056fa23a9e80286bbb370',
+    '615b11e154e31480eaf1b78a',
+    '6166c2849af8d8e1858e3b14',
+    '61680035775d6be6c3034464',
+    '61548c8901c5c2a2fb997763',
+    '616047aca593ff6eb34c2bb3',
+    '615a0198a1a2d449a781b8a5',
+    '61542508e4600733844ab8af',
+    '59d4283121977e0001d62f46',
+    '5e46d130954b011968fcc862',
+    '59d4283121977e0001d62f46',
+    '5fa84432f643c7686ab96927',
+    '616410529bf3660626527235',
+    '6160c92e9027d2e219dc975a',
+    '616d823fbceeadebef2c2923',
+    '615afc4b6a313ec070c76d4c',
+    '6148beccb767e62c451ce7bc',
+    '6154e0eaaaa79b827af4bca6',
+    '5a8ff02e4fcb2f0001d8bb9b',
+    '60fd18e34ebe98b059adf020',
+    '5e4344c1c3e7db1e29935599',
+    '614cf7d1df2213f8c1f81e6e',
+    '615a17c90199096a5bbe0f48',
+    '6134bc3c8e266fcf6ba97739',
+    '5e779837e8230d2ffd8717b1',
+    '5e779837e8230d2ffd8717b1',
+    '5e35373e1ddb124e6c306747',
+    '6153593be7f8925dee8d7db6',
+    '59c10c7e5364260001dc47e6'
+    '6148ee933093eb6be1edf761',
+    '613a2a827cab4afeb484eef1',
+    '615c29d30804319d32d20351',
+    '5929e024943e670001cde06b',
+    '614881481dcfc1e2ea215aca',
+    '6160717242827a64a55d99ad',
+    '6151c7989b3c460fe4400daa',
+    '615f45e5c7d52a87e60831d7',
+    '6163f8a826c9b98b20139416',
  ]
  
 def condition_allocation(pID):
@@ -49,7 +86,7 @@ def condition_allocation(pID):
 allocations = []
 for pid in pIDs:
     allocations.append(condition_allocation(pid))
-print(allocations)
+print(len(allocations), allocations)
 
 final_allocations = np.zeros((6,6))
 for i, ii in allocations:
