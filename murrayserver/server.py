@@ -39,7 +39,7 @@ class Server:
 
         self._games = { }
 
-        self._current_game_no = 1;
+        self._current_game_no = 0
         self._current_game = None
 
     async def _enter(self, request):
@@ -51,20 +51,17 @@ class Server:
         game_id = self._current_game_no
         player_id = self._current_game.add_player()
 
-        # bot_type = request.query.get('b')
-        # pretend_to_be_human = request.query.get('h', '0') == '1'
-
         # if we state that a bot should be used then set up to use the bot. Otherwise, play HvH
-        bot_type = request.query.get('b','0') == '1'
-        if bot_type:
+        against_bot = request.query.get('b','0') == '1'
+
+        if against_bot:
             bot_types = ['d','d','c','c','q','q']
             pretend_to_be_humans = [False, True, False, True, False, True]
-            n_block_orders = 6
-            bot_type_id = (game_id//len(bot_types))%n_block_orders
 
-            bot_type = bot_types[bot_type_id]
-            pretend_to_be_human = pretend_to_be_humans[bot_type_id]
-            print(f'bot type is {bot_type} and human status is {pretend_to_be_human} \n bot type id is {bot_type_id}')
+            bot_type = bot_types[game_id % len(bot_types)]
+            pretend_to_be_human = pretend_to_be_humans[game_id % len(pretend_to_be_humans)]
+
+            print(f'bot type is {bot_type} and human status is {pretend_to_be_human}')
 
         if bot_type == 'd':
             self._bot = Bot(pretend_to_be_human, bot_type)
