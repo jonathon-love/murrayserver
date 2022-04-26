@@ -4,7 +4,8 @@ FROM ubuntu:20.04
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
     python3-minimal \
     python3-distutils \
-    python3-aiohttp
+    python3-aiohttp \
+    python3-numpy
 
 WORKDIR /tmp
 
