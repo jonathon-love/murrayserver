@@ -25,6 +25,32 @@ from .bot import Bot
 from .bot import Bot2
 from .bot import BotQ
 
+completed_game_nos = [0,
+7,
+14,
+21,
+28,
+35,
+36,
+43,
+50,
+57,
+64,
+71,
+72,
+79,
+86,
+93,
+107,
+108,
+115,
+122,
+129,
+143,
+151,
+165,
+]
+
 class Server:
 
     def __init__(self):
@@ -38,12 +64,14 @@ class Server:
         self._runner = AppRunner(self._app)
 
         self._games = { }
-
+        
         self._current_game_no = 0
         self._current_game = None
 
     async def _enter(self, request):
         if self._current_game is None:
+            while self._current_game_no in completed_game_nos:
+                self._current_game_no += 1
             self._current_game = Game(self._current_game_no)
             self._start_game(self._current_game)
             self._games[str(self._current_game_no)] = self._current_game
@@ -54,11 +82,12 @@ class Server:
         # if we state that a bot should be used then set up to use the bot. Otherwise, play HvH
         against_bot = request.query.get('b','0') == '1'
 
+        bot_type = None
         if against_bot:
             bot_types = ['d','d','c','c','q','q']
             pretend_to_be_humans = [False, True, False, True, False, True]
 
-            bot_type = bot_types[game_id % len(bot_types)]
+            bot_type = bot_types[(game_id // len(bot_types)) % len(bot_types)]
             pretend_to_be_human = pretend_to_be_humans[game_id % len(pretend_to_be_humans)]
 
             print(f'bot type is {bot_type} and human status is {pretend_to_be_human}')
