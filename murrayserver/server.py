@@ -69,9 +69,13 @@ class Server:
         self._current_game = None
 
     async def _enter(self, request):
+        # if we state that a bot should be used then set up to use the bot. Otherwise, play HvH
+        against_bot = request.query.get('b','0') == '1'
+
         if self._current_game is None:
-            while self._current_game_no in completed_game_nos:
-                self._current_game_no += 1
+            if against_bot:
+                while self._current_game_no in completed_game_nos:
+                    self._current_game_no += 1
             self._current_game = Game(self._current_game_no)
             self._start_game(self._current_game)
             self._games[str(self._current_game_no)] = self._current_game
@@ -79,8 +83,6 @@ class Server:
         game_id = self._current_game_no
         player_id = self._current_game.add_player()
 
-        # if we state that a bot should be used then set up to use the bot. Otherwise, play HvH
-        against_bot = request.query.get('b','0') == '1'
 
         bot_type = None
         if against_bot:
