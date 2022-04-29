@@ -25,6 +25,7 @@ from .bot import Bot
 from .bot import Bot2
 from .bot import BotQ
 
+total_games = 288
 completed_game_nos = [0,
 7,
 14,
@@ -67,22 +68,26 @@ class Server:
         
         self._current_game_no = 0
         self._current_game = None
+        self._ids = range(total_games)
+        self._ids = list(filter(lambda id: id not in completed_game_nos, range(total_games)))
 
     async def _enter(self, request):
         # if we state that a bot should be used then set up to use the bot. Otherwise, play HvH
         against_bot = request.query.get('b','0') == '1'
-
+              
         if self._current_game is None:
             if against_bot:
-                while self._current_game_no in completed_game_nos:
-                    self._current_game_no += 1
+                try:
+                    self._current_game_no = self._ids.pop(0)
+                except:
+                    pass
+                
             self._current_game = Game(self._current_game_no)
             self._start_game(self._current_game)
             self._games[str(self._current_game_no)] = self._current_game
 
         game_id = self._current_game_no
         player_id = self._current_game.add_player()
-
 
         bot_type = None
         if against_bot:
