@@ -26,30 +26,28 @@ from .bot import Bot2
 from .bot import BotQ
 
 total_games = 288
-completed_game_nos = [0,
-7,
-14,
-21,
-28,
-35,
-36,
-43,
-50,
-57,
-64,
-71,
-72,
-79,
-86,
-93,
-107,
-108,
-115,
-122,
-129,
-143,
-151,
+completed_game_nos = [0, 2, 4, 7, 9,
+11, 12, 14, 16, 19,
+21, 23, 24, 26, 28,
+31, 33, 35, 36, 38,
+40, 43, 45, 47, 48,
+50, 52, 55, 57, 59,
+60, 62, 64, 67, 69,
+71, 72, 74, 76, 79,
+81, 83, 84, 86, 88,
+91, 93, 95, 96, 98,
+100, 103, 107, 108,
+110, 112, 115, 117, 119,
+122, 124, 127, 129, 
+131, 132, 134, 136, 139,
+143, 144, 151, 158,
 165,
+179,
+180, 187,
+194,
+201,
+215,
+237,
 ]
 
 class Server:
@@ -94,8 +92,10 @@ class Server:
             bot_types = ['d','d','c','c','q','q']
             pretend_to_be_humans = [False, True, False, True, False, True]
 
-            bot_type = bot_types[(game_id // len(bot_types)) % len(bot_types)]
-            pretend_to_be_human = pretend_to_be_humans[game_id % len(pretend_to_be_humans)]
+            bot_id = (game_id // len(bot_types)) % len(bot_types)
+
+            bot_type = bot_types[bot_id]
+            pretend_to_be_human = pretend_to_be_humans[bot_id]
 
             print(f'bot type is {bot_type} and human status is {pretend_to_be_human}')
 
