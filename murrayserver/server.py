@@ -26,28 +26,9 @@ from .bot import Bot2
 from .bot import BotQ
 
 total_games = 288
-completed_game_nos = [0, 2, 4, 7, 9,
-11, 12, 14, 16, 19,
-21, 23, 24, 26, 28,
-31, 33, 35, 36, 38,
-40, 43, 45, 47, 48,
-50, 52, 55, 57, 59,
-60, 62, 64, 67, 69,
-71, 72, 74, 76, 79,
-81, 83, 84, 86, 88,
-91, 93, 95, 96, 98,
-100, 103, 107, 108,
-110, 112, 115, 117, 119,
-122, 124, 127, 129, 
-131, 132, 134, 136, 139,
-143, 144, 151, 158,
-165,
-179,
-180, 187,
-194,
-201,
-215,
-237,
+to_be_completed_game_nos = [8,29, 31,32, 41,51, 53, 61,63,65,85,89,
+103, 111,123,125,128,141,142,146,164,167,173,186,196, 198,
+201, 233,234,235,236,242,255,266,271,273,277,284,285,286,287
 ]
 
 class Server:
@@ -67,7 +48,7 @@ class Server:
         self._current_game_no = 0
         self._current_game = None
         self._ids = range(total_games)
-        self._ids = list(filter(lambda id: id not in completed_game_nos, range(total_games)))
+        self._ids = list(filter(lambda id: id in to_be_completed_game_nos, range(total_games)))
 
     async def _enter(self, request):
         # if we state that a bot should be used then set up to use the bot. Otherwise, play HvH
