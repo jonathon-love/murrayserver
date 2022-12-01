@@ -94,6 +94,7 @@ class Game:
             'players': {
                 '0': {
                     'pos': self._dim['p1Start'],
+                    'posY': 566.3,
                     'status': 'notReady',
                     'instructionProgress': 0,
                     'hand': [],
@@ -106,6 +107,7 @@ class Game:
                     },
                 '1': {
                     'pos': self._dim['p2Start'],
+                    'posY': 566.3,
                     'status': 'notReady',
                     'instructionProgress': 0,
                     'hand': [],
@@ -274,7 +276,7 @@ class Game:
 
                     if ball['id'] < 9:
 
-                        if y + self._dim['ballR'] > self._dim['paddleY'] and y < self._dim['paddleY']+self._dim['ballR']:
+                        if y + self._dim['ballR'] > self._state['players']['0']['posY'] and y < self._state['players']['0']['posY']+self._dim['ballR']:
                             if x + self._dim['ballR'] > self._state['players']['0']['pos'] and x < self._state['players']['0']['pos'] + self._dim['pWidth'] + self._dim['ballR']: ## approx paddle width - much to account for here.
                                 impact = (x + self._dim['ballR']/2) - (self._state['players']['0']['pos']+ (self._dim['pWidth']/2))
                                 offset = impact/(self._dim['pWidth']/2)/2
@@ -282,13 +284,13 @@ class Game:
                                     angle = -angle
                                 else:
                                     angle = -angle + offset
-                                y = self._dim['paddleY'] - (self._dim['paddleY'] - y) - self._dim['ballR']
+                                #y = self._state['players']['0']['posY'] - (self._state['players']['0']['posY'] - y) - self._dim['ballR']
                                 self._state['players']['0']['hits'] += 1
                                 self._state['players']['0']['score'] += 1
                                 trajectory = 1
 
                     if ball['id'] >= 9:
-                        if y + self._dim['ballR'] > self._dim['paddleY'] and y < self._dim['paddleY']+self._dim['ballR']:
+                        if y + self._dim['ballR'] > self._state['players']['0']['posY'] and y < self._state['players']['0']['posY']+self._dim['ballR']:
                             if x + self._dim['ballR'] > self._state['players']['1']['pos'] and x < self._state['players']['1']['pos'] + self._dim['pWidth'] + self._dim['ballR']: ## approx paddle width - much to account for here.
                                 impact = (x + self._dim['ballR']/2) - (self._state['players']['1']['pos']+ (self._dim['pWidth']/2))
                                 offset = impact/(self._dim['pWidth']/2)/2
@@ -296,12 +298,12 @@ class Game:
                                     angle = -angle
                                 else:
                                     angle = -angle + offset
-                                y = self._dim['paddleY'] - (self._dim['paddleY'] - y) - self._dim['ballR']
+                                #y = self._state['players']['0']['posY'] - (self._state['players']['0']['posY'] - y) - self._dim['ballR']
                                 self._state['players']['1']['hits'] += 1
                                 self._state['players']['1']['score'] += 1
                                 trajectory = 1
                 else:
-                    if y + self._dim['ballR'] > self._dim['paddleY'] and y < self._dim['paddleY']+self._dim['ballR']:
+                    if y + self._dim['ballR'] > self._state['players']['0']['posY'] and y < self._state['players']['0']['posY']+self._dim['ballR']:
                         if x + self._dim['ballR'] > self._state['players']['0']['pos'] and x < self._state['players']['0']['pos'] + self._dim['pWidth'] + self._dim['ballR']:
                             impact = (x + self._dim['ballR']/2) - (self._state['players']['0']['pos']+ (self._dim['pWidth']/2))
                             offset = impact/(self._dim['pWidth']/2)/2
@@ -309,7 +311,7 @@ class Game:
                                 angle = -angle
                             else:
                                 angle = -angle + offset
-                            y = self._dim['paddleY'] - (self._dim['paddleY'] - y) - self._dim['ballR']
+                            #y = self._dim['paddleY'] - (self._state['players']['0']['posY'] - y) - self._dim['ballR']
                             if x + self._dim['ballR'] > self._state['players']['1']['pos'] and x < self._state['players']['1']['pos'] + self._dim['pWidth'] + self._dim['ballR']:
                                     self._state['players']['0']['hits'] += 0.5
                                     self._state['players']['1']['hits'] += 0.5
@@ -327,7 +329,7 @@ class Game:
                                 angle = -angle
                             else:
                                 angle = -angle + offset
-                            y = self._dim['paddleY'] - (self._dim['paddleY'] - y) - self._dim['ballR']
+                            #y = self._dim['paddleY'] - (self._dim['paddleY'] - y) - self._dim['ballR']
                             self._state['players']['1']['hits'] += 1
                             self._state['players']['1']['score'] += 1
                             trajectory = 1

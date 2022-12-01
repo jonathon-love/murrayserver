@@ -337,6 +337,8 @@ let paddle2History = new PaddleHistory();
         var pSpeed              = Math.round(pHeight/2);
         let p1Right             = false;
         let p1Left              = false;
+        let p1Up = false;
+        let p1Down = false;
         let p2Right             = false;
         let p2Left              = false;
         let p1Start;
@@ -679,10 +681,11 @@ let paddle2History = new PaddleHistory();
         class Paddle {
             constructor(x,colour){
                 this.x      = x;
+                this.y = 566.3;
                 this.colour = colour;
                 this.coords = [];
                 }
-            move(mvLeft = false, mvRight = false, speed) {
+            move(mvLeft, mvRight, mvUp, mvDown, speed) {
                 let playerId = state.player_id;
                 let otherId = playerId === '0' ? '1' : '0';
                 let theirPos = state.players[otherId].pos;
@@ -699,11 +702,17 @@ let paddle2History = new PaddleHistory();
                         this.x = frameRight - pWidth;
                     }
                 }
+                if (mvDown){
+                    this.y += speed;
+                }
+                if (mvUp){
+                    this.y -= speed;
+                }
             }
 
             draw(){
                 expContext.beginPath();
-                expContext.rect(this.x,py,pWidth,pHeight);
+                expContext.rect(this.x,this.y,pWidth,pHeight);
                 expContext.fillStyle = this.colour;
                 expContext.fill();
                 expContext.stroke();
@@ -818,6 +827,10 @@ let paddle2History = new PaddleHistory();
                 p1Right = true;
             } else if (e.keyCode == left) {
                 p1Left = true;
+            } else if (e.key === 'ArrowUp') {
+                p1Up = true;
+            } else if (e.key === 'ArrowDown') {
+                p1Down = true;
             }
             // if (e.keyCode == plyr1DRTrespKey) {
             //     drtResp1 = true;
@@ -997,6 +1010,12 @@ let paddle2History = new PaddleHistory();
             } else if (e.keyCode == left) {
                 p1Left  = false;
             }
+            else if (e.key === 'ArrowUp') {
+                p1Up = false;
+            } else if (e.key === 'ArrowDown') {
+                p1Down = false;
+            }
+
             // DRT Response
             if (e.keyCode == plyr1DRTrespKey) {
                 drtResp1 = false;
@@ -2176,8 +2195,8 @@ let paddle2History = new PaddleHistory();
             }
             drawFrame();
 
-            paddle1.move(p1Left,p1Right,speedCorrected);
-            paddle2.move(p2Left,p2Right,speedCorrected);
+            paddle1.move(p1Left,p1Right,p1Up,p1Down,speedCorrected);
+            // paddle2.move(p2Left,p2Right,speedCorrected);
             paddle1History.add(now, paddle1.x);
 
             let playerId = state.player_id;
@@ -2249,7 +2268,7 @@ let paddle2History = new PaddleHistory();
 
             while (true) {
                 if (state.status === 'playing' && paddle1) {
-                    ws.send(JSON.stringify({ 'pos': paddle1.x, serverTimeDelta, messageDelay, roundTripTime }));
+                    ws.send(JSON.stringify({ 'pos': paddle1.x, 'posY': paddle1.y, serverTimeDelta, messageDelay, roundTripTime }));
                     await sleep(50);
                 }
                 else {
