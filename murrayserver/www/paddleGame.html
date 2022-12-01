@@ -233,7 +233,7 @@ let paddle2History = new PaddleHistory();
         var dirInst             = 10;            //10 second intervals to display practice trial instructions
         var blockBreakTime      = 20; // 20
         var trialBreakTime      = 5; // 5
-        var instructionsPause   = 5; // 5
+        var instructionsPause   = 0; // 5
         var sharedColour        = "#963d97";
         var p1Colour            = "FireBrick";
         var p2Colour            = "RoyalBlue";
@@ -1450,30 +1450,38 @@ let paddle2History = new PaddleHistory();
         }
 
         function instructions1(){
-            bInInstructions1 = true;
-            drawCanvas(frameColour);
-            entryPageStyling();
-            drawGameTitle()
-            fwCtx.clearRect(0,0,expCanvas.width, expCanvas.height);
-			expContext.fillStyle = fontColour;
-            expContext.font="16px Arial";
-			expContext.textAlign = "center";
-            expContext.fillText("Welcome to",expCanvas.width/2,expCanvas.height/4-100);
-            expContext.fillText("This experiment will examine your performance during a multiplayer arcade-style game.",expCanvas.width/2,expCanvas.height/4);
-            expContext.fillText("Please ensure that your browser window is maximised.",expCanvas.width/2,expCanvas.height/4+20);
-            if (show_drt){expContext.fillText("1/6", expCanvas.width*.75,25);}
-            else {expContext.fillText("1/5", expCanvas.width*.75,25);}
-            expContext.fillText("The game involves a set of balls flying around the screen and two paddles.",expCanvas.width/2,expCanvas.height/4+50);
-            expContext.fillText("Your task is to move your paddle to hit as many balls as you can within the time limit whilst",expCanvas.width/2,expCanvas.height/4+70);
-            expContext.fillText("collaborating, competing, or playing separately to the other player.", expCanvas.width/2,expCanvas.height/4+90);
+            p1Hand.push(RHdrtRespKey);
+            plyr1DRTrespKey = RHdrtRespKey;
+            left    = RHleft;
+            right   = RHright;
+            p1HandChosen = true;
+            ws.send(JSON.stringify({'hand':'Right'}));
+            ws.send(JSON.stringify({"status":"ready"}))
 
-            expContext.fillText("The game runs over 3 blocks of 12 trials, where each trial lasts 45 seconds.", expCanvas.width/2,expCanvas.height/4+130);
-            expContext.fillText("There is a forced 20 second break between blocks.", expCanvas.width/2,expCanvas.height/4+150);
-            expContext.fillText("The experiment will take approximately 35-40 minutes.", expCanvas.width/2,expCanvas.height/4+170);
-            // expContext.fillText("You may exit the study at any time without penalty by closing your browser window.", expCanvas.width/2,expCanvas.height/4+190);
+            // bInInstructions1 = true;
+            // drawCanvas(frameColour);
+            // entryPageStyling();
+            // drawGameTitle()
+            // fwCtx.clearRect(0,0,expCanvas.width, expCanvas.height);
+			// expContext.fillStyle = fontColour;
+            // expContext.font="16px Arial";
+			// expContext.textAlign = "center";
+            // expContext.fillText("Welcome to",expCanvas.width/2,expCanvas.height/4-100);
+            // expContext.fillText("This experiment will examine your performance during a multiplayer arcade-style game.",expCanvas.width/2,expCanvas.height/4);
+            // expContext.fillText("Please ensure that your browser window is maximised.",expCanvas.width/2,expCanvas.height/4+20);
+            // if (show_drt){expContext.fillText("1/6", expCanvas.width*.75,25);}
+            // else {expContext.fillText("1/5", expCanvas.width*.75,25);}
+            // expContext.fillText("The game involves a set of balls flying around the screen and two paddles.",expCanvas.width/2,expCanvas.height/4+50);
+            // expContext.fillText("Your task is to move your paddle to hit as many balls as you can within the time limit whilst",expCanvas.width/2,expCanvas.height/4+70);
+            // expContext.fillText("collaborating, competing, or playing separately to the other player.", expCanvas.width/2,expCanvas.height/4+90);
 
-            // expContext.fillText("Press 'spacebar' to continue", expCanvas.width*.75,expCanvas.height-50);
-            timeout = setTimeout(instructionsContinue,instructionsPause*1000);
+            // expContext.fillText("The game runs over 3 blocks of 12 trials, where each trial lasts 45 seconds.", expCanvas.width/2,expCanvas.height/4+130);
+            // expContext.fillText("There is a forced 20 second break between blocks.", expCanvas.width/2,expCanvas.height/4+150);
+            // expContext.fillText("The experiment will take approximately 35-40 minutes.", expCanvas.width/2,expCanvas.height/4+170);
+            // // expContext.fillText("You may exit the study at any time without penalty by closing your browser window.", expCanvas.width/2,expCanvas.height/4+190);
+
+            // // expContext.fillText("Press 'spacebar' to continue", expCanvas.width*.75,expCanvas.height-50);
+            // timeout = setTimeout(instructionsContinue,instructionsPause*1000);
         }
         // Perhaps include another page here that explains to them the nature of the multiplayer game. For example:
         function instructionsOnline(){
