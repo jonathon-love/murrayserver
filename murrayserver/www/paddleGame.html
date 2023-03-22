@@ -234,7 +234,7 @@ let paddle2History = new PaddleHistory();
         var blockBreakTime      = 20; // 20
         var trialBreakTime      = 5; // 5
         var instructionsPause   = 5; // 5
-        var sharedColour        = "#963d97";
+        var sharedColour        = "#963d97"; 
         var p1Colour            = "FireBrick";
         var p2Colour            = "RoyalBlue";
         var pColours            = [p1Colour, p2Colour];
@@ -2207,8 +2207,8 @@ let paddle2History = new PaddleHistory();
             
             playerId = state.player_id;
             otherId = playerId === '0' ? '1' : '0';
-
-            if (state.block.block_type=="nonCol"){
+// LH: Below appears to be the code for how balls are treated during the nonCol or Sep conditions.
+            if  (state.block.block_type=="nonCol"){
                 for (let i = 0; i < state.block.n_balls; i++){
                     p1Balls.push(new Ball(state.balls[i].x, pColours[parseInt(playerId)], state.balls[i].id, state.balls[i].angle));
                     allBalls.push(new Ball(state.balls[i].x, pColours[parseInt(playerId)], state.balls[i].id, state.balls[i].angle));
@@ -2218,9 +2218,17 @@ let paddle2History = new PaddleHistory();
                     allBalls.push(new Ball(state.balls[i].x, pColours[parseInt(otherId)], state.balls[i].id, state.balls[i].angle));
                 }
             } else {
-                for (let i = 0; i < state.block.n_balls*2; i++){
-                    allBalls.push(new Ball(state.balls[i].x, sharedColour, state.balls[i].id, state.balls[i].angle));
+                for (let i = 0; i < state.block.n_balls; i++){
+                    p1Balls.push(new Ball(state.balls[i].x, pColours[parseInt(playerId)], state.balls[i].id, state.balls[i].angle));
+                    allBalls.push(new Ball(state.balls[i].x, pColours[parseInt(playerId)], state.balls[i].id, state.balls[i].angle));
                 }
+                for (let i = state.block.n_balls; i < state.block.n_balls*2; i++){
+                    p2Balls.push(new Ball(state.balls[i].x, pColours[parseInt(otherId)], state.balls[i].id, state.balls[i].angle));
+                    allBalls.push(new Ball(state.balls[i].x, pColours[parseInt(otherId)], state.balls[i].id, state.balls[i].angle));
+                }                
+                // for (let i = 0; i < state.block.n_balls*2; i++){
+                    // allBalls.push(new Ball(state.balls[i].x, sharedColour, state.balls[i].id, state.balls[i].angle));
+                // }
             }
 
             paddle1     = new Paddle(state.players[playerId].pos, p1Colour);
