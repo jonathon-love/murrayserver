@@ -1,4 +1,3 @@
-
 import json
 from asyncio import Event
 from asyncio import create_task
@@ -20,6 +19,8 @@ import math
 import sys
 
 import logging
+
+print('Laiton Checking Changes Have Been Made PT2.1')
 
 
 async def run_later(coro, delay):
@@ -271,6 +272,7 @@ class Game:
 
                 # If a player is in the right spot at the right ?time?
                 if self._state['block']['block_type'] == 'nonCol':
+                    congruhit = 10    
 
                     if ball['id'] < 9:
 
@@ -284,7 +286,7 @@ class Game:
                                     angle = -angle + offset
                                 y = self._dim['paddleY'] - (self._dim['paddleY'] - y) - self._dim['ballR']
                                 self._state['players']['0']['hits'] += 1
-                                self._state['players']['0']['score'] += 1
+                                self._state['players']['0']['score'] += congruhit
                                 trajectory = 1
 
                     if ball['id'] >= 9:
@@ -298,7 +300,7 @@ class Game:
                                     angle = -angle + offset
                                 y = self._dim['paddleY'] - (self._dim['paddleY'] - y) - self._dim['ballR']
                                 self._state['players']['1']['hits'] += 1
-                                self._state['players']['1']['score'] += 1
+                                self._state['players']['1']['score'] += congruhit
                                 trajectory = 1
                 else:
 
@@ -369,36 +371,80 @@ class Game:
                     #             self._state['players']['1']['score'] += 1
                     #             trajectory = 1    
                                 
-                    # if y + self._dim['ballR'] > self._dim['paddleY'] and y < self._dim['paddleY']+self._dim['ballR']:
-                    #     if x + self._dim['ballR'] > self._state['players']['0']['pos'] and x < self._state['players']['0']['pos'] + self._dim['pWidth'] + self._dim['ballR']:
-                    #         impact = (x + self._dim['ballR']/2) - (self._state['players']['0']['pos']+ (self._dim['pWidth']/2))
-                    #         offset = impact/(self._dim['pWidth']/2)/2
-                    #         if (-angle + offset) <= -math.radians(155) or (-angle + offset >= -math.radians(35)):
-                    #             angle = -angle
-                    #         else:
-                    #             angle = -angle + offset
-                    #         y = self._dim['paddleY'] - (self._dim['paddleY'] - y) - self._dim['ballR']
-                    #         if x + self._dim['ballR'] > self._state['players']['1']['pos'] and x < self._state['players']['1']['pos'] + self._dim['pWidth'] + self._dim['ballR']:
-                    #                 self._state['players']['0']['hits'] += 0.5
-                    #                 self._state['players']['1']['hits'] += 0.5
-                    #                 self._state['players']['0']['score'] += 0.5
-                    #                 self._state['players']['1']['score'] += 0.5
-                    #         else:
-                    #             self._state['players']['0']['hits'] += 1
-                    #             self._state['players']['0']['score'] += 1
-                    #         trajectory = 1
+                    if y + self._dim['ballR'] > self._dim['paddleY'] and y < self._dim['paddleY']+self._dim['ballR']:
+                        congruhit = 10 
+                        incongruhit = 2
+                        if x + self._dim['ballR'] > self._state['players']['0']['pos'] and x < self._state['players']['0']['pos'] + self._dim['pWidth'] + self._dim['ballR']:
+                            impact = (x + self._dim['ballR']/2) - (self._state['players']['0']['pos']+ (self._dim['pWidth']/2))
+                            offset = impact/(self._dim['pWidth']/2)/2
+                            if (-angle + offset) <= -math.radians(155) or (-angle + offset >= -math.radians(35)):
+                                angle = -angle
+                            else:
+                                angle = -angle + offset
+                            y = self._dim['paddleY'] - (self._dim['paddleY'] - y) - self._dim['ballR']
+                            if x + self._dim['ballR'] > self._state['players']['1']['pos'] and x < self._state['players']['1']['pos'] + self._dim['pWidth'] + self._dim['ballR']:
+                                    print("Both Players Hit same ball")
 
-                    #     elif x + self._dim['ballR'] > self._state['players']['1']['pos'] and x < self._state['players']['1']['pos'] + self._dim['pWidth'] + self._dim['ballR']:
-                    #         impact = (x + self._dim['ballR']/2) - (self._state['players']['1']['pos']+ (self._dim['pWidth']/2))
-                    #         offset = impact/(self._dim['pWidth']/2)/2
-                    #         if (-angle + offset) <= -math.radians(155) or (-angle + offset >= -math.radians(35)):
-                    #             angle = -angle
-                    #         else:
-                    #             angle = -angle + offset
-                    #         y = self._dim['paddleY'] - (self._dim['paddleY'] - y) - self._dim['ballR']
-                    #         self._state['players']['1']['hits'] += 1
-                    #         self._state['players']['1']['score'] += 1
-                    #         trajectory = 1
+                                    if int(ball['id']) < balls_per_player:
+                                        print("Congruent Ball p0 / Non Congruent Ball p1")
+                                        self._state['players']['0']['hits'] += 1
+                                        self._state['players']['0']['score'] += congruhit/2
+                                        self._state['players']['1']['hits'] += 1
+                                        self._state['players']['1']['score'] += incongruhit/2
+                                    else:
+                                        print("Congruent Ball p` / Non Congruent Ball p0")
+                                        self._state['players']['0']['hits'] += 1
+                                        self._state['players']['0']['score'] += incongruhit/2 
+                                        self._state['players']['1']['hits'] += 1
+                                        self._state['players']['1']['score'] += congruhit/2
+                                    
+                                    # self._state['players']['0']['hits'] += 0.5
+                                    # self._state['players']['1']['hits'] += 0.5
+                                    # self._state['players']['0']['score'] += 0.5
+                                    # self._state['players']['1']['score'] += 0.5
+                            else:
+
+                                if int(ball['id']) < balls_per_player: # balls_per_trial: # ball_ids_for_players:
+                                    # print(f"{trial_name}: {n}")
+                                    print("Congruent Ball p0")
+                                    self._state['players']['0']['hits'] += 1
+                                    self._state['players']['0']['score'] += congruhit
+                                    # self._state['players']['1']['hits'] += 1
+                                    # self._state['players']['1']['score'] += 1
+                                else: 
+                                    print("Non Congruent Ball p0")
+                                    # print(f"{trial_name}: {n}")
+                                    self._state['players']['0']['hits'] += 1
+                                    self._state['players']['0']['score'] += incongruhit
+
+
+                            trajectory = 1
+
+                        elif x + self._dim['ballR'] > self._state['players']['1']['pos'] and x < self._state['players']['1']['pos'] + self._dim['pWidth'] + self._dim['ballR']:
+                            impact = (x + self._dim['ballR']/2) - (self._state['players']['1']['pos']+ (self._dim['pWidth']/2))
+                            offset = impact/(self._dim['pWidth']/2)/2
+                            if (-angle + offset) <= -math.radians(155) or (-angle + offset >= -math.radians(35)):
+                                angle = -angle
+                            else:
+                                angle = -angle + offset
+                            y = self._dim['paddleY'] - (self._dim['paddleY'] - y) - self._dim['ballR']
+
+
+                            if int(ball['id']) >=  balls_per_player: #balls_per_trial: #ball_ids_for_players:
+                                    print("Congruent Ball p1")
+                                    # print(f"{trial_name}: {n}")
+                                    self._state['players']['1']['hits'] += 2
+                                    self._state['players']['1']['score'] += congruhit
+                            else: 
+                                    print("Non Congruent Ball p1")
+                                    # print(f"{trial_name}: {n}")
+                                    self._state['players']['1']['hits'] += 1
+                                    self._state['players']['1']['score'] += incongruhit
+
+
+                            # self._state['players']['1']['hits'] += 1
+                            # self._state['players']['1']['score'] += 1
+                            trajectory = 1
 
                 ball['x'] = x
                 ball['y'] = y
