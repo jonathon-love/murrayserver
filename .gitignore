@@ -6,3 +6,4 @@ murrayserver/www/spriteSave.html
 murrayserver/open.py
 *.txt
 murrayserver/autoProgression.py
+**/.DS_Store
