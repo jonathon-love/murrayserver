@@ -71,8 +71,8 @@ class Game:
             }
 
         block_orders = [
-        #    ["nonCol","col","com"], #123 A
-        #    ["nonCol","com","col"], #132 B
+           ["nonCol","col","com"], #123 A
+           ["nonCol","com","col"], #132 B
            ["col","nonCol","com"], #213 C
            ["col","com","nonCol"], #231 D
            ["com","nonCol","col"], #312 E
