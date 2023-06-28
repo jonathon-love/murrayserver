@@ -228,8 +228,8 @@ let paddle2History = new PaddleHistory();
 
         // workload
         var workloadLevels      = [1,3,6,9];
-        var trialDuration       = 2  // 45 seconds
-        var practiceTrialDuration = 2; // 25
+        var trialDuration       = 45  // 45 seconds
+        var practiceTrialDuration = 25; // 25
         var dirInst             = 0;            //10 second intervals to display practice trial instructions
         var blockBreakTime      = 0; // 20
         var trialBreakTime      = 0; // 5
@@ -2474,15 +2474,17 @@ let paddle2History = new PaddleHistory();
             expContext.font="16px Arial";
             expContext.textAlign = "center";
             expContext.fillText("Trial "+nCurrentTrial+" of "+state.maxTrials +" completed.",expCanvas.width/2,expCanvas.height/5);
-            competitiveQuotes= ['Compete to win!', 'You can beat them!', 'Outscore them by the end of the block!', 'You can do it! Remember the red balls provide more points than the blue!'];
-            collaborativeQuotes= ['Combine your efforts to win!','Work together!', 'Collaborate to boost the team score!', "You can do it! Remember the red balls provide more points than the blue!"];
+            competitiveQuotes=['Compete to win! Remember the red balls provide more points than the blue!']
+            // ['Compete to win!', 'You can beat them!', 'Outscore them by the end of the block!', 'You can do it! Remember the red balls provide more points than the blue!'];
+            collaborativeQuotes= ['Combine your efforts to win! Remember the red balls provide more points than the blue!']
+            // ['Combine your efforts to win!','Work together!', 'Collaborate to boost the team score!', "You can do it! Remember the red balls provide more points than the blue!"];
             if (blockType == "com"){
                 if (nCurrentTrial == state.maxTrials){
                     expContext.fillText("Well Done!",expCanvas.width/2, expCanvas.height/5+50);
                 } else {
                     expContext.fillText(competitiveQuotes[state.trialNo%competitiveQuotes.length],expCanvas.width/2, expCanvas.height/5+50);
                 }
-                drawBorder(200,140, 400, 50, 2);
+                drawBorder(100,140, 600, 50, 2);
             }
             if (blockType == "col"){
                 if (nCurrentTrial == state.maxTrials){
@@ -2490,7 +2492,7 @@ let paddle2History = new PaddleHistory();
                 } else {
                     expContext.fillText(collaborativeQuotes[state.trialNo%collaborativeQuotes.length],expCanvas.width/2, expCanvas.height/5+50);
                 }
-                drawBorder(200,140, 400, 50, 2);
+                drawBorder(75,140, 650, 50, 2);
             }
             
             dispFireworks = nCurrentTrial == state.maxTrials & state.trialNo == 0;
