@@ -10,6 +10,8 @@ async def start():
 
 
 if __name__ == '__main__':
+
+    print('Laiton: Checking Main Works')
     try:
         loop = get_event_loop()
         loop.run_until_complete(start())

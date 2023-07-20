@@ -157,3 +157,4 @@ class Server:
         await self._runner.setup()
         site = TCPSite(self._runner, '0.0.0.0', 8080)
         await site.start()
+        print('Laiton: Check Runner is working')
