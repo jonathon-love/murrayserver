@@ -35,10 +35,10 @@ class Server:
     def __init__(self):
         self._app = Application()
         self._app.add_routes([
-            get('/', self._enter),
-            get('/{game_id}/', self._enter_game),
-            get(r'/{game_id}/{player_id}/coms', self._ws_handler),
-            get(r'/{game_id}/{player_id}/{path}', self._get_assets),
+            get('/teamspirit/', self._enter),
+            get('/teamspirit/{game_id}/', self._enter_game),
+            get(r'/teamspirit/{game_id}/{player_id}/coms', self._ws_handler),
+            get(r'/teamspirit/{game_id}/{player_id}/{path}', self._get_assets),
         ])
         self._runner = AppRunner(self._app)
 
@@ -97,7 +97,7 @@ class Server:
             self._current_game = None
             self._current_game_no += 1
 
-        return HTTPFound(f'/{ game_id }/{ player_id }/paddleGame.html?{ request.query_string }')
+        return HTTPFound(f'/teamspirit/{ game_id }/{ player_id }/paddleGame.html?{ request.query_string }')
 
     async def _enter_game(self, request):
         game_id = request.match_info.get('game_id')
@@ -108,7 +108,7 @@ class Server:
             self._games[game_id] = game
         player_id = game.add_player()
 
-        return HTTPFound(f'/{ game_id }/{ player_id }/paddleGame.html')
+        return HTTPFound(f'/teamspirit/{ game_id }/{ player_id }/paddleGame.html')
 
 
     async def _get_assets(self, request):

@@ -408,7 +408,7 @@ class Game:
 
         time_string = datetime.now().isoformat(timespec='seconds').replace(':', '')
 
-        log_path = environ.get('MURRAYSERVER_LOG_PATH', '')
+        log_path = environ.get('SERVER_LOG_PATH', '')
         log_path = path.join(log_path, f'game-{ time_string }-{ self._game_no }.txt')
 
         self._logHandler = logging.FileHandler(log_path, mode='w')

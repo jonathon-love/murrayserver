@@ -2,15 +2,15 @@
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: murray-pv
+  name: laiton-pv
 spec:
   capacity:
     storage: 1Gi
   accessModes:
   - ReadWriteOnce
-  storageClassName: murray-storage
+  storageClassName: laiton-storage
   local:
-    path: /storage/murraydata
+    path: /storage/laitondata
   nodeAffinity:
     required:
       nodeSelectorTerms:
@@ -24,10 +24,10 @@ apiVersion: v1
 kind: Service
 metadata:
   labels:
-  name: murrayserver
+  name: laitonserver
 spec:
   selector:
-    app: murrayserver
+    app: laitonserver
   ports:
     - name: server
       port: 8080
@@ -39,9 +39,9 @@ spec:
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: murrayserver-pvc
+  name: laitonserver-pvc
 spec:
-  storageClassName: murray-storage
+  storageClassName: laiton-storage
   accessModes:
     - ReadWriteOnce
   resources:
@@ -51,24 +51,23 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: murrayserver
+  name: laitonserver
   labels:
-    app: murrayserver
+    app: laitonserver
 spec:
   selector:
     matchLabels:
-      app: murrayserver
+      app: laitonserver
   template:
     metadata:
       labels:
-        app: murrayserver
+        app: laitonserver
     spec:
       containers:
-        - name: murrayserver
-          image: murrayserver
-          imagePullPolicy: Never
+        - name: laitonserver
+          image: jonathonlove/laitonserver
           env:
-            - name: MURRAYSERVER_LOG_PATH
+            - name: SERVER_LOG_PATH
               value: /data
           volumeMounts:
             - mountPath: "/data"
@@ -90,7 +89,7 @@ spec:
       volumes:
         - name: storage
           persistentVolumeClaim:
-            claimName: murrayserver-pvc
+            claimName: laitonserver-pvc
         - name: nginx-config
           configMap:
             name: nginx-config
@@ -112,4 +111,31 @@ data:
               autoindex on;
           }
       }
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: laiton-ingress
+  # annotations:
+  #   nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  #ingressClassName: nginx-example
+  rules:
+  - host: laitonweb.site
+    http:
+      paths:
+      - path: /teamspirit
+        pathType: Prefix
+        backend:
+          service:
+            name: laitonserver
+            port:
+              number: 8080
+      - path: /data
+        pathType: Prefix
+        backend:
+          service:
+            name: laitonserver
+            port:
+              number: 80
 ---

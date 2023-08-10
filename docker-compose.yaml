@@ -2,6 +2,7 @@ version: '3'
 services:
   murrayserver:
     build: .
-    image: murrayserver
+    platform: linux/amd64
+    image: scienceboy1996/laitonserver
     ports:
       - '8080:8080'
