@@ -1931,7 +1931,7 @@ let paddle2History = new PaddleHistory();
                         hits1++;
                     } else {
                         ws.send(JSON.stringify({'rt' : stimTimes[0] - tRem}));
-                        ws.send(JSON.stringify({'score' : score1 + 1}));
+                        ws.send(JSON.stringify({'increaseScore' : 1}));
                     }
                     counter1 = false;
                 } else {

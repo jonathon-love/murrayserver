@@ -17,6 +17,7 @@ from os import environ
 from os import path
 import math
 import sys
+import random
 
 import logging
 
@@ -81,6 +82,7 @@ class Game:
 
         block_types = block_orders[self._game_no % len(block_orders)]
         n_balls = [1, 1, 1, 3, 3, 3, 6, 6, 6, 9, 9, 9]  
+       # n_balls = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]  
         balls_per_trial = {}
 
 
@@ -175,6 +177,12 @@ class Game:
                     else:
                         # self._log.info(f'{{ "received": { msg.data }, "player": { player_id } }}')
                         data = json.loads(msg.data)
+
+                        increase_score = data.get('increaseScore')
+                        if increase_score != None:
+                            self._state['players'][player_id]['score'] += increase_score
+                            del data['increaseScore']
+
                         self._state['players'][player_id].update(data)
                         self._receive_update.set()
             finally:
@@ -338,16 +346,16 @@ class Game:
                                 angle = -angle + offset
                             y = self._dim['paddleY'] - (self._dim['paddleY'] - y) - self._dim['ballR']
                             if x + self._dim['ballR'] > self._state['players']['1']['pos'] and x < self._state['players']['1']['pos'] + self._dim['pWidth'] + self._dim['ballR']:
-                                    print("Both Players Hit same ball")
+                                    # print("Both Players Hit same ball")
 
                                     if int(ball['id']) < balls_per_player:
-                                        print("Congruent Ball p0 / Non Congruent Ball p1")
+                                        # print("Congruent Ball p0 / Non Congruent Ball p1")
                                         self._state['players']['0']['hits'] += 0.5
                                         self._state['players']['0']['score'] += congruhit /2
                                         self._state['players']['1']['hits'] += 0.5
                                         self._state['players']['1']['score'] += incongruhit /2
                                     else:
-                                        print("Congruent Ball p` / Non Congruent Ball p0")
+                                        # print("Congruent Ball p` / Non Congruent Ball p0")
                                         self._state['players']['0']['hits'] += 0.5
                                         self._state['players']['0']['score'] += incongruhit /2
                                         self._state['players']['1']['hits'] += 0.5
@@ -357,12 +365,12 @@ class Game:
 
                                 if int(ball['id']) < balls_per_player: # balls_per_trial: # ball_ids_for_players:
                                     # print(f"{trial_name}: {n}")
-                                    print("Congruent Ball p0")
+                                    # print("Congruent Ball p0")
                                     self._state['players']['0']['hits'] += 1
                                     self._state['players']['0']['score'] += congruhit
 
                                 else: 
-                                    print("Non Congruent Ball p0")
+                                    # print("Non Congruent Ball p0")
                                     # print(f"{trial_name}: {n}")
                                     self._state['players']['0']['hits'] += 1
                                     self._state['players']['0']['score'] += incongruhit
@@ -381,12 +389,12 @@ class Game:
 
 
                             if int(ball['id']) >=  balls_per_player: #balls_per_trial: #ball_ids_for_players:
-                                    print("Congruent Ball p1")
+                                    # print("Congruent Ball p1")
                                     # print(f"{trial_name}: {n}")
                                     self._state['players']['1']['hits'] += 1
                                     self._state['players']['1']['score'] += congruhit
                             else: 
-                                    print("Non Congruent Ball p1")
+                                    # print("Non Congruent Ball p1")
                                     # print(f"{trial_name}: {n}")
                                     self._state['players']['1']['hits'] += 1
                                     self._state['players']['1']['score'] += incongruhit
@@ -447,14 +455,35 @@ class Game:
 
                 #LH here see how balls are duplicated we could create two lists for balls one that is a list exclusively related to palyer 0 and then one for player 1 to ensure colors match... 
                 balls = [None] * block['n_balls'] * 2 # n_balls represents the number of balls per player, so should be doubled. 
+
+
+
+                print(f'Balls {balls}')
+                angles_list = list(range(-45, -136, -5))
+                random.shuffle(angles_list) 
+                # displayed_angles = angles[:len(balls)] 
+
                 
+                #angles = [0-math.radians(randint(45,135)) for angle in balls]
+
+
+                angles_in_radians = [math.radians(angle) for angle in angles_list]
+                angles_in_radians = [-abs(math.radians(angle)) for angle in angles_list]
+                angles = angles_in_radians 
+
                 
-                angles = [0-math.radians(randint(45,135)) for angle in balls]
+                for idx, angle in enumerate(angles):
+                    print('Ball ID & Angles:')
+                    print(f"Ball {idx + 1}: {angle:.2f} radians or {math.degrees(angle):.2f} degrees")
+                    print(f"Angles List: {angles_list}")
+                    # print(f'ball nos: {len(balls)}')
+                    # print(f"The angles balls should take {displayed_angles}")
+
                 speed = 4
                 for i, _ in enumerate(balls):
-                    print("Enumerate has been called")
-                    print("Ball numbers below:")
-                    print(balls)
+                    # print("Enumerate has been called")
+                    # print("Ball numbers below:")
+                    # print(balls)
                     if self._state['block']['block_type'] == "nonCol":
                         if i >= len(balls)/2:
                             balls[i] = {
@@ -485,6 +514,7 @@ class Game:
                         'id': i,
                         'dir': 1,
                         }
+                    print(f'angle {round(angles[i], 2)}')
 
                 self._state['balls'] = balls
 
