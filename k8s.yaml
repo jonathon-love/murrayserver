@@ -65,7 +65,7 @@ spec:
     spec:
       containers:
         - name: laitonserver
-          image: jonathonlove/laitonserver
+          image: scienceboy1996/laitonserver
           env:
             - name: SERVER_LOG_PATH
               value: /data
