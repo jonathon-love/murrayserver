@@ -21,7 +21,7 @@ import random
 
 import logging
 
-print('Laiton: Checking Changes Have Been Made PT3.3')
+print('Laiton: Checking Changes Have Been Made PT3.6')
 
 
 async def run_later(coro, delay):

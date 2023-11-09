@@ -235,8 +235,12 @@ let paddle2History = new PaddleHistory();
         var trialBreakTime      = 0; // 5
         var instructionsPause   = 0; // 5
         var sharedColour        = "#963d97"; 
-        var p1Colour            = "FireBrick";
-        var p2Colour            = "RoyalBlue";
+        // var p1Colour            = "FireBrick";
+        // var p2Colour            = "RoyalBlue";
+        var p1PadColour         = "FireBrick";
+        var p2PadColour         = "RoyalBlue";
+        var p1Colour            = "RoyalBlue";
+        var p2Colour            = "FireBrick";
         var pColours            = [p1Colour, p2Colour];
         var frameColour         = "ivory";
         var fontColour          = "black"
@@ -769,7 +773,7 @@ let paddle2History = new PaddleHistory();
         function keyInsts(p1, p2, drt1, drt2, x = expCanvas.height/2){
             // Player Keys
             if (p1){
-                expContext.fillStyle = p1Colour;
+                expContext.fillStyle = p1PadColour; 
                 expContext.fillStyle = "black";
                 if (drt1 == LHdrtRespKey){
                     if (show_drt){
@@ -1666,19 +1670,19 @@ let paddle2History = new PaddleHistory();
             } else if (state.block.block_type == "col"){
                 expContext.fillText("During this block you must work together!",expCanvas.width/2 ,expCanvas.height/4+5);
                 expContext.fillText("In this block the balls and paddles are red and blue. You can hit any ball with your red paddle.",expCanvas.width/2 ,expCanvas.height/4+25);
-                expContext.fillText("However, hitting a red ball will earn you more points than hitting a blue ball.",expCanvas.width/2,expCanvas.height/4+45);
+                expContext.fillText("However, hitting a blue ball will earn you more points than hitting a red ball.",expCanvas.width/2,expCanvas.height/4+45);
                 expContext.fillText("Your teammate's paddle is blue. Your teammate will earn more points",expCanvas.width/2,expCanvas.height/4+65);
-                expContext.fillText("hitting a blue ball than a red ball.",expCanvas.width/2,expCanvas.height/4+85);
-                expContext.fillText("Try to hit red balls to maximize the team's score.",expCanvas.width/2,expCanvas.height/4+105);
+                expContext.fillText("hitting a red ball than a blue ball.",expCanvas.width/2,expCanvas.height/4+85);
+                expContext.fillText("Try to hit blue balls to maximize the team's score.",expCanvas.width/2,expCanvas.height/4+105);
                 drawBorder(50,120,700,155,2)
            
             } else if (state.block.block_type == "com"){
                 expContext.fillText("During this block you must try to outscore your opponent.",expCanvas.width/2 ,expCanvas.height/4+5);
                 expContext.fillText("In this block the balls and paddles are red and blue. You can hit any ball with your red paddle.",expCanvas.width/2 ,expCanvas.height/4+25);
-                expContext.fillText("However, hitting a red ball will earn you more points than hitting a blue ball.",expCanvas.width/2,expCanvas.height/4+45);
+                expContext.fillText("However, hitting a blue ball will earn you more points than hitting a red ball.",expCanvas.width/2,expCanvas.height/4+45);
                 expContext.fillText("Your opponent's paddle is blue. Your opponent will earn more points",expCanvas.width/2,expCanvas.height/4+65);
-                expContext.fillText("hitting a blue ball than a red ball.",expCanvas.width/2,expCanvas.height/4+85);
-                expContext.fillText("Try to hit red balls to maximize your score.",expCanvas.width/2,expCanvas.height/4+105);
+                expContext.fillText("hitting a red ball than a blue ball.",expCanvas.width/2,expCanvas.height/4+85);
+                expContext.fillText("Try to hit blue balls to maximize your score.",expCanvas.width/2,expCanvas.height/4+105);
                 drawBorder(50,120,700,155,2)
         }
         
@@ -2240,8 +2244,13 @@ let paddle2History = new PaddleHistory();
                 // }
             }
 
-            paddle1     = new Paddle(state.players[playerId].pos, p1Colour);
-            paddle2     = new Paddle(state.players[otherId].pos, p2Colour);
+            // paddle1     = new Paddle(state.players[playerId].pos, p1Colour);
+            // paddle2     = new Paddle(state.players[otherId].pos, p2Colour);
+            paddle1     = new Paddle(state.players[playerId].pos, p1PadColour);
+            paddle2     = new Paddle(state.players[otherId].pos, p2PadColour);
+
+
+            p1PadColour 
 
             let drawStartTime = null;
             let rAf;
@@ -2421,7 +2430,7 @@ let paddle2History = new PaddleHistory();
             }
             playerId = state.player_id;
             otherId = playerId === '0' ? '1' : '0';
-            paddle1     = new Paddle(state.players[playerId].pos, p1Colour);
+            paddle1     = new Paddle(state.players[playerId].pos, p1PadColour);
             
             let drawStartTime = null;
             let rAf;
@@ -2474,9 +2483,9 @@ let paddle2History = new PaddleHistory();
             expContext.font="16px Arial";
             expContext.textAlign = "center";
             expContext.fillText("Trial "+nCurrentTrial+" of "+state.maxTrials +" completed.",expCanvas.width/2,expCanvas.height/5);
-            competitiveQuotes=['Compete to win! Remember the red balls provide more points than the blue!']
+            competitiveQuotes=['Compete to win! Remember the blue balls provide more points than the red!']
             // ['Compete to win!', 'You can beat them!', 'Outscore them by the end of the block!', 'You can do it! Remember the red balls provide more points than the blue!'];
-            collaborativeQuotes= ['Combine your efforts to win! Remember the red balls provide more points than the blue!']
+            collaborativeQuotes= ['Combine your efforts to win! Remember the blue balls provide more points than the red!']
             // ['Combine your efforts to win!','Work together!', 'Collaborate to boost the team score!', "You can do it! Remember the red balls provide more points than the blue!"];
             if (blockType == "com"){
                 if (nCurrentTrial == state.maxTrials){
