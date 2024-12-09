@@ -121,7 +121,7 @@ metadata:
 spec:
   #ingressClassName: nginx-example
   rules:
-  - host: laitonweb.site
+  - host: laiton.duckdns.org
     http:
       paths:
       - path: /teamspirit
