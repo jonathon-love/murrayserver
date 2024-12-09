@@ -66,6 +66,7 @@ spec:
       containers:
         - name: laitonserver
           image: scienceboy1996/laitonserver
+          imagePullPolicy: Always
           env:
             - name: SERVER_LOG_PATH
               value: /data
